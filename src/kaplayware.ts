@@ -191,7 +191,7 @@ export type Minigame = {
 	/**
 	 * Load assets.
 	 */
-	onLoad?: (k: LoadCtx) => void;
+	load?: (k: LoadCtx) => void;
 	/**
 	 * Main entry of the game code. Should return a game object made by `k.make()` that contains the whole game.
 	 *
@@ -199,7 +199,7 @@ export type Minigame = {
 	 * ```js
 	 * ```
 	 */
-	onStart: (ctx: MinigameCtx) => GameObj;
+	start: (ctx: MinigameCtx) => GameObj;
 	/**
 	 * The id of the minigame (getter).
 	 * Will always return ${author}:${prompt}
@@ -239,6 +239,10 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 	k.loadSprite("@mark", assets.mark.sprite);
 	k.loadSprite("@cloud", assets.cloud.sprite);
 	k.loadSprite("@heart", assets.heart.sprite);
+
+	function coolPrompt(prompt: string) {
+		return prompt.toUpperCase() + (prompt[prompt.length - 1] == "!" ? "" : "!");
+	}
 
 	function addScoreText() {
 		return k.add([
@@ -476,7 +480,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 
 			gameBox.removeAll();
 			wareCtx.time = g.duration;
-			let minigameScene = g.onStart({
+			let minigameScene = g.start({
 				...ctx,
 				...api,
 				width: k.width,
@@ -507,7 +511,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 			function addPrompt() {
 				const promptTitle = k.add([
 					k.color(k.BLACK),
-					k.text(g.prompt, { align: "center", size: 100 }),
+					k.text(coolPrompt(g.prompt), { align: "center", size: 100 }),
 					k.pos(k.center()),
 					k.anchor("center"),
 					k.scale(),
@@ -566,7 +570,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 		game.duration = game.duration ?? DEFAULT_DURATION;
 		game.hue = game.hue ?? 1;
 
-		if (game.onLoad) {
+		if (game.load) {
 			// patch loadXXX() functions to scoped asset names
 			const loaders = [
 				"loadSprite",
@@ -602,7 +606,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 				k.loadRoot("");
 			}
 
-			game.onLoad(loadCtx as LoadCtx);
+			game.load(loadCtx as LoadCtx);
 			loadCtx["loadRoot"] = k.loadRoot;
 		}
 	}

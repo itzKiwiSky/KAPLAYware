@@ -1,17 +1,17 @@
 import { assets } from "@kaplayjs/crew";
-import { Minigame } from "../../src/kaplayware";
+import { Minigame } from "../../../src/kaplayware";
 
 const getGame: Minigame = {
-	prompt: "GET!",
+	prompt: "get",
 	author: "amyspark-ng",
 	hue: 1,
 	urlPrefix: "",
-	onLoad(ctx) {
+	load(ctx) {
 		ctx.loadSprite("bean", assets.bean.sprite);
 		ctx.loadSprite("beant", assets.beant.sprite);
 		ctx.loadSprite("apple", assets.apple.sprite);
 	},
-	onStart(ctx) {
+	start(ctx) {
 		const game = ctx.make();
 		const SPEED = 5;
 

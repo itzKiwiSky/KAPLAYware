@@ -1,14 +1,14 @@
-import { Minigame } from "../../src/kaplayware";
+import { Minigame } from "../../../src/kaplayware";
 
 const spamGame: Minigame = {
-	prompt: "SPAM!",
+	prompt: "spam",
 	author: "amyspark-ng",
 	hue: 4,
 	urlPrefix: "/games/amyspark-ng/assets",
-	onLoad(ctx) {
+	load(ctx) {
 		ctx.loadSprite("hexagon", "/sprites/hexagon.png");
 	},
-	onStart(ctx) {
+	start(ctx) {
 		let score = 0;
 		const SCORE_TO_WIN = 20;
 		const game = ctx.make();

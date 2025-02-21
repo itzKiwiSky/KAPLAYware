@@ -1,5 +1,5 @@
-import getGame from "../games/amyspark-ng/get";
-import spamGame from "../games/amyspark-ng/spam";
+import getGame from "../games/amyspark-ng/get/game";
+import spamGame from "../games/amyspark-ng/spam/game";
 import kaplayware from "./kaplayware";
 
 const games = [

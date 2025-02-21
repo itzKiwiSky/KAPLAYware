@@ -1,8 +1,10 @@
 {
 	"name": "kaplayware",
+	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"build": "tsc && vite build"
+		"build": "tsc && vite build",
+		"create-game": "node scripts/create.js"
 	},
 	"dependencies": {
 		"@kaplayjs/crew": "^1.7.1",
