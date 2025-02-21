@@ -407,9 +407,20 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 
 			for (const api of gameAPIs) {
 				ctx[api] = k[api];
+
 				if (api == "sprite") {
 					ctx[api] = (spr: string | SpriteData | Asset<SpriteData>, opts?: SpriteCompOpt) => {
-						return k.sprite(wareCtx.curGame().id + spr, opts);
+						const spriteComp = k.sprite(`${wareCtx.curGame().id}-${spr}`, opts);
+						return {
+							...spriteComp,
+							set sprite(val: string) {
+								spriteComp.sprite = `${wareCtx.curGame().id}-${val}`;
+							},
+
+							get sprite() {
+								return spr.toString();
+							},
+						};
 					};
 				}
 			}
@@ -515,6 +526,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 			return {
 				start() {
 					wareCtx.time = g.duration;
+					wareCtx.time = 1;
 					addPrompt();
 				},
 			};
@@ -572,7 +584,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 			for (const loader of loaders) {
 				loadCtx[loader] = (name: string, ...args: any) => {
 					if (typeof name === "string") {
-						name = game.id + name;
+						name = `${game.id}-${name}`;
 					}
 					return k[loader](name, ...args);
 				};

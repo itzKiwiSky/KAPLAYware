@@ -59,8 +59,7 @@ const getGame: Minigame = {
 
 		ctx.onTimeout(() => {
 			if (apple.exists()) {
-				// TODO: Find a way to override the setter and getter
-				bean.sprite = "amyspark-ng:GET!beant";
+				bean.sprite = "beant";
 				ctx.lose();
 				ctx.wait(0.5, () => ctx.finish());
 			}
