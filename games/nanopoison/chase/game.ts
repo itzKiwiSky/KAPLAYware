@@ -1,5 +1,5 @@
 import { assets } from "@kaplayjs/crew";
-import { Minigame } from "../../../src/kaplayware";
+import { Minigame } from "../../../src/types";
 
 const newGame: Minigame = {
 	prompt: "chase",
@@ -13,9 +13,7 @@ const newGame: Minigame = {
 		ctx.loadSprite("steel", assets.steel.sprite);
 	},
 	start(ctx) {
-		const game = ctx.make([
-			ctx.timer()
-		]);
+		const game = ctx.make([ctx.timer()]);
 
 		const moveRate = 0.5 / ctx.speed;
 		let level;
@@ -32,7 +30,7 @@ const newGame: Minigame = {
 					"- ---  --- -",
 					"-          -",
 					"------------",
-				]
+				];
 				break;
 			case 2:
 				level = [
@@ -45,7 +43,7 @@ const newGame: Minigame = {
 					"- ---- --- -",
 					"-          -",
 					"------------",
-				]
+				];
 				break;
 			case 3:
 				level = [
@@ -58,7 +56,7 @@ const newGame: Minigame = {
 					"---------  -",
 					"-          -",
 					"------------",
-				]
+				];
 				break;
 		}
 
@@ -67,7 +65,7 @@ const newGame: Minigame = {
 			DOWN: ctx.vec2(0, 1),
 			LEFT: ctx.vec2(-1, 0),
 			RIGHT: ctx.vec2(1, 0),
-		}
+		};
 
 		class Grid {
 			grid = [];
@@ -78,13 +76,14 @@ const newGame: Minigame = {
 				for (let r = 0; r < this.h; r++) {
 					this.grid[r] = [];
 					for (let c = 0; c < this.w; c++) {
-						if (level[r].charAt(c) == ' ') {
+						if (level[r].charAt(c) == " ") {
 							this.grid[r][c] == null;
-						} else {
+						}
+						else {
 							this.grid[r][c] = game.add([
 								ctx.pos(this.getWorldPos(c, r)),
 								ctx.sprite("steel"),
-							])
+							]);
 						}
 					}
 				}
@@ -97,7 +96,7 @@ const newGame: Minigame = {
 			getCellCoords(pos) {
 				let c = Math.floor((pos.x - 16) / 64);
 				let r = Math.floor((pos.y - 12) / 64);
-				return { x: c, y: r};
+				return { x: c, y: r };
 			}
 
 			isCellInBounds(c, r) {
@@ -105,8 +104,9 @@ const newGame: Minigame = {
 			}
 
 			isCellBlocked(c, r) {
-				if (!this.isCellInBounds(c,r))
+				if (!this.isCellInBounds(c, r)) {
 					return true;
+				}
 				console.log(`${r}, ${c}`);
 				return this.grid[r][c] != null;
 			}
@@ -116,16 +116,15 @@ const newGame: Minigame = {
 			if (grid.isCellBlocked(coordinates.x, coordinates.y)) {
 				if (sound) {
 					// play blocked sound
-
 				}
-			} else {
+			}
+			else {
 				// move the object
 				obj.pos = grid.getWorldPos(coordinates.x, coordinates.y);
 				// the way i made the characters move doesn't work with this lol
-				//ctx.tween(obj.pos, grid.getWorldPos(coordinates.x, coordinates.y), 0.2, (p) => obj.pos = p, ctx.easings.easeInOutCubic);
+				// ctx.tween(obj.pos, grid.getWorldPos(coordinates.x, coordinates.y), 0.2, (p) => obj.pos = p, ctx.easings.easeInOutCubic);
 				if (sound) {
 					// play move sound
-
 				}
 			}
 		}
@@ -140,73 +139,74 @@ const newGame: Minigame = {
 
 		const karat = game.add([
 			ctx.sprite("karat"),
-			ctx.pos(grid.getWorldPos(8, 3).add(16,16)),
+			ctx.pos(grid.getWorldPos(8, 3).add(16, 16)),
 			ctx.area(),
 			ctx.scale(0.5),
-			"karat"
-		])
+			"karat",
+		]);
 
 		ctx.onButtonPress("left", () => {
 			var cellCoords = grid.getCellCoords(kat.pos);
-			var moveCoords = ctx.vec2(cellCoords.x - 1, cellCoords.y)
-			
-			moveTo(kat, moveCoords)
+			var moveCoords = ctx.vec2(cellCoords.x - 1, cellCoords.y);
+
+			moveTo(kat, moveCoords);
 		});
 
 		ctx.onButtonPress("right", () => {
 			var cellCoords = grid.getCellCoords(kat.pos);
-			var moveCoords = ctx.vec2(cellCoords.x + 1, cellCoords.y)
-			
-			moveTo(kat, moveCoords)
+			var moveCoords = ctx.vec2(cellCoords.x + 1, cellCoords.y);
+
+			moveTo(kat, moveCoords);
 		});
 
 		ctx.onButtonPress("up", () => {
 			var cellCoords = grid.getCellCoords(kat.pos);
-			var moveCoords = ctx.vec2(cellCoords.x, cellCoords.y - 1)
-			
-			moveTo(kat, moveCoords)
+			var moveCoords = ctx.vec2(cellCoords.x, cellCoords.y - 1);
+
+			moveTo(kat, moveCoords);
 		});
 
 		ctx.onButtonPress("down", () => {
 			var cellCoords = grid.getCellCoords(kat.pos);
-			var moveCoords = ctx.vec2(cellCoords.x, cellCoords.y + 1)
-			
-			moveTo(kat, moveCoords)
-		})
+			var moveCoords = ctx.vec2(cellCoords.x, cellCoords.y + 1);
+
+			moveTo(kat, moveCoords);
+		});
 
 		let karatMoveLoop = game.loop(moveRate, () => {
 			let availableDirections = [];
 			var cellCoords = grid.getCellCoords(karat.pos);
 			for (const [k, dir] of Object.entries(directions)) {
 				var dc = dir.add(cellCoords.x, cellCoords.y);
-				if (!grid.isCellBlocked(dc.x, dc.y))
+				if (!grid.isCellBlocked(dc.x, dc.y)) {
 					availableDirections.push(dir);
+				}
 			}
 
 			var randomDir = availableDirections[Math.floor(Math.random() * availableDirections.length)];
 			if (randomDir != null) {
 				moveTo(karat, randomDir.add(cellCoords.x, cellCoords.y), false);
-				karat.pos = karat.pos.add(12,16);
+				karat.pos = karat.pos.add(12, 16);
 			}
-		})
+		});
 
 		kat.onCollide("karat", () => {
 			karatMoveLoop.cancel();
 			karat.destroy();
 			ctx.win();
 			ctx.burp().onEnd(() => {
-				ctx.wait(0.1, () => {
+				game.wait(0.1, () => {
 					ctx.finish();
 				});
 			});
-		})
+		});
 
 		ctx.onTimeout(() => {
 			if (karat.exists()) {
 				ctx.lose();
-				ctx.wait(0.5, () => ctx.finish());
+				game.wait(0.5, () => ctx.finish());
 			}
-		})
+		});
 
 		return game;
 	},
