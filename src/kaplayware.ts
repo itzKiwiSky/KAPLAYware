@@ -1,9 +1,10 @@
 import { assets } from "@kaplayjs/crew";
-import kaplay, { Asset, AudioPlay, GameObj, KAPLAYCtx, KAPLAYOpt, KEventController, SpriteCompOpt, SpriteData } from "kaplay";
-import { addBomb } from "./objects";
+import kaplay, { Asset, KAPLAYOpt, SpriteCompOpt, SpriteData } from "kaplay";
+import { addBomb, addPrompt } from "./objects";
 import { loseTransition, prepTransition, winTransition } from "./transitions";
+import { KaplayWareCtx, LoadCtx, Minigame, MinigameAPI, MinigameCtx } from "./types";
 
-const loadAPIs = [
+export const loadAPIs = [
 	"loadRoot",
 	"loadSprite",
 	"loadSpriteAtlas",
@@ -20,7 +21,7 @@ const loadAPIs = [
 	"loadProgress",
 ] as const;
 
-const gameAPIs = [
+export const gameAPIs = [
 	"make",
 	"pos",
 	"scale",
@@ -118,136 +119,6 @@ const gameAPIs = [
 	"burp",
 ] as const;
 
-/** A button */
-export type Button =
-	| "action"
-	| "left"
-	| "right"
-	| "up"
-	| "down";
-
-/** The allowed load functions */
-export type LoadCtx = Pick<KAPLAYCtx, typeof loadAPIs[number]>;
-
-/** The specific API for minigames */
-export type MinigameAPI = {
-	/**
-	 * Register an event that runs once when a button is pressed.
-	 */
-	onButtonPress: (btn: Button, action: () => void) => KEventController;
-	/**
-	 * Register an event that runs once when a button is released.
-	 */
-	onButtonRelease: (btn: Button, action: () => void) => KEventController;
-	/**
-	 * Register an event that runs every frame when a button is held down.
-	 */
-	onButtonDown: (btn: Button, action: () => void) => KEventController;
-	/**
-	 * Register an event that runs once when timer runs out.
-	 */
-	onTimeout: (action: () => void) => KEventController;
-	/**
-	 * Run this when player succeeded in completing the game.
-	 */
-	win: () => void;
-	/**
-	 * Run this when player failed.
-	 */
-	lose: () => void;
-	/**
-	 * Run this when your minigame has 100% finished all win/lose animations etc
-	 */
-	finish: () => void;
-	/**
-	 * The current difficulty of the game
-	 */
-	difficulty: 1 | 2 | 3;
-	/**
-	 * The speed multiplier
-	 */
-	speed: number;
-	/**
-	 * The lives the player has left
-	 */
-	lives: number;
-};
-
-/** The context for the allowed functions in a minigame */
-export type MinigameCtx = Pick<KAPLAYCtx, typeof gameAPIs[number]> & MinigameAPI;
-
-/** The type for a minigame */
-export type Minigame = {
-	/**
-	 * Prompt of the mini game!
-	 */
-	prompt: string;
-	/**
-	 * Name of the author of the game.
-	 */
-	author: string;
-	/**
-	 * Hue of the background color (saturation: 27, lightness: 52)
-	 */
-	hue?: number;
-	/**
-	 * How long the minigame goes for
-	 */
-	duration?: number;
-	/**
-	 * Assets URL prefix.
-	 */
-	urlPrefix?: string;
-	/**
-	 * Load assets.
-	 */
-	load?: (k: LoadCtx) => void;
-	/**
-	 * Main entry of the game code. Should return a game object made by `k.make()` that contains the whole game.
-	 *
-	 * @example
-	 * ```js
-	 * start(ctx) {
-	 * 	const game = ctx.make();
-	 * 	// (Your game code will be here...)
-	 * 	return game;
-	 * }
-	 * ```
-	 */
-	start: (ctx: MinigameCtx) => GameObj;
-};
-
-export type KaplayWareCtx = {
-	/** The KAPLAY context */
-	kCtx: KAPLAYCtx;
-	/** Wheter the input is enabled */
-	inputEnabled: boolean;
-	/** Wheter the current game is paused */
-	gamePaused: boolean;
-	/** The speed of the game */
-	speed: number;
-	/** The difficulty */
-	difficulty: 1 | 2 | 3;
-	/** The time left for a minigame to finish */
-	time: number;
-	/** The current score for the player */
-	score: number;
-	/** The lives left */
-	lives: number;
-	/** The index of the game in the games array */
-	gameIdx: number;
-	/** Transition to the next game */
-	nextGame: () => void;
-	/** Runs when the game changes */
-	onChange: (action: (g: Minigame) => void) => KEventController;
-	/** Returns the current minigame */
-	curGame: () => Minigame;
-	/** Runs a minigame */
-	runGame: (g: Minigame) => { start: () => void; };
-	/** Speeds up the game */
-	speedUp: () => void;
-};
-
 const DEFAULT_DURATION = 4;
 
 export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {}): KaplayWareCtx {
@@ -255,7 +126,10 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 		...opts,
 		width: 800,
 		height: 600,
+		font: "apl386",
 	});
+
+	k.loadFont("apl386", "fonts/apl386.ttf", { outline: { width: 4, color: k.BLACK } });
 
 	k.loadSound("@prepJingle", "sounds/prepJingle.ogg");
 	k.loadSound("@winJingle", "sounds/winJingle.ogg");
@@ -273,7 +147,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 	const coolPrompt = (prompt: string) => prompt.toUpperCase() + (prompt[prompt.length - 1] == "!" ? "" : "!");
 	const getGameID = (g: Minigame) => `${g.author}:${g.prompt}`;
 	const onChangeEvent = new k.KEvent<[Minigame]>();
-	let wonLastGame = false;
+	let wonLastGame: boolean = null;
 
 	// INITIALIZE THE GAME
 	const gameBox = k.add([
@@ -375,8 +249,6 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 			const minigameScene = gameBox.add(g.start({
 				...gameCtx,
 				...gameAPI,
-				width: k.width,
-				height: k.height,
 			} as unknown as MinigameCtx));
 
 			let gameEnabled = false;
@@ -397,32 +269,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 				}
 			});
 
-			function addPrompt() {
-				const promptTitle = k.add([
-					k.color(k.BLACK),
-					k.text(coolPrompt(g.prompt), { align: "center", size: 100 }),
-					k.pos(k.center()),
-					k.anchor("center"),
-					k.scale(),
-					k.opacity(),
-					k.timer(),
-					k.z(101),
-				]);
-
-				promptTitle.fadeIn(1, k.easings.easeOutQuint);
-				promptTitle.tween(k.vec2(1.5), k.vec2(1), 1, (p) => promptTitle.scale = p, k.easings.easeOutQuint).onEnd(() => {
-					promptTitle.fadeOut(0.1).onEnd(() => promptTitle.destroy());
-					gameEnabled = true;
-					wareCtx.gamePaused = false;
-				});
-			}
-
-			return {
-				start() {
-					wareCtx.time = g.duration;
-					addPrompt();
-				},
-			};
+			return minigameScene;
 		},
 		curGame() {
 			return games[wareCtx.gameIdx];
@@ -431,16 +278,26 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 			return k.getTreeRoot().on("change", action);
 		},
 		nextGame() {
-			let transition: ReturnType<typeof winTransition> = null;
-			if (wonLastGame) transition = winTransition(k, wareCtx);
-			else transition = loseTransition(k, wareCtx);
-
-			transition.onEnd(() => {
-				const nextGame = k.choose(games.filter((game) => game != wareCtx.curGame()));
+			function start() {
+				const nextGame = k.choose(games.filter((game) => {
+					if (games.length == 1) return game;
+					else return game != wareCtx.curGame();
+				}));
 				wareCtx.gameIdx = games.indexOf(nextGame);
 				const gameProcess = wareCtx.runGame(nextGame);
-				prepTransition(k, wareCtx).onEnd(() => gameProcess.start());
-			});
+				const prepTrans = prepTransition(k, wareCtx);
+				prepTrans.onHalf(() => addPrompt(k, coolPrompt(nextGame.prompt)));
+				prepTrans.onEnd(() => gameProcess.paused = false);
+			}
+
+			if (wonLastGame != null) {
+				let transition: ReturnType<typeof winTransition> = null;
+				if (wonLastGame) transition = winTransition(k, wareCtx);
+				else transition = loseTransition(k, wareCtx);
+
+				transition.onEnd(() => start());
+			}
+			else start();
 		},
 		speedUp() {
 			this.speed += this.speed * 0.07;

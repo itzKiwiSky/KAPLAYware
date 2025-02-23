@@ -1,5 +1,21 @@
 import { KAPLAYCtx } from "kaplay";
-import { KaplayWareCtx } from "./kaplayware";
+import { KaplayWareCtx } from "./types";
+
+export function addPrompt(k: KAPLAYCtx, prompt: string) {
+	const promptTitle = k.add([
+		k.color(k.WHITE),
+		k.text(prompt, { align: "center", size: 100 }),
+		k.pos(k.center()),
+		k.anchor("center"),
+		k.scale(),
+		k.opacity(),
+		k.timer(),
+		k.z(101),
+	]);
+
+	promptTitle.tween(k.vec2(0), k.vec2(1), 0.25, (p) => promptTitle.scale = p, k.easings.easeOutElastic);
+	return promptTitle;
+}
 
 export function addHearts(k: KAPLAYCtx, lives: number) {
 	const hearts: ReturnType<typeof addHeart>[] = [];
@@ -31,7 +47,7 @@ export function addHearts(k: KAPLAYCtx, lives: number) {
 export function addScoreText(k: KAPLAYCtx, score: number) {
 	return k.add([
 		k.text(score.toString()),
-		k.color(k.BLACK),
+		k.color(k.WHITE),
 		k.anchor("center"),
 		k.scale(4),
 		k.pos(k.center().x, k.center().y - 90),

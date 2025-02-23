@@ -1,6 +1,5 @@
 import { assets } from "@kaplayjs/crew";
-import { Minigame } from "../../../src/kaplayware";
-import kaboomware from "../../../src/oldkaboomware";
+import { Minigame } from "../../../src/types";
 
 const getGame: Minigame = {
 	prompt: "get",

@@ -1,30 +1,52 @@
-import kaplay, { GameObj, KAPLAYCtx } from "kaplay";
-import { KaplayWareCtx } from "./kaplayware";
+import { KAPLAYCtx } from "kaplay";
+import { Conductor } from "./conductor";
 import { addHearts, addScoreText } from "./objects";
+import { KaplayWareCtx } from "./types";
 
 export function prepTransition(k: KAPLAYCtx, ware: KaplayWareCtx) {
 	const sound = k.play("@prepJingle");
+	const conductor = new Conductor(k, sound, 140);
 
 	const bg = k.add([
 		k.rect(k.width(), k.height()),
 		k.color(k.rgb(50, 156, 64)),
 	]);
 
+	conductor.onBeat(() => {
+		bean.tween(k.vec2(2.5), k.vec2(2), 0.15, (p) => bean.scale = p, k.easings.easeOutQuint);
+		hearts.forEach((heart) => {
+			bean.tween(k.vec2(2.5), k.vec2(2), 0.15, (p) => heart.scale = p, k.easings.easeOutQuint);
+		});
+	});
+
 	const scoreText = addScoreText(k, ware.score);
 	const hearts = addHearts(k, ware.lives);
+
 	const bean = k.add([
 		k.sprite("@bean"),
 		k.scale(2),
 		k.anchor("center"),
 		k.pos(k.center()),
+		k.timer(),
 	]);
 
 	return {
+		onHalf: (action: () => void) => {
+			let event = k.onUpdate(() => {
+				if (sound.time() >= sound.duration() / 2 && event) {
+					event.cancel();
+					event = null;
+					action();
+				}
+			});
+		},
+
 		onEnd: (action: () => void) => {
-			sound.onEnd(() => {
+			return sound.onEnd(() => {
 				bg.destroy();
 				scoreText.destroy();
 				bean.destroy();
+				conductor.destroy();
 				hearts.forEach((heart) => heart.destroy());
 				action();
 			});

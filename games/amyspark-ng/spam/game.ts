@@ -1,4 +1,4 @@
-import { Minigame } from "../../../src/kaplayware";
+import { Minigame } from "../../../src/types";
 
 const spamGame: Minigame = {
 	prompt: "spam",
