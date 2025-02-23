@@ -1,5 +1,6 @@
 import { assets } from "@kaplayjs/crew";
 import { Minigame } from "../../../src/kaplayware";
+import kaboomware from "../../../src/oldkaboomware";
 
 const getGame: Minigame = {
 	prompt: "get",
@@ -13,12 +14,13 @@ const getGame: Minigame = {
 	},
 	start(ctx) {
 		const game = ctx.make();
-		const SPEED = 5;
+		const SPEED = 5 * ctx.speed;
 
 		const bean = game.add([
 			ctx.sprite("bean"),
 			ctx.pos(),
 			ctx.area(),
+			ctx.anchor("center"),
 		]);
 
 		const apple = game.add([
@@ -28,12 +30,28 @@ const getGame: Minigame = {
 			"apple",
 		]);
 
-		bean.pos = ctx.vec2(ctx.rand(0, ctx.width()), ctx.rand(0, ctx.height()));
-		apple.pos = ctx.vec2(ctx.rand(0, ctx.width()), ctx.rand(0, ctx.height()));
+		// TODO: Fix this
+		const getBeanPos = () => ctx.vec2(ctx.rand(0, ctx.width() - bean.width), ctx.rand(0, ctx.height() - bean.height));
+		const getApplePos = () => {
+			const randOffset = ctx.difficulty == 1
+				? ctx.vec2(ctx.rand(60, 80), ctx.rand(60, 80))
+				: ctx.difficulty == 2
+				? ctx.vec2(ctx.rand(40, 60), ctx.rand(40, 60))
+				: ctx.difficulty == 3
+				? ctx.vec2(ctx.rand(60, 70), ctx.rand(60, 70))
+				: undefined;
+			return bean.pos.add(randOffset);
+		};
 
-		ctx.onButtonDown("left", () => {
-			bean.pos.x -= SPEED;
+		bean.pos = getBeanPos();
+		apple.pos = getApplePos();
+
+		bean.onUpdate(() => {
+			bean.pos.x = ctx.clamp(bean.pos.x, -bean.width / 2, ctx.width() + bean.width / 2);
+			bean.pos.y = ctx.clamp(bean.pos.y, -bean.height / 2, ctx.height() + bean.height / 2);
 		});
+
+		ctx.onButtonDown("left", () => bean.pos.x -= SPEED);
 
 		ctx.onButtonDown("right", () => {
 			bean.pos.x += SPEED;

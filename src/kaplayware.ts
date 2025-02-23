@@ -1,5 +1,7 @@
 import { assets } from "@kaplayjs/crew";
 import kaplay, { Asset, AudioPlay, GameObj, KAPLAYCtx, KAPLAYOpt, KEventController, SpriteCompOpt, SpriteData } from "kaplay";
+import { addBomb } from "./objects";
+import { loseTransition, prepTransition, winTransition } from "./transitions";
 
 const loadAPIs = [
 	"loadRoot",
@@ -146,10 +148,6 @@ export type MinigameAPI = {
 	 */
 	onTimeout: (action: () => void) => KEventController;
 	/**
-	 * Register an event that runs once when game ends, either succeeded, failed or timed out.
-	 */
-	onEnd: (action: () => void) => KEventController;
-	/**
 	 * Run this when player succeeded in completing the game.
 	 */
 	win: () => void;
@@ -161,6 +159,18 @@ export type MinigameAPI = {
 	 * Run this when your minigame has 100% finished all win/lose animations etc
 	 */
 	finish: () => void;
+	/**
+	 * The current difficulty of the game
+	 */
+	difficulty: 1 | 2 | 3;
+	/**
+	 * The speed multiplier
+	 */
+	speed: number;
+	/**
+	 * The lives the player has left
+	 */
+	lives: number;
 };
 
 /** The context for the allowed functions in a minigame */
@@ -197,27 +207,45 @@ export type Minigame = {
 	 *
 	 * @example
 	 * ```js
+	 * start(ctx) {
+	 * 	const game = ctx.make();
+	 * 	// (Your game code will be here...)
+	 * 	return game;
+	 * }
 	 * ```
 	 */
 	start: (ctx: MinigameCtx) => GameObj;
-	/**
-	 * The id of the minigame (getter).
-	 * Will always return ${author}:${prompt}
-	 */
-	id?: string;
 };
 
 export type KaplayWareCtx = {
+	/** The KAPLAY context */
 	kCtx: KAPLAYCtx;
-	gameInProgress: boolean;
+	/** Wheter the input is enabled */
+	inputEnabled: boolean;
+	/** Wheter the current game is paused */
+	gamePaused: boolean;
+	/** The speed of the game */
+	speed: number;
+	/** The difficulty */
+	difficulty: 1 | 2 | 3;
+	/** The time left for a minigame to finish */
 	time: number;
+	/** The current score for the player */
 	score: number;
+	/** The lives left */
 	lives: number;
-	curMinigameIdx: number;
+	/** The index of the game in the games array */
+	gameIdx: number;
+	/** Transition to the next game */
 	nextGame: () => void;
+	/** Runs when the game changes */
 	onChange: (action: (g: Minigame) => void) => KEventController;
+	/** Returns the current minigame */
 	curGame: () => Minigame;
+	/** Runs a minigame */
 	runGame: (g: Minigame) => { start: () => void; };
+	/** Speeds up the game */
+	speedUp: () => void;
 };
 
 const DEFAULT_DURATION = 4;
@@ -239,186 +267,49 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 	k.loadSprite("@mark", assets.mark.sprite);
 	k.loadSprite("@cloud", assets.cloud.sprite);
 	k.loadSprite("@heart", assets.heart.sprite);
+	k.loadSprite("@bomb", assets.question_mark.sprite);
+	k.loadSprite("@kaboom", assets.kaboom.sprite);
 
-	function coolPrompt(prompt: string) {
-		return prompt.toUpperCase() + (prompt[prompt.length - 1] == "!" ? "" : "!");
-	}
+	const coolPrompt = (prompt: string) => prompt.toUpperCase() + (prompt[prompt.length - 1] == "!" ? "" : "!");
+	const getGameID = (g: Minigame) => `${g.author}:${g.prompt}`;
+	const onChangeEvent = new k.KEvent<[Minigame]>();
+	let wonLastGame = false;
 
-	function addScoreText() {
-		return k.add([
-			k.text(wareCtx.score.toString()),
-			k.color(k.BLACK),
-			k.anchor("center"),
-			k.scale(4),
-			k.pos(k.center().x, k.center().y - 90),
-		]);
-	}
-
-	function addHearts(lives: number) {
-		const hearts: ReturnType<typeof addHeart>[] = [];
-
-		function addHeart() {
-			const heart = k.add([
-				k.sprite("@heart"),
-				k.pos(),
-				k.anchor("center"),
-				k.scale(2),
-				k.rotate(),
-				k.opacity(),
-				k.z(100),
-			]);
-
-			return heart;
-		}
-
-		for (let i = 0; i < lives; i++) {
-			const INITIAL_POS = k.vec2(k.center().x - 100, k.center().y + 100);
-			const heart = addHeart();
-			heart.pos = INITIAL_POS.add(k.vec2((heart.width * i) * 2.5, 0));
-			hearts.push(heart);
-		}
-
-		return hearts;
-	}
-
-	// const transition = k.add();
-	let wonLastGame = true;
-
-	function prepTransition() {
-		const sound = k.play("@prepJingle");
-
-		const bg = k.add([
-			k.rect(k.width(), k.height()),
-			k.color(k.rgb(50, 156, 64)),
-		]);
-
-		const scoreText = addScoreText();
-		const hearts = addHearts(wareCtx.lives);
-		const bean = k.add([
-			k.sprite("@bean"),
-			k.scale(2),
-			k.anchor("center"),
-			k.pos(k.center()),
-		]);
-
-		return {
-			onEnd: (action: () => void) => {
-				sound.onEnd(() => {
-					bg.destroy();
-					scoreText.destroy();
-					bean.destroy();
-					hearts.forEach((heart) => heart.destroy());
-					action();
-				});
-			},
-		};
-	}
-
-	function winTransition() {
-		const sound = k.play("@winJingle");
-
-		const bg = k.add([
-			k.rect(k.width(), k.height()),
-			k.color(k.rgb(77, 255, 100)),
-		]);
-
-		const scoreText = addScoreText();
-		const hearts = addHearts(wareCtx.lives);
-		const bean = k.add([
-			k.sprite("@bean"),
-			k.scale(2),
-			k.anchor("center"),
-			k.pos(k.center()),
-		]);
-
-		return {
-			onEnd: (action: () => void) => {
-				sound.onEnd(() => {
-					bg.destroy();
-					scoreText.destroy();
-					bean.destroy();
-					hearts.forEach((heart) => heart.destroy());
-					action();
-				});
-			},
-		};
-	}
-
-	function loseTransition() {
-		const sound = k.play("@loseJingle");
-
-		const bg = k.add([
-			k.rect(k.width(), k.height()),
-			k.color(k.rgb(57, 81, 150)),
-		]);
-
-		const scoreText = addScoreText();
-		const hearts = addHearts(k.clamp(wareCtx.lives + 1, 0, 4));
-		hearts[hearts.length - 1].fadeOut(0.1);
-		const beant = k.add([
-			k.sprite("@beant"),
-			k.scale(2),
-			k.anchor("center"),
-			k.pos(k.center()),
-		]);
-
-		return {
-			onEnd: (action: () => void) => {
-				sound.onEnd(() => {
-					bg.destroy();
-					scoreText.destroy();
-					beant.destroy();
-					hearts.forEach((heart) => heart.destroy());
-					action();
-				});
-			},
-		};
-	}
-
-	function speedupTransition() {
-		const sound = k.play("@speedJingle");
-		return {
-			onEnd: (action: () => void) => {
-				sound.onEnd(() => {
-					// bg.destroy();
-					// bean.destroy();
-					// hearts.forEach((heart) => heart.destroy());
-					action();
-				});
-			},
-		};
-	}
+	// INITIALIZE THE GAME
+	const gameBox = k.add([
+		k.fixed(),
+		k.pos(),
+		k.timer(),
+		k.stay(["game"]),
+	]);
 
 	const wareCtx: KaplayWareCtx = {
 		kCtx: k,
-		gameInProgress: false,
+		inputEnabled: false,
+		gamePaused: false,
 		time: 0,
 		score: 0,
 		lives: 4,
-		curMinigameIdx: 0,
+		speed: 1,
+		difficulty: 1,
+		gameIdx: 0,
 		runGame(g) {
-			g.id = `${g.author}:${g.prompt}`;
-			onChangeEvent.trigger(g);
+			if (g.prompt.length > 12) throw new Error("Prompt cannot exceed 12 characters!");
 
-			const onEndEvent = new k.KEvent();
+			onChangeEvent.trigger(g);
 			const onTimeoutEvent = new k.KEvent();
 
-			if (g.prompt.length > 12) {
-				throw new Error("Prompt cannot exceed 12 characters!");
-			}
-
-			const ctx = {};
-
+			const gameCtx = {};
 			for (const api of gameAPIs) {
-				ctx[api] = k[api];
+				gameCtx[api] = k[api];
 
 				if (api == "sprite") {
-					ctx[api] = (spr: string | SpriteData | Asset<SpriteData>, opts?: SpriteCompOpt) => {
-						const spriteComp = k.sprite(`${wareCtx.curGame().id}-${spr}`, opts);
+					gameCtx[api] = (spr: string | SpriteData | Asset<SpriteData>, opts?: SpriteCompOpt) => {
+						const spriteComp = k.sprite(`${getGameID(g)}-${spr}`, opts);
 						return {
 							...spriteComp,
 							set sprite(val: string) {
-								spriteComp.sprite = `${wareCtx.curGame().id}-${val}`;
+								spriteComp.sprite = `${getGameID(g)}-${val}`;
 							},
 
 							get sprite() {
@@ -430,9 +321,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 			}
 
 			const input = gameBox.add([]);
-
-			// TODO: custom cam
-			const api: MinigameAPI = {
+			const gameAPI: MinigameAPI = {
 				onButtonPress: (btn, action) => {
 					if (btn === "action") {
 						return k.KEventController.join([
@@ -461,7 +350,6 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 					return input.onKeyDown(btn, action);
 				},
 				onTimeout: (action) => onTimeoutEvent.add(action),
-				onEnd: (action) => onEndEvent.add(action),
 				win: () => {
 					wareCtx.score++;
 					if (wareCtx.time > 0) wareCtx.time = 0;
@@ -473,38 +361,39 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 					wonLastGame = false;
 				},
 				finish: () => {
-					minigameScene.paused = true;
+					wareCtx.gamePaused = true;
 					wareCtx.nextGame();
 				},
+				difficulty: wareCtx.difficulty,
+				lives: wareCtx.lives,
+				speed: wareCtx.speed,
 			};
 
 			gameBox.removeAll();
 			wareCtx.time = g.duration;
-			let minigameScene = g.start({
-				...ctx,
-				...api,
+			wareCtx.gamePaused = true;
+			const minigameScene = gameBox.add(g.start({
+				...gameCtx,
+				...gameAPI,
 				width: k.width,
 				height: k.height,
-			} as unknown as MinigameCtx);
-			minigameScene = gameBox.add(minigameScene);
+			} as unknown as MinigameCtx));
 
-			let timerEnabled = false;
-
+			let gameEnabled = false;
 			const updateEV = k.onUpdate(() => {
 				// this is for pausing the input
-				input.paused = !timerEnabled;
+				input.paused = !gameEnabled;
 
-				// the update for the gameplay
-				if (timerEnabled) {
+				if (gameEnabled) {
 					wareCtx.time -= k.dt();
-					if (wareCtx.time <= g.duration / 4) {
-						// k.debug.log(wareCtx.time);
+					if (wareCtx.time <= 0) {
+						gameEnabled = false;
+						input.paused = true;
+						onTimeoutEvent.trigger();
+						updateEV.cancel();
 					}
 
-					if (wareCtx.time <= 0 && timerEnabled) {
-						timerEnabled = false;
-						onTimeoutEvent.trigger();
-					}
+					if (wareCtx.time <= g.duration / 2 && k.get("bomb").length == 0) addBomb(k, wareCtx);
 				}
 			});
 
@@ -523,39 +412,40 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 				promptTitle.fadeIn(1, k.easings.easeOutQuint);
 				promptTitle.tween(k.vec2(1.5), k.vec2(1), 1, (p) => promptTitle.scale = p, k.easings.easeOutQuint).onEnd(() => {
 					promptTitle.fadeOut(0.1).onEnd(() => promptTitle.destroy());
-					timerEnabled = true;
+					gameEnabled = true;
+					wareCtx.gamePaused = false;
 				});
 			}
 
 			return {
 				start() {
 					wareCtx.time = g.duration;
-					wareCtx.time = 1;
 					addPrompt();
 				},
 			};
 		},
 		curGame() {
-			return games[wareCtx.curMinigameIdx];
+			return games[wareCtx.gameIdx];
 		},
 		onChange(action) {
 			return k.getTreeRoot().on("change", action);
 		},
 		nextGame() {
 			let transition: ReturnType<typeof winTransition> = null;
-			if (wonLastGame) transition = winTransition();
-			else transition = loseTransition();
+			if (wonLastGame) transition = winTransition(k, wareCtx);
+			else transition = loseTransition(k, wareCtx);
 
 			transition.onEnd(() => {
 				const nextGame = k.choose(games.filter((game) => game != wareCtx.curGame()));
-				wareCtx.curMinigameIdx = games.indexOf(nextGame);
+				wareCtx.gameIdx = games.indexOf(nextGame);
 				const gameProcess = wareCtx.runGame(nextGame);
-				prepTransition().onEnd(() => gameProcess.start());
+				prepTransition(k, wareCtx).onEnd(() => gameProcess.start());
 			});
 		},
+		speedUp() {
+			this.speed += this.speed * 0.07;
+		},
 	};
-
-	const onChangeEvent = new k.KEvent<[Minigame]>();
 
 	// # LOADING
 	const loadCtx = {};
@@ -565,7 +455,6 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 	}
 
 	for (const game of games) {
-		game.id = `${game.author}:${game.prompt}`;
 		game.urlPrefix = game.urlPrefix ?? "";
 		game.duration = game.duration ?? DEFAULT_DURATION;
 		game.hue = game.hue ?? 1;
@@ -588,7 +477,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 			for (const loader of loaders) {
 				loadCtx[loader] = (name: string, ...args: any) => {
 					if (typeof name === "string") {
-						name = `${game.id}-${name}`;
+						name = `${getGameID(game)}-${name}`;
 					}
 					return k[loader](name, ...args);
 				};
@@ -610,13 +499,6 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 			loadCtx["loadRoot"] = k.loadRoot;
 		}
 	}
-
-	// INITIALIZE THE GAME
-	const gameBox = k.add([
-		k.fixed(),
-		k.pos(),
-		k.timer(),
-	]);
 
 	gameBox.onDraw(() => {
 		const BG_S = 0.27;

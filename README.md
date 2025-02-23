@@ -4,9 +4,9 @@ yea
 ## How to add game????
 To make a new game do:
 ```sh
-$ npm run create {yourname}:{gamename}
+$ npm run create-game {yourname}:{gamename}
 # for example
-$ npm run create wario:squeeze
+$ npm run create-game wario:squeeze
 ```
 
 When you make it the URLPREFIX for your game will automatically be created from your user folder, so it will look something like this

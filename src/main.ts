@@ -9,11 +9,13 @@ const games = [
 
 const ware = kaplayware(games);
 const k = ware.kCtx;
-ware.runGame(games[0]).start();
 
-// TODO: Move all to a scene so i can make a game over scene
-// k.scene("game", () => {
-// 	ware.runGame(games[0]);
-// });
+k.scene("game", () => {
+	ware.runGame(games[0]).start();
+});
 
-// k.go("game");
+k.scene("gameover", () => {
+	k.debug.log(":(");
+});
+
+k.go("game");
