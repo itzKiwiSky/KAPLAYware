@@ -1,8 +1,8 @@
 import { assets } from "@kaplayjs/crew";
-import kaplay, { Asset, KAPLAYOpt, SpriteCompOpt, SpriteData } from "kaplay";
+import kaplay, { Asset, KAPLAYOpt, Key, SpriteCompOpt, SpriteData } from "kaplay";
 import { addBomb, addPrompt } from "./objects";
 import { loseTransition, prepTransition, winTransition } from "./transitions";
-import { KaplayWareCtx, LoadCtx, Minigame, MinigameAPI, MinigameCtx } from "./types";
+import { Button, KaplayWareCtx, LoadCtx, Minigame, MinigameAPI, MinigameCtx } from "./types";
 
 export const loadAPIs = [
 	"loadRoot",
@@ -113,9 +113,6 @@ export const gameAPIs = [
 	"Mat4",
 	"Quad",
 	"RNG",
-	"wait",
-	"tween",
-	"loop",
 	"burp",
 ] as const;
 
@@ -160,7 +157,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 	const wareCtx: KaplayWareCtx = {
 		kCtx: k,
 		inputEnabled: false,
-		gamePaused: false,
+		gameRunning: false,
 		time: 0,
 		score: 0,
 		lives: 4,
@@ -168,6 +165,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 		difficulty: 1,
 		gameIdx: 0,
 		runGame(g) {
+			// SETUP
 			if (g.prompt.length > 12) throw new Error("Prompt cannot exceed 12 characters!");
 
 			onChangeEvent.trigger(g);
@@ -194,34 +192,46 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 				}
 			}
 
-			const input = gameBox.add([]);
+			// OBJECT STUFF
+			gameBox.removeAll();
+
+			function dirToKeys(button: Button): Key[] {
+				if (button == "left") return ["left", "a"];
+				else if (button == "down") return ["down", "s"];
+				else if (button == "up") return ["up", "w"];
+				else if (button == "right") return ["right", "d"];
+			}
+
 			const gameAPI: MinigameAPI = {
 				onButtonPress: (btn, action) => {
+					const func = () => wareCtx.inputEnabled ? action() : false;
 					if (btn === "action") {
 						return k.KEventController.join([
-							input.onKeyPress("space", action),
-							input.onMousePress("left", action),
+							gameBox.onKeyPress("space", func),
+							gameBox.onMousePress("left", func),
 						]);
 					}
-					return input.onKeyPress(btn, action);
+					else return gameBox.onKeyPress(dirToKeys(btn), func);
 				},
 				onButtonRelease: (btn, action) => {
+					const func = () => wareCtx.inputEnabled ? action() : false;
 					if (btn === "action") {
 						return k.KEventController.join([
-							input.onKeyRelease("space", action),
-							input.onMouseRelease("left", action),
+							gameBox.onKeyRelease("space", func),
+							gameBox.onMouseRelease("left", func),
 						]);
 					}
-					return input.onKeyRelease(btn, action);
+					else return gameBox.onKeyRelease(dirToKeys(btn), func);
 				},
 				onButtonDown: (btn, action) => {
+					const func = () => wareCtx.inputEnabled ? action() : false;
 					if (btn === "action") {
 						return k.KEventController.join([
-							input.onKeyDown("space", action),
-							input.onMouseDown("left", action),
+							gameBox.onKeyDown("space", func),
+							gameBox.onMouseDown("left", func),
 						]);
 					}
-					return input.onKeyDown(btn, action);
+					else return gameBox.onKeyDown(dirToKeys(btn), func);
 				},
 				onTimeout: (action) => onTimeoutEvent.add(action),
 				win: () => {
@@ -234,35 +244,26 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 					if (wareCtx.time > 0) wareCtx.time = 0;
 					wonLastGame = false;
 				},
-				finish: () => {
-					wareCtx.gamePaused = true;
-					wareCtx.nextGame();
-				},
+				finish: () => wareCtx.nextGame(),
 				difficulty: wareCtx.difficulty,
 				lives: wareCtx.lives,
 				speed: wareCtx.speed,
 			};
 
-			gameBox.removeAll();
 			wareCtx.time = g.duration;
-			wareCtx.gamePaused = true;
 			const minigameScene = gameBox.add(g.start({
 				...gameCtx,
 				...gameAPI,
 			} as unknown as MinigameCtx));
 
-			let gameEnabled = false;
-			const updateEV = k.onUpdate(() => {
-				// this is for pausing the input
-				input.paused = !gameEnabled;
-
-				if (gameEnabled) {
+			let clockRunning = true;
+			gameBox.onUpdate(() => {
+				if (clockRunning) {
 					wareCtx.time -= k.dt();
-					if (wareCtx.time <= 0) {
-						gameEnabled = false;
-						input.paused = true;
+					if (wareCtx.time <= 0 && clockRunning) {
+						clockRunning = false;
 						onTimeoutEvent.trigger();
-						updateEV.cancel();
+						wareCtx.inputEnabled = false;
 					}
 
 					if (wareCtx.time <= g.duration / 2 && k.get("bomb").length == 0) addBomb(k, wareCtx);
@@ -284,14 +285,22 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 					else return game != wareCtx.curGame();
 				}));
 				wareCtx.gameIdx = games.indexOf(nextGame);
-				const gameProcess = wareCtx.runGame(nextGame);
+				wareCtx.runGame(nextGame);
+				wareCtx.gameRunning = false;
+				let prompt: ReturnType<typeof addPrompt> = null;
 				const prepTrans = prepTransition(k, wareCtx);
-				prepTrans.onHalf(() => addPrompt(k, coolPrompt(nextGame.prompt)));
-				prepTrans.onEnd(() => gameProcess.paused = false);
+				prepTrans.onHalf(() => prompt = addPrompt(k, coolPrompt(nextGame.prompt)));
+				prepTrans.onEnd(() => {
+					k.wait(0.15, () => {
+						prompt.fadeOut(0.15).onEnd(() => prompt.destroy());
+					});
+					wareCtx.inputEnabled = true;
+					wareCtx.gameRunning = true;
+				});
 			}
 
 			if (wonLastGame != null) {
-				let transition: ReturnType<typeof winTransition> = null;
+				let transition: ReturnType<typeof prepTransition> = null;
 				if (wonLastGame) transition = winTransition(k, wareCtx);
 				else transition = loseTransition(k, wareCtx);
 
@@ -356,6 +365,11 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 			loadCtx["loadRoot"] = k.loadRoot;
 		}
 	}
+
+	const game = k.add([k.stay(["game"])]);
+	game.onUpdate(() => {
+		gameBox.paused = !wareCtx.gameRunning;
+	});
 
 	gameBox.onDraw(() => {
 		const BG_S = 0.27;

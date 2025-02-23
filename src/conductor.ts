@@ -36,7 +36,7 @@ export class Conductor {
 			const oldBeat = Math.floor(currentBeat);
 			currentBeat = Math.floor(beatTime);
 			if (currentBeat != oldBeat) {
-				this.beatHitEv.trigger();
+				this.beatHitEv.trigger(currentBeat);
 			}
 		});
 

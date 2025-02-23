@@ -46,9 +46,15 @@ export function addHearts(k: KAPLAYCtx, lives: number) {
 
 export function addScoreText(k: KAPLAYCtx, score: number) {
 	return k.add([
-		k.text(score.toString()),
+		k.text(`[a]${score.toString()}[/a]`, {
+			styles: {
+				"a": {
+					angle: 0,
+				},
+			},
+		}),
 		k.color(k.WHITE),
-		k.anchor("center"),
+		k.anchor("topleft"),
 		k.scale(4),
 		k.pos(k.center().x, k.center().y - 90),
 	]);

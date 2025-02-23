@@ -12,7 +12,7 @@ const getGame: Minigame = {
 		ctx.loadSprite("apple", assets.apple.sprite);
 	},
 	start(ctx) {
-		const game = ctx.make();
+		const game = ctx.make([ctx.timer()]);
 		const SPEED = 5 * ctx.speed;
 
 		const bean = game.add([
@@ -68,7 +68,7 @@ const getGame: Minigame = {
 			apple.destroy();
 			ctx.win();
 			ctx.burp().onEnd(() => {
-				ctx.wait(0.1, () => {
+				game.wait(0.1, () => {
 					ctx.finish();
 				});
 			});
@@ -78,7 +78,7 @@ const getGame: Minigame = {
 			if (apple.exists()) {
 				bean.sprite = "beant";
 				ctx.lose();
-				ctx.wait(0.5, () => ctx.finish());
+				game.wait(0.5, () => ctx.finish());
 			}
 		});
 

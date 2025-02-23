@@ -1,4 +1,4 @@
-import { GameObj, KAPLAYCtx, KEventController } from "kaplay";
+import { GameObj, KAPLAYCtx, KEventController, TimerComp } from "kaplay";
 import { gameAPIs, loadAPIs } from "./kaplayware";
 
 /** A button */
@@ -97,16 +97,16 @@ export type Minigame = {
 	 * }
 	 * ```
 	 */
-	start: (ctx: MinigameCtx) => GameObj;
+	start: (ctx: MinigameCtx) => GameObj<TimerComp>;
 };
 
 export type KaplayWareCtx = {
 	/** The KAPLAY context */
 	kCtx: KAPLAYCtx;
-	/** Wheter the input is enabled */
+
 	inputEnabled: boolean;
-	/** Wheter the current game is paused */
-	gamePaused: boolean;
+	/** Wheter the current game is running */
+	gameRunning: boolean;
 	/** The speed of the game */
 	speed: number;
 	/** The difficulty */
@@ -126,7 +126,7 @@ export type KaplayWareCtx = {
 	/** Returns the current minigame */
 	curGame: () => Minigame;
 	/** Runs a minigame */
-	runGame: (g: Minigame) => GameObj;
+	runGame: (g: Minigame) => GameObj<TimerComp>;
 	/** Speeds up the game */
 	speedUp: () => void;
 };

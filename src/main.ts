@@ -1,7 +1,6 @@
 import getGame from "../games/amyspark-ng/get/game";
 import spamGame from "../games/amyspark-ng/spam/game";
 import kaplayware from "./kaplayware";
-import { prepTransition } from "./transitions";
 
 const games = [
 	getGame,
@@ -19,6 +18,8 @@ k.scene("focus", () => {
 		k.pos(k.center()),
 		k.anchor("center"),
 	]);
+
+	k.onClick(() => k.go("game"));
 });
 
 k.scene("game", () => {
