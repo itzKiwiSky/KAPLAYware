@@ -17,6 +17,7 @@ import { AudioPlay, GameObj, KAPLAYCtx, KEvent } from "kaplay";
 export class Conductor {
 	private obj: GameObj;
 	private beatHitEv: KEvent;
+	private bpm: number;
 	onBeat(action: (beat: number) => void) {
 		return this.beatHitEv.add(action);
 	}
@@ -30,9 +31,10 @@ export class Conductor {
 	constructor(k: KAPLAYCtx | GameObj, sound: AudioPlay, bpm: number) {
 		this.beatHitEv = new k.KEvent();
 		this.obj = k.add([]);
+		this.bpm = bpm;
 		let currentBeat = 0;
 		this.obj.onUpdate(() => {
-			const beatTime = sound.time() / (60 / bpm);
+			const beatTime = sound.time() / (60 / this.bpm);
 			const oldBeat = Math.floor(currentBeat);
 			currentBeat = Math.floor(beatTime);
 			if (currentBeat != oldBeat) {

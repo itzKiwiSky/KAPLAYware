@@ -115,10 +115,14 @@ export type KaplayWareCtx = {
 	time: number;
 	/** The current score for the player */
 	score: number;
+	/** The amount of games played counting loses */
+	gamesPlayed: number;
 	/** The lives left */
 	lives: number;
 	/** The index of the game in the games array */
 	gameIdx: number;
+	/** The amount of times the game has sped up */
+	timesSpeed: number;
 	/** Transition to the next game */
 	nextGame: () => void;
 	/** Runs when the game changes */

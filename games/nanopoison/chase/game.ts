@@ -107,7 +107,6 @@ const newGame: Minigame = {
 				if (!this.isCellInBounds(c, r)) {
 					return true;
 				}
-				console.log(`${r}, ${c}`);
 				return this.grid[r][c] != null;
 			}
 		}

@@ -53,15 +53,15 @@ const getGame: Minigame = {
 		ctx.onButtonDown("left", () => bean.pos.x -= SPEED);
 
 		ctx.onButtonDown("right", () => {
-			bean.pos.x += SPEED;
+			bean.pos.x += SPEED * ctx.speed;
 		});
 
 		ctx.onButtonDown("down", () => {
-			bean.pos.y += SPEED;
+			bean.pos.y += SPEED * ctx.speed;
 		});
 
 		ctx.onButtonDown("up", () => {
-			bean.pos.y -= SPEED;
+			bean.pos.y -= SPEED * ctx.speed;
 		});
 
 		bean.onCollide("apple", () => {

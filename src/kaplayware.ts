@@ -1,7 +1,7 @@
 import { assets } from "@kaplayjs/crew";
 import kaplay, { Asset, KAPLAYOpt, Key, SpriteCompOpt, SpriteData } from "kaplay";
 import { addBomb, addPrompt } from "./objects";
-import { loseTransition, prepTransition, winTransition } from "./transitions";
+import { loseTransition, prepTransition, speedupTransition, winTransition } from "./transitions";
 import { Button, KaplayWareCtx, LoadCtx, Minigame, MinigameAPI, MinigameCtx } from "./types";
 
 export const loadAPIs = [
@@ -139,7 +139,9 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 	k.loadSprite("@cloud", assets.cloud.sprite);
 	k.loadSprite("@heart", assets.heart.sprite);
 	k.loadSprite("@bomb", assets.question_mark.sprite);
-	k.loadSprite("@kaboom", assets.kaboom.sprite);
+	k.loadSprite("@sun", assets.sun.sprite);
+	k.loadSprite("@cloud", assets.cloud.sprite);
+	k.loadSprite("@grass_tile", "sprites/grass.png");
 
 	const coolPrompt = (prompt: string) => prompt.toUpperCase() + (prompt[prompt.length - 1] == "!" ? "" : "!");
 	const getGameID = (g: Minigame) => `${g.author}:${g.prompt}`;
@@ -159,11 +161,13 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 		inputEnabled: false,
 		gameRunning: false,
 		time: 0,
-		score: 0,
+		score: 1,
 		lives: 4,
 		speed: 1,
 		difficulty: 1,
 		gameIdx: 0,
+		timesSpeed: 0,
+		gamesPlayed: 0,
 		runGame(g) {
 			// SETUP
 			if (g.prompt.length > 12) throw new Error("Prompt cannot exceed 12 characters!");
@@ -250,11 +254,14 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 				speed: wareCtx.speed,
 			};
 
-			wareCtx.time = g.duration;
+			wareCtx.time = g.duration / wareCtx.speed;
 			const minigameScene = gameBox.add(g.start({
 				...gameCtx,
 				...gameAPI,
 			} as unknown as MinigameCtx));
+
+			minigameScene.onUpdate(() => {
+			});
 
 			let clockRunning = true;
 			gameBox.onUpdate(() => {
@@ -279,7 +286,12 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 			return k.getTreeRoot().on("change", action);
 		},
 		nextGame() {
-			function start() {
+			wareCtx.gamesPlayed++;
+			if (wareCtx.gamesPlayed >= 10) wareCtx.difficulty = 2;
+			else if (wareCtx.gamesPlayed >= 15) wareCtx.difficulty = 3;
+			else wareCtx.difficulty = 1;
+
+			function prep() {
 				const nextGame = k.choose(games.filter((game) => {
 					if (games.length == 1) return game;
 					else return game != wareCtx.curGame();
@@ -288,11 +300,12 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 				wareCtx.runGame(nextGame);
 				wareCtx.gameRunning = false;
 				let prompt: ReturnType<typeof addPrompt> = null;
+
 				const prepTrans = prepTransition(k, wareCtx);
 				prepTrans.onHalf(() => prompt = addPrompt(k, coolPrompt(nextGame.prompt)));
 				prepTrans.onEnd(() => {
-					k.wait(0.15, () => {
-						prompt.fadeOut(0.15).onEnd(() => prompt.destroy());
+					k.wait(0.15 / wareCtx.speed, () => {
+						prompt.fadeOut(0.15 / wareCtx.speed).onEnd(() => prompt.destroy());
 					});
 					wareCtx.inputEnabled = true;
 					wareCtx.gameRunning = true;
@@ -304,9 +317,19 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 				if (wonLastGame) transition = winTransition(k, wareCtx);
 				else transition = loseTransition(k, wareCtx);
 
-				transition.onEnd(() => start());
+				transition.onEnd(() => {
+					const timeToSpeedUP = wareCtx.gamesPlayed % 5 == 0;
+					if (timeToSpeedUP) {
+						wareCtx.timesSpeed++;
+						speedupTransition(k, wareCtx).onEnd(() => {
+							prep();
+						});
+						wareCtx.speedUp();
+					}
+					else prep();
+				});
 			}
-			else start();
+			else prep();
 		},
 		speedUp() {
 			this.speed += this.speed * 0.07;
