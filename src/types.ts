@@ -1,4 +1,4 @@
-import { GameObj, KAPLAYCtx, KEventController, TimerComp } from "kaplay";
+import { GameObj, KAPLAYCtx, KEvent, KEventController, TimerComp } from "kaplay";
 import { gameAPIs, loadAPIs } from "./kaplayware";
 
 /** A button */
@@ -26,6 +26,11 @@ export type MinigameAPI = {
 	 * Register an event that runs every frame when a button is held down.
 	 */
 	onButtonDown: (btn: Button, action: () => void) => KEventController;
+	onClickPress: (action: () => void) => KEventController;
+	/**
+	 *  Wheter to hide the cursor, you can hide it and then make an object which would serve as a custom cursor for your game
+	 */
+	hideCursor: () => void;
 	/**
 	 * Register an event that runs once when timer runs out.
 	 */

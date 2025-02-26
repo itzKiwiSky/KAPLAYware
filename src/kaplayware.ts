@@ -1,5 +1,5 @@
 import { assets } from "@kaplayjs/crew";
-import kaplay, { Asset, Color, KAPLAYOpt, Key, SpriteCompOpt, SpriteData } from "kaplay";
+import kaplay, { AreaComp, Asset, Color, GameObj, KAPLAYOpt, KEventController, Key, SpriteCompOpt, SpriteData } from "kaplay";
 import { addBomb, addPrompt } from "./objects";
 import { loseTransition, prepTransition, speedupTransition, winTransition } from "./transitions";
 import { Button, KaplayWareCtx, LoadCtx, Minigame, MinigameAPI, MinigameCtx } from "./types";
@@ -154,6 +154,32 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 	k.loadSprite("@cloud", assets.cloud.sprite);
 	k.loadSprite("@grass_tile", "sprites/grass.png");
 	k.loadSprite("@trophy", "sprites/trophy.png");
+	k.loadSpriteAtlas("sprites/cursor.png", {
+		"@cursor": {
+			width: 28,
+			height: 32,
+			x: 0,
+			y: 0,
+		},
+		"@cursor_point": {
+			width: 28,
+			height: 32,
+			x: 28,
+			y: 0,
+		},
+		"@cursor_like": {
+			width: 28,
+			height: 32,
+			x: 28 * 2,
+			y: 0,
+		},
+		"@cursor_knock": {
+			width: 28,
+			height: 32,
+			x: 28 * 3,
+			y: 0,
+		},
+	});
 
 	// friends for speed up
 	friends.forEach((friend) => {
@@ -165,6 +191,8 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 	const onChangeEvent = new k.KEvent<[Minigame]>();
 	let wonLastGame: boolean = null;
 
+	k.setCursor("none");
+
 	// INITIALIZE THE GAME
 	const gameBox = k.add([
 		k.fixed(),
@@ -172,6 +200,32 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 		k.timer(),
 		k.stay(["game"]),
 	]);
+
+	const cursor = k.add([
+		k.sprite("@cursor"),
+		k.pos(),
+		k.anchor("topleft"),
+		k.stay(["game"]),
+		k.scale(2),
+		k.z(999),
+	]);
+
+	cursor.onUpdate(() => {
+		if (cursor.hidden) return;
+		if (!cursor.hidden && wonLastGame == true) {
+			cursor.sprite = "@cursor_like";
+			return;
+		}
+
+		const hovered = gameBox.get("area", { recursive: true }).filter((obj) => obj.isHovering() && !gameBox.paused).length > 0;
+		if (k.isMouseDown("left")) cursor.sprite = "@cursor_knock";
+		if (hovered && !k.isMouseDown("left")) cursor.sprite = "@cursor_point";
+		else if (!hovered && !k.isMouseDown("left")) cursor.sprite = "@cursor";
+	});
+
+	cursor.onMouseMove(() => {
+		cursor.pos = k.mousePos();
+	});
 
 	const wareCtx: KaplayWareCtx = {
 		kCtx: k,
@@ -223,46 +277,44 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 				}
 			}
 
+			// TODO: CUSTOM CURSOR HIDDEN API i hate this....
+
 			// OBJECT STUFF
 			gameBox.removeAll();
+			const inputEvents: KEventController[] = [];
 
 			function dirToKeys(button: Button): Key[] {
 				if (button == "left") return ["left", "a"];
 				else if (button == "down") return ["down", "s"];
 				else if (button == "up") return ["up", "w"];
 				else if (button == "right") return ["right", "d"];
+				else if (button == "action") return ["space"];
 			}
 
 			const gameAPI: MinigameAPI = {
 				onButtonPress: (btn, action) => {
 					const func = () => wareCtx.inputEnabled ? action() : false;
-					if (btn === "action") {
-						return k.KEventController.join([
-							gameBox.onKeyPress("space", func),
-							gameBox.onMousePress("left", func),
-						]);
-					}
-					else return gameBox.onKeyPress(dirToKeys(btn), func);
+					const ev = gameBox.onKeyPress(dirToKeys(btn), func);
+					inputEvents.push(ev);
+					return ev;
 				},
 				onButtonRelease: (btn, action) => {
 					const func = () => wareCtx.inputEnabled ? action() : false;
-					if (btn === "action") {
-						return k.KEventController.join([
-							gameBox.onKeyRelease("space", func),
-							gameBox.onMouseRelease("left", func),
-						]);
-					}
-					else return gameBox.onKeyRelease(dirToKeys(btn), func);
+					const ev = gameBox.onKeyRelease(dirToKeys(btn), func);
+					inputEvents.push(ev);
+					return ev;
 				},
 				onButtonDown: (btn, action) => {
 					const func = () => wareCtx.inputEnabled ? action() : false;
-					if (btn === "action") {
-						return k.KEventController.join([
-							gameBox.onKeyDown("space", func),
-							gameBox.onMouseDown("left", func),
-						]);
-					}
-					else return gameBox.onKeyDown(dirToKeys(btn), func);
+					const ev = gameBox.onKeyDown(dirToKeys(btn), func);
+					inputEvents.push(ev);
+					return ev;
+				},
+				onClickPress: (action) => {
+					const func = () => wareCtx.inputEnabled ? action() : false;
+					const ev = gameBox.onMousePress("left", func);
+					inputEvents.push(ev);
+					return ev;
 				},
 				onTimeout: (action) => onTimeoutEvent.add(action),
 				win: () => {
@@ -275,7 +327,14 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 					if (wareCtx.time > 0) wareCtx.time = 0;
 					wonLastGame = false;
 				},
-				finish: () => wareCtx.nextGame(),
+				hideCursor() {
+					cursor.hidden = true;
+				},
+				finish: () => {
+					minigameScene.clearEvents();
+					wareCtx.nextGame();
+					inputEvents.forEach((ev) => ev.cancel());
+				},
 				difficulty: wareCtx.difficulty,
 				lives: wareCtx.lives,
 				speed: wareCtx.speed,
@@ -334,12 +393,15 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 					wareCtx.inputEnabled = true;
 					wareCtx.gameRunning = true;
 				});
+
+				cursor.hidden = !nextGame.usesMouse;
 			}
 
 			if (wonLastGame != null) {
 				let transition: ReturnType<typeof prepTransition> = null;
 				if (wonLastGame) transition = winTransition(k, wareCtx);
 				else transition = loseTransition(k, wareCtx);
+				wonLastGame = null;
 
 				transition.onEnd(() => {
 					if (!wonLastGame && wareCtx.lives == 0) {

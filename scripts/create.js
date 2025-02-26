@@ -14,7 +14,7 @@ const assets_dir = `${author_dir}/assets`;
 
 const template = `
 import { assets } from "@kaplayjs/crew";
-import { Minigame } from "../../../src/kaplayware";
+import { Minigame } from "../../../src/types.ts";
 
 const newGame: Minigame = {
 	prompt: "${game}",

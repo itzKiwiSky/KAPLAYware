@@ -1,4 +1,5 @@
 import getGame from "../games/amyspark-ng/get/game";
+import knockGame from "../games/amyspark-ng/knock/game";
 import spamGame from "../games/amyspark-ng/spam/game";
 import chaseGame from "../games/nanopoison/chase/game";
 import kaplayware from "./kaplayware";
@@ -7,6 +8,7 @@ const games = [
 	getGame,
 	spamGame,
 	chaseGame,
+	knockGame,
 ];
 
 const ware = kaplayware(games);
