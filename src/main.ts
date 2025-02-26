@@ -36,6 +36,8 @@ k.scene("gameover", () => {
 		k.pos(k.center()),
 		k.anchor("center"),
 	]);
+
+	k.onClick(() => k.go("game"));
 });
 
 k.onLoad(() => {

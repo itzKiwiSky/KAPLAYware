@@ -116,7 +116,18 @@ export const gameAPIs = [
 	"burp",
 ] as const;
 
+export const friends = [
+	"bobo",
+	"bag",
+	"ghosty",
+	"goldfly",
+	"marroc",
+	"tga",
+	"gigagantrum",
+];
+
 const DEFAULT_DURATION = 4;
+const FORCE_SPEED_ON_GAME = true;
 
 export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {}): KaplayWareCtx {
 	const k = kaplay({
@@ -142,6 +153,12 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 	k.loadSprite("@sun", assets.sun.sprite);
 	k.loadSprite("@cloud", assets.cloud.sprite);
 	k.loadSprite("@grass_tile", "sprites/grass.png");
+	k.loadSprite("@trophy", "sprites/trophy.png");
+
+	// friends for speed up
+	friends.forEach((friend) => {
+		k.loadSprite(`@${friend}`, assets[friend].sprite);
+	});
 
 	const coolPrompt = (prompt: string) => prompt.toUpperCase() + (prompt[prompt.length - 1] == "!" ? "" : "!");
 	const getGameID = (g: Minigame) => `${g.author}:${g.prompt}`;
@@ -260,9 +277,6 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 				...gameAPI,
 			} as unknown as MinigameCtx));
 
-			minigameScene.onUpdate(() => {
-			});
-
 			let clockRunning = true;
 			gameBox.onUpdate(() => {
 				if (clockRunning) {
@@ -318,10 +332,16 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 				else transition = loseTransition(k, wareCtx);
 
 				transition.onEnd(() => {
-					const timeToSpeedUP = wareCtx.gamesPlayed % 5 == 0;
+					if (!wonLastGame && wareCtx.lives == 0) {
+						k.go("gameover");
+						return;
+					}
+
+					const timeToSpeedUP = FORCE_SPEED_ON_GAME || wareCtx.gamesPlayed % 5 == 0;
 					if (timeToSpeedUP) {
 						wareCtx.timesSpeed++;
 						speedupTransition(k, wareCtx).onEnd(() => {
+							k.tween(k.getCamPos(), k.center(), 0.15, (p) => k.setCamPos(p), k.easings.easeOutExpo);
 							prep();
 						});
 						wareCtx.speedUp();
