@@ -4,7 +4,7 @@ import { Minigame } from "../../../src/types";
 const newGame: Minigame = {
 	prompt: "chase",
 	author: "nanopoison",
-	hue: 1,
+	rgb: [133, 97, 97],
 	duration: 4,
 	urlPrefix: "games/nanopoison/assets",
 	load(ctx) {

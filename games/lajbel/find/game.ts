@@ -4,7 +4,7 @@ import { Minigame } from "../../../src/types.ts";
 const newGame: Minigame = {
 	prompt: "find",
 	author: "lajbel",
-	hue: 1,
+	rgb: [1, 1, 1],
 	urlPrefix: "games/lajbel/assets",
 	load(ctx) {
 		ctx.loadSprite("bean", assets.bean.sprite);

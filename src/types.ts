@@ -61,28 +61,29 @@ export type MinigameCtx = Pick<KAPLAYCtx, typeof gameAPIs[number]> & MinigameAPI
 
 /** The type for a minigame */
 export type Minigame = {
-	/**
-	 * Prompt of the mini game!
-	 */
+	/** Prompt of the mini game! */
 	prompt: string;
-	/**
-	 * Name of the author of the game.
-	 */
+	/** The author of the game */
 	author: string;
-	/**
-	 * Hue of the background color (saturation: 27, lightness: 52)
-	 */
-	hue?: number;
-	/**
-	 * How long the minigame goes for
-	 */
+	/** The RGB code for the game's backgroun */
+	rgb?: [number, number, number];
+	/** Wheter the games makes use or the mouse, if false only keyboard */
+	usesMouse?: boolean;
+	/** How long the minigames goes for (choose a reasonable number) */
 	duration?: number;
 	/**
 	 * Assets URL prefix.
 	 */
 	urlPrefix?: string;
 	/**
-	 * Load assets.
+	 * The function that loads the game's custom assets
+	 *
+	 * @example
+	 * ```js
+	 * load(ctx) {
+	 * 	ctx.loadSprite("bean", "sprites/bean.png")
+	 * }
+	 * ```
 	 */
 	load?: (k: LoadCtx) => void;
 	/**
@@ -103,7 +104,7 @@ export type Minigame = {
 export type KaplayWareCtx = {
 	/** The KAPLAY context */
 	kCtx: KAPLAYCtx;
-
+	/** Wheter input is enabled */
 	inputEnabled: boolean;
 	/** Wheter the current game is running */
 	gameRunning: boolean;
@@ -123,6 +124,8 @@ export type KaplayWareCtx = {
 	gameIdx: number;
 	/** The amount of times the game has sped up */
 	timesSpeed: number;
+	/** Resets the ware to initial state */
+	reset: () => void;
 	/** Transition to the next game */
 	nextGame: () => void;
 	/** Runs when the game changes */

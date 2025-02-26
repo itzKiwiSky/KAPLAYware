@@ -3,7 +3,7 @@ import { Minigame } from "../../../src/types";
 const spamGame: Minigame = {
 	prompt: "spam",
 	author: "amyspark-ng",
-	hue: 4,
+	rgb: [26, 26, 26],
 	duration: 6,
 	urlPrefix: "/games/amyspark-ng/assets",
 	load(ctx) {
@@ -16,7 +16,7 @@ const spamGame: Minigame = {
 
 		const scoreText = game.add([
 			ctx.text("0"),
-			ctx.color(ctx.rgb(0, 0, 0)),
+			ctx.color(ctx.rgb(255, 255, 255)),
 			ctx.pos(ctx.center().x, 60),
 			ctx.anchor("center"),
 			ctx.scale(1),

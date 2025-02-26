@@ -4,7 +4,7 @@ import { Minigame } from "../../../src/types";
 const getGame: Minigame = {
 	prompt: "get",
 	author: "amyspark-ng",
-	hue: 1,
+	rgb: [133, 97, 97],
 	urlPrefix: "",
 	load(ctx) {
 		ctx.loadSprite("bean", assets.bean.sprite);

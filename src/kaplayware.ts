@@ -1,5 +1,5 @@
 import { assets } from "@kaplayjs/crew";
-import kaplay, { Asset, KAPLAYOpt, Key, SpriteCompOpt, SpriteData } from "kaplay";
+import kaplay, { Asset, Color, KAPLAYOpt, Key, SpriteCompOpt, SpriteData } from "kaplay";
 import { addBomb, addPrompt } from "./objects";
 import { loseTransition, prepTransition, speedupTransition, winTransition } from "./transitions";
 import { Button, KaplayWareCtx, LoadCtx, Minigame, MinigameAPI, MinigameCtx } from "./types";
@@ -127,7 +127,7 @@ export const friends = [
 ];
 
 const DEFAULT_DURATION = 4;
-const FORCE_SPEED_ON_GAME = true;
+const FORCE_SPEED_ON_GAME = false;
 
 export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {}): KaplayWareCtx {
 	const k = kaplay({
@@ -185,6 +185,16 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 		gameIdx: 0,
 		timesSpeed: 0,
 		gamesPlayed: 0,
+		reset() {
+			this.lives = 4;
+			this.score = 1;
+			this.speed = 1;
+			this.difficulty = 1;
+			this.timesSpeed = 0;
+			this.gamesPlayed = 0;
+			wonLastGame = null;
+		},
+
 		runGame(g) {
 			// SETUP
 			if (g.prompt.length > 12) throw new Error("Prompt cannot exceed 12 characters!");
@@ -301,9 +311,9 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 		},
 		nextGame() {
 			wareCtx.gamesPlayed++;
-			if (wareCtx.gamesPlayed >= 10) wareCtx.difficulty = 2;
-			else if (wareCtx.gamesPlayed >= 15) wareCtx.difficulty = 3;
-			else wareCtx.difficulty = 1;
+			if (wareCtx.gamesPlayed < 10) wareCtx.difficulty = 1;
+			else if (wareCtx.gamesPlayed >= 10) wareCtx.difficulty = 2;
+			else if (wareCtx.gamesPlayed >= 20) wareCtx.difficulty = 3;
 
 			function prep() {
 				const nextGame = k.choose(games.filter((game) => {
@@ -341,7 +351,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 					if (timeToSpeedUP) {
 						wareCtx.timesSpeed++;
 						speedupTransition(k, wareCtx).onEnd(() => {
-							k.tween(k.getCamPos(), k.center(), 0.15, (p) => k.setCamPos(p), k.easings.easeOutExpo);
+							k.tween(k.getCamPos(), k.center(), 0.5 / wareCtx.speed, (p) => k.setCamPos(p), k.easings.easeOutQuint);
 							prep();
 						});
 						wareCtx.speedUp();
@@ -366,7 +376,8 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 	for (const game of games) {
 		game.urlPrefix = game.urlPrefix ?? "";
 		game.duration = game.duration ?? DEFAULT_DURATION;
-		game.hue = game.hue ?? 1;
+		game.rgb = game.rgb ?? [0, 0, 0];
+		game.usesMouse = game.usesMouse ?? false;
 
 		if (game.load) {
 			// patch loadXXX() functions to scoped asset names
@@ -418,8 +429,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 		const BG_S = 0.27;
 		const BG_L = 0.52;
 
-		const bgColor = k.hsl2rgb(wareCtx.curGame().hue, BG_S, BG_L);
-
+		const bgColor = k.rgb(wareCtx.curGame().rgb[0], wareCtx.curGame().rgb[1], wareCtx.curGame().rgb[2]);
 		k.drawRect({
 			width: k.width(),
 			height: k.height(),

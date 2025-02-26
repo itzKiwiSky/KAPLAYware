@@ -19,7 +19,7 @@ import { Minigame } from "../../../src/kaplayware";
 const newGame: Minigame = {
 	prompt: "${game}",
 	author: "${author}",
-	hue: 1,
+	rgb: [0, 0, 0],
 	urlPrefix: "${assets_dir}",
 	load(ctx) {
 		ctx.loadSprite("bean", assets.bean.sprite);

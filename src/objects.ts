@@ -1,7 +1,7 @@
-import { Color, GameObj, KAPLAYCtx, Vec2 } from "kaplay";
+import { Color, GameObj, KAPLAYCtx, Mat4, Vec2 } from "kaplay";
 import { KaplayWareCtx } from "./types";
 
-export function addPrompt(k: KAPLAYCtx, prompt: string) {
+export function addPrompt(k: KAPLAYCtx, prompt: string, time: number = 0.25, wobbleLetters: boolean = true) {
 	const promptTitle = k.add([
 		k.color(k.WHITE),
 		k.fixed(),
@@ -22,12 +22,38 @@ export function addPrompt(k: KAPLAYCtx, prompt: string) {
 		k.z(101),
 	]);
 
-	for (let i = 0; i < prompt.length; i++) {
-		// @ts-ignore
-		// promptTitle.tween(-5, 0, 0.05 * i, (p) => promptTitle.textStyles["a"].pos.y = p, k.easings.easeOutElastic);
-	}
-	promptTitle.tween(k.vec2(0), k.vec2(1), 0.25, (p) => promptTitle.scale = p, k.easings.easeOutElastic);
+	promptTitle.tween(0, 1.2, time, (p) => promptTitle.scale.x = p, k.easings.easeOutExpo);
+	promptTitle.tween(0, 0.9, time, (p) => promptTitle.scale.y = p, k.easings.easeOutExpo).onEnd(() => {
+		promptTitle.tween(promptTitle.scale, k.vec2(1), time * 1.1, (p) => promptTitle.scale = p, k.easings.easeOutElastic).onEnd(() => {
+			// now do the shaky letters
+			if (wobbleLetters == false) return;
+
+			let magnitude = 0;
+			let angle = 0;
+			promptTitle.onUpdate(() => {
+				magnitude = k.lerp(magnitude, k.randi(2, 8), 0.1);
+				angle = k.lerp(angle, angle + 1, 0.1) % 360;
+				promptTitle.textTransform = (idx, ch) => ({
+					pos: k.vec2(magnitude * Math.cos(angle * idx + 1), magnitude * Math.sin(angle * idx + 1)),
+				});
+			});
+		});
+	});
 	return promptTitle;
+}
+
+export function makeHearts(k: KAPLAYCtx, parent: GameObj | KAPLAYCtx, amount: number) {
+	const hearts: ReturnType<typeof makeHeart>[] = [];
+	for (let i = 0; i < amount; i++) {
+		const heart = parent.add(makeHeart(k));
+		heart.scale = k.vec2(2);
+		const HEART_WIDTH = heart.width * heart.scale.x * 1.1;
+		const INITIAL_POS = k.vec2(k.center().x - HEART_WIDTH * 1.5, 0);
+		heart.pos = INITIAL_POS.add(k.vec2(HEART_WIDTH * i, heart.height * 2));
+		hearts.push(heart);
+	}
+
+	return hearts;
 }
 
 export function makeHeart(k: KAPLAYCtx) {
@@ -55,17 +81,12 @@ export function makeHeart(k: KAPLAYCtx) {
 
 export function makeScoreText(k: KAPLAYCtx, score: number) {
 	return k.make([
-		k.text(`[a]${score.toString()}[/a]`, {
-			styles: {
-				"a": {
-					angle: 0,
-				},
-			},
-		}),
+		k.text(`${score.toString()}`, { align: "left" }),
 		k.color(k.WHITE),
-		k.anchor("topleft"),
+		k.anchor("center"),
 		k.scale(4),
-		k.pos(k.center().x, k.center().y - 90),
+		k.rotate(0),
+		k.pos(k.center().x, k.center().y - 150),
 		k.timer(),
 	]);
 }

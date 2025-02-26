@@ -25,6 +25,7 @@ k.scene("focus", () => {
 });
 
 k.scene("game", () => {
+	ware.reset();
 	ware.nextGame();
 });
 

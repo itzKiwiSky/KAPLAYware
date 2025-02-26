@@ -9,7 +9,7 @@ $ npm run create-game {yourname}:{gamename}
 $ npm run create-game wario:squeeze
 ```
 
-When you make it the URLPREFIX for your game will automatically be created from your user folder, so it will look something like this
+When you make it the urlPrefix for your game will automatically be created from your user folder, so it will look something like this
 `games/wario/assets`
 
 Then you can reference this folder in your games like
