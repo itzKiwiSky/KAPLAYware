@@ -1,6 +1,7 @@
 import { assets } from "@kaplayjs/crew";
 import kaplay, { AreaComp, Asset, Color, GameObj, KAPLAYOpt, KEventController, Key, SpriteCompOpt, SpriteData } from "kaplay";
 import { addBomb, addPrompt } from "./objects";
+import { overload2 } from "./overload";
 import { loseTransition, prepTransition, speedupTransition, winTransition } from "./transitions";
 import { Button, KaplayWareCtx, LoadCtx, Minigame, MinigameAPI, MinigameCtx } from "./types";
 
@@ -114,6 +115,11 @@ export const gameAPIs = [
 	"Quad",
 	"RNG",
 	"burp",
+	"onClick",
+	"loop",
+	"wait",
+	"tween",
+	"addLevel",
 ] as const;
 
 export const friends = [
@@ -144,17 +150,21 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 	k.loadSound("@winJingle", "sounds/winJingle.ogg");
 	k.loadSound("@loseJingle", "sounds/loseJingle.ogg");
 	k.loadSound("@speedJingle", "sounds/speedJingle.ogg");
+	k.loadSound("@tick", "sounds/bombtick.mp3");
+	k.loadSound("@explosion", "sounds/explosion.mp3");
 
 	k.loadSprite("@bean", assets.bean.sprite);
 	k.loadSprite("@beant", assets.beant.sprite);
 	k.loadSprite("@mark", assets.mark.sprite);
 	k.loadSprite("@cloud", assets.cloud.sprite);
 	k.loadSprite("@heart", assets.heart.sprite);
-	k.loadSprite("@bomb", assets.question_mark.sprite);
 	k.loadSprite("@sun", assets.sun.sprite);
 	k.loadSprite("@cloud", assets.cloud.sprite);
 	k.loadSprite("@grass_tile", "sprites/grass.png");
 	k.loadSprite("@trophy", "sprites/trophy.png");
+	k.loadSprite("@bomb", "sprites/bomb.png");
+	k.loadSprite("@bomb_wire", "sprites/wire.png");
+	k.loadSprite("@bomb_flame", "sprites/flame.png");
 	k.loadSpriteAtlas("sprites/cursor.png", {
 		"@cursor": {
 			width: 28,
@@ -189,8 +199,9 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 
 	const coolPrompt = (prompt: string) => prompt.toUpperCase() + (prompt[prompt.length - 1] == "!" ? "" : "!");
 	const getGameID = (g: Minigame) => `${g.author}:${g.prompt}`;
-	const onChangeEvent = new k.KEvent<[Minigame]>();
 	let wonLastGame: boolean = null;
+	const timerEvents: KEventController[] = [];
+	const inputEvents: KEventController[] = [];
 
 	k.setCursor("none");
 
@@ -253,8 +264,6 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 		runGame(g) {
 			// SETUP
 			if (g.prompt.length > 12) throw new Error("Prompt cannot exceed 12 characters!");
-
-			onChangeEvent.trigger(g);
 			const onTimeoutEvent = new k.KEvent();
 
 			const gameCtx = {};
@@ -276,16 +285,62 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 						};
 					};
 				}
-
-				// override onClick
-				// if (api == "onClick") {
-
-				// }
-
-				if (api == "area") {
+				else if (api == "onClick") {
+					gameCtx[api] = overload2((action: () => void) => {
+						const func = () => wareCtx.inputEnabled ? action() : false;
+						const ev = k.onMousePress("left", func);
+						inputEvents.push(ev);
+					}, (tag: string, action: (a: GameObj) => void) => {
+						const ev = k.onClick(tag, () => wareCtx.inputEnabled ? action : false);
+						inputEvents.push(ev);
+						return ev;
+					});
+				}
+				else if (api == "area") {
 					// override area onClick too!!
-					// gameCtx[api] = () => {
-					// };
+					gameCtx[api] = (...args: any[]) => {
+						const areaComp = k.area(...args);
+						return {
+							...areaComp,
+							onClick(action: () => void) {
+								const ev = k.onMousePress("left", () => {
+									if (wareCtx.inputEnabled && this.isHovering()) action();
+								});
+								inputEvents.push(ev);
+								return ev;
+							},
+						};
+					};
+				}
+				else if (api == "wait") {
+					gameCtx[api] = (...args: any[]) => {
+						const ev = k.wait(args[0], args[1]);
+						timerEvents.push(ev);
+						return ev;
+					};
+				}
+				else if (api == "loop") {
+					gameCtx[api] = (...args: any[]) => {
+						const ev = k.loop(args[0], args[1]);
+						timerEvents.push(ev);
+						return ev;
+					};
+				}
+				else if (api == "tween") {
+					gameCtx[api] = (...args: any[]) => {
+						// @ts-ignore
+						const ev = k.tween(...args);
+						timerEvents.push(ev);
+						return ev;
+					};
+				}
+				else if (api == "addLevel") {
+					gameCtx[api] = (...args: any[]) => {
+						// @ts-ignore
+						const level = k.addLevel(...args);
+						level.onUpdate(() => level.paused = !wareCtx.gameRunning);
+						return level;
+					};
 				}
 			}
 
@@ -293,7 +348,6 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 
 			// OBJECT STUFF
 			gameBox.removeAll();
-			const inputEvents: KEventController[] = [];
 
 			function dirToKeys(button: Button): Key[] {
 				if (button == "left") return ["left", "a"];
@@ -322,21 +376,16 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 					inputEvents.push(ev);
 					return ev;
 				},
-				onClickPress: (action) => {
-					const func = () => wareCtx.inputEnabled ? action() : false;
-					const ev = gameBox.onMousePress("left", func);
-					inputEvents.push(ev);
-					return ev;
-				},
 				onTimeout: (action) => onTimeoutEvent.add(action),
 				win: () => {
 					wareCtx.score++;
-					if (wareCtx.time > 0) wareCtx.time = 0;
+					runClock = false;
 					wonLastGame = true;
+					if (bomb) bomb.turnOff();
 				},
 				lose: () => {
 					wareCtx.lives--;
-					if (wareCtx.time > 0) wareCtx.time = 0;
+					runClock = false;
 					wonLastGame = false;
 				},
 				hideCursor() {
@@ -346,6 +395,8 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 					minigameScene.clearEvents();
 					wareCtx.nextGame();
 					inputEvents.forEach((ev) => ev.cancel());
+					timerEvents.forEach((ev) => ev.cancel());
+					if (bomb) bomb.destroy();
 				},
 				difficulty: wareCtx.difficulty,
 				lives: wareCtx.lives,
@@ -358,17 +409,22 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 				...gameAPI,
 			} as unknown as MinigameCtx));
 
-			let clockRunning = true;
+			let bomb: ReturnType<typeof addBomb> = null;
+			let runClock = true;
+			let addedBomb = false;
 			gameBox.onUpdate(() => {
-				if (clockRunning) {
+				if (runClock) {
 					wareCtx.time -= k.dt();
-					if (wareCtx.time <= 0 && clockRunning) {
-						clockRunning = false;
+					if (wareCtx.time <= 0 && runClock) {
+						runClock = false;
 						onTimeoutEvent.trigger();
 						wareCtx.inputEnabled = false;
 					}
 
-					if (wareCtx.time <= g.duration / 2 && k.get("bomb").length == 0) addBomb(k, wareCtx);
+					if (wareCtx.time <= g.duration / 2 && !addedBomb) {
+						addedBomb = true;
+						bomb = addBomb(k, wareCtx);
+					}
 				}
 			});
 
@@ -376,9 +432,6 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 		},
 		curGame() {
 			return games[wareCtx.gameIdx];
-		},
-		onChange(action) {
-			return k.getTreeRoot().on("change", action);
 		},
 		nextGame() {
 			wareCtx.gamesPlayed++;
@@ -406,7 +459,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 					wareCtx.gameRunning = true;
 				});
 
-				cursor.hidden = !nextGame.usesMouse;
+				cursor.hidden = !nextGame.mouse;
 			}
 
 			if (wonLastGame != null) {
@@ -451,7 +504,6 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 		game.urlPrefix = game.urlPrefix ?? "";
 		game.duration = game.duration ?? DEFAULT_DURATION;
 		game.rgb = game.rgb ?? [0, 0, 0];
-		game.usesMouse = game.usesMouse ?? false;
 
 		if (game.load) {
 			// patch loadXXX() functions to scoped asset names
@@ -497,6 +549,8 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 	const game = k.add([k.stay(["game"])]);
 	game.onUpdate(() => {
 		gameBox.paused = !wareCtx.gameRunning;
+		inputEvents.forEach((ev) => ev.paused = !wareCtx.gameRunning);
+		timerEvents.forEach((ev) => ev.paused = !wareCtx.gameRunning);
 	});
 
 	gameBox.onDraw(() => {

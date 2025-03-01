@@ -1,7 +1,7 @@
 import getGame from "../games/amyspark-ng/get";
 import knockGame from "../games/amyspark-ng/knock";
 import spamGame from "../games/amyspark-ng/spam";
-import chaseGame from "../games/nanopoison/game";
+import chaseGame from "../games/nanopoison/chase";
 import kaplayware from "./kaplayware";
 
 const games = [

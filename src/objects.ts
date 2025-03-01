@@ -104,46 +104,83 @@ export function makeFriend(k: KAPLAYCtx, name: string) {
 export function addBomb(k: KAPLAYCtx, ware: KaplayWareCtx) {
 	const timeAtCreate = ware.time;
 
+	const fuse = k.add([
+		k.sprite("@bomb_wire", { tiled: true }),
+		k.pos(k.vec2()),
+		k.anchor("left"),
+	]);
+
 	const bomb = k.add([
 		k.sprite("@bomb"),
 		k.pos(k.vec2(40, k.height() - 40)),
 		k.anchor("center"),
 		k.scale(1.25),
-		"bomb",
+		k.color(),
 	]);
 
-	function addFuse() {
-		return k.add([
-			k.rect(70, k.rand(30, 40), { radius: 4 }),
-			k.pos(k.center()),
-			k.anchor("center"),
-			k.outline(4, k.BLACK),
-			k.color(),
-		]);
-	}
+	const flame = k.add([
+		k.sprite("@bomb_flame"),
+		k.pos(),
+		k.anchor("center"),
+		k.scale(),
+		k.opacity(),
+	]);
 
-	for (let i = 0; i < 8; i++) {
-		const fuse = addFuse();
-		fuse.pos = bomb.pos.add((i + 1) * (fuse.width * 1.25), 0);
-		fuse.onUpdate(() => {
-			if (ware.time <= (timeAtCreate / 8) * (i + 1)) {
-				fuse.destroy();
-			}
+	const ogFuseWidth = fuse.width;
+	const totalBeats = 6;
+	let beatsLeft = totalBeats;
+	let fuseWidth = ogFuseWidth;
+	let flamePos = fuse.pos.add(k.vec2(fuse.width, flame.height / 2));
 
-			if (ware.time <= (timeAtCreate / 8) * (i + 2)) {
-				if (i == 0) fuse.color = k.RED;
-				else if (i == 1) fuse.color = k.RED.lerp(k.YELLOW, 0.5);
-				else if (i == 2) fuse.color = k.YELLOW;
-			}
-		});
+	function destroy() {
+		bomb.destroy();
+		fuse.destroy();
+		flame.destroy();
 	}
 
 	bomb.onUpdate(() => {
-		if (ware.time <= 0 && bomb.exists()) {
-			bomb.destroy();
-			k.addKaboom(bomb.pos);
+		if (beatsLeft < -1) return;
+
+		if (ware.time <= (timeAtCreate / totalBeats) * beatsLeft) {
+			fuseWidth -= ogFuseWidth / totalBeats;
+			beatsLeft--;
+
+			if (beatsLeft == 0 || beatsLeft == 1 || beatsLeft == 2) {
+				k.tween(k.vec2(1.5), k.vec2(1.25), timeAtCreate / totalBeats, (p) => bomb.scale = p, k.easings.easeOutQuint);
+				k.play("@tick", { detune: 25 * 2 - beatsLeft });
+			}
+
+			if (beatsLeft == 2) {
+				bomb.color = k.YELLOW;
+			}
+			else if (beatsLeft == 1) {
+				bomb.color = k.RED.lerp(k.YELLOW, 0.5);
+			}
+			else if (beatsLeft == 0) {
+				bomb.color = k.RED;
+			}
+
+			if (beatsLeft == -1) {
+				destroy();
+				k.addKaboom(bomb.pos);
+				k.play("@explosion");
+			}
 		}
+
+		if (beatsLeft != 0) flamePos = fuse.pos.add(fuse.width, flame.height / 2);
+		else flamePos = bomb.pos.sub(0, bomb.height * 0.75);
+
+		fuse.pos = bomb.pos.sub(0, bomb.height);
+		fuse.width = k.lerp(fuse.width, fuseWidth, 0.75);
+		flame.pos = k.lerp(flame.pos, flamePos, 0.75);
 	});
+
+	return {
+		destroy,
+		turnOff: () => {
+			flame.fadeOut(timeAtCreate / totalBeats).onEnd(() => flame.destroy());
+		},
+	};
 }
 
 export type Sampler<T> = T | (() => T);

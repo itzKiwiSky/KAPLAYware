@@ -3,7 +3,7 @@ import { Minigame } from "../../src/types";
 
 const newGame: Minigame = {
 	prompt: "knock",
-	usesMouse: true,
+	mouse: { hidden: false },
 	author: "amyspark-ng",
 	rgb: [74, 48, 82],
 	urlPrefix: "/games/amyspark-ng/assets",
@@ -27,7 +27,7 @@ const newGame: Minigame = {
 			ctx.area(),
 		]);
 
-		ctx.onClickPress(() => {
+		ctx.onClick(() => {
 			if (!door.isHovering()) return;
 			ctx.debug.log(knocksLeft);
 

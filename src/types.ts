@@ -17,16 +17,15 @@ export type MinigameAPI = {
 	/**
 	 * Register an event that runs once when a button is pressed.
 	 */
-	onButtonPress: (btn: Button, action: () => void) => KEventController;
+	onButtonPress(btn: Button, action: () => void): KEventController;
 	/**
 	 * Register an event that runs once when a button is released.
 	 */
-	onButtonRelease: (btn: Button, action: () => void) => KEventController;
+	onButtonRelease(btn: Button, action: () => void): KEventController;
 	/**
 	 * Register an event that runs every frame when a button is held down.
 	 */
-	onButtonDown: (btn: Button, action: () => void) => KEventController;
-	onClickPress: (action: () => void) => KEventController;
+	onButtonDown(btn: Button, action: () => void): KEventController;
 	/**
 	 *  Wheter to hide the cursor, you can hide it and then make an object which would serve as a custom cursor for your game
 	 */
@@ -72,8 +71,8 @@ export type Minigame = {
 	author: string;
 	/** The RGB code for the game's backgroun */
 	rgb?: [number, number, number];
-	/** Wheter the games makes use or the mouse, if false only keyboard */
-	usesMouse?: boolean;
+	/** Wheter the games use the mouse, If you want to use a custom mouse you can set `hidden` to true */
+	mouse?: { hidden: boolean; };
 	/** How long the minigames goes for (choose a reasonable number) */
 	duration?: number;
 	/**
@@ -103,7 +102,7 @@ export type Minigame = {
 	 * }
 	 * ```
 	 */
-	start: (ctx: MinigameCtx) => GameObj<TimerComp>;
+	start: (ctx: MinigameCtx) => GameObj;
 };
 
 export type KaplayWareCtx = {
@@ -133,12 +132,10 @@ export type KaplayWareCtx = {
 	reset: () => void;
 	/** Transition to the next game */
 	nextGame: () => void;
-	/** Runs when the game changes */
-	onChange: (action: (g: Minigame) => void) => KEventController;
 	/** Returns the current minigame */
 	curGame: () => Minigame;
 	/** Runs a minigame */
-	runGame: (g: Minigame) => GameObj<TimerComp>;
+	runGame: (g: Minigame) => GameObj;
 	/** Speeds up the game */
 	speedUp: () => void;
 };
