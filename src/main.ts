@@ -1,7 +1,7 @@
-import getGame from "../games/amyspark-ng/get/game";
-import knockGame from "../games/amyspark-ng/knock/game";
-import spamGame from "../games/amyspark-ng/spam/game";
-import chaseGame from "../games/nanopoison/chase/game";
+import getGame from "../games/amyspark-ng/get";
+import knockGame from "../games/amyspark-ng/knock";
+import spamGame from "../games/amyspark-ng/spam";
+import chaseGame from "../games/nanopoison/game";
 import kaplayware from "./kaplayware";
 
 const games = [
@@ -15,7 +15,10 @@ const ware = kaplayware(games);
 const k = ware.kCtx;
 
 k.scene("focus", () => {
-	k.setBackground(k.BLACK);
+	k.add([
+		k.rect(k.width(), k.height()),
+		k.color(k.BLACK),
+	]);
 
 	k.add([
 		k.text("CLICK TO FOCUS"),
@@ -32,8 +35,6 @@ k.scene("game", () => {
 });
 
 k.scene("gameover", () => {
-	k.debug.log(":(");
-
 	k.add([
 		k.text("you lost :("),
 		k.pos(k.center()),
@@ -45,5 +46,5 @@ k.scene("gameover", () => {
 
 k.onLoad(() => {
 	if (k.isFocused()) k.go("game");
-	else k.go("focus");
+	else k.go("game");
 });

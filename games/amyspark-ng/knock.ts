@@ -1,5 +1,5 @@
 import { assets } from "@kaplayjs/crew";
-import { Minigame } from "../../../src/types.ts";
+import { Minigame } from "../../src/types";
 
 const newGame: Minigame = {
 	prompt: "knock",
@@ -28,6 +28,7 @@ const newGame: Minigame = {
 		]);
 
 		ctx.onClickPress(() => {
+			if (!door.isHovering()) return;
 			ctx.debug.log(knocksLeft);
 
 			if (knocksLeft > 0) {
@@ -57,12 +58,12 @@ const newGame: Minigame = {
 			}
 		});
 
-		// ctx.onTimeout(() => {
-		// 	if (knocksLeft > 0) ctx.lose();
-		// 	game.wait(1, () => {
-		// 		ctx.finish();
-		// 	});
-		// });
+		ctx.onTimeout(() => {
+			if (knocksLeft > 0) ctx.lose();
+			game.wait(1, () => {
+				ctx.finish();
+			});
+		});
 
 		return game;
 	},

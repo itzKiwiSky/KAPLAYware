@@ -20,3 +20,6 @@ Then you can reference this folder in your games like
     },
 }
 ```
+
+### Notes:
+- Please refrain to use `onMousePress`!! You can use `ctx.onClick()` an `obj.onClick`, but no mouse button (mouse minigames are only allowed to be played with left click)

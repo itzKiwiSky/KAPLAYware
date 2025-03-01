@@ -1,4 +1,4 @@
-import { Minigame } from "../../../src/types";
+import { Minigame } from "../../src/types";
 
 const spamGame: Minigame = {
 	prompt: "spam",
@@ -11,7 +11,7 @@ const spamGame: Minigame = {
 	},
 	start(ctx) {
 		let score = 0;
-		const SCORE_TO_WIN = ctx.difficulty == 1 ? 20 : ctx.difficulty == 2 ? 60 : ctx.difficulty == 3 ? 100 : undefined;
+		const SCORE_TO_WIN = ctx.difficulty == 1 ? 20 : ctx.difficulty == 2 ? 60 : ctx.difficulty == 3 ? 100 : 100;
 		const game = ctx.make([ctx.timer()]);
 
 		const scoreText = game.add([

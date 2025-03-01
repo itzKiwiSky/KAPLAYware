@@ -135,6 +135,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 		width: 800,
 		height: 600,
 		font: "apl386",
+		focus: false,
 	});
 
 	k.loadFont("apl386", "fonts/apl386.ttf", { outline: { width: 4, color: k.BLACK } });
@@ -274,6 +275,17 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 							},
 						};
 					};
+				}
+
+				// override onClick
+				// if (api == "onClick") {
+
+				// }
+
+				if (api == "area") {
+					// override area onClick too!!
+					// gameCtx[api] = () => {
+					// };
 				}
 			}
 

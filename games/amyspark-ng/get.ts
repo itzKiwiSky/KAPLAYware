@@ -1,5 +1,5 @@
 import { assets } from "@kaplayjs/crew";
-import { Minigame } from "../../../src/types";
+import { Minigame } from "../../src/types";
 
 const getGame: Minigame = {
 	prompt: "get",
@@ -38,7 +38,7 @@ const getGame: Minigame = {
 				? ctx.vec2(ctx.rand(40, 60), ctx.rand(40, 60))
 				: ctx.difficulty == 3
 				? ctx.vec2(ctx.rand(60, 70), ctx.rand(60, 70))
-				: undefined;
+				: ctx.vec2();
 			return bean.pos.add(randOffset);
 		};
 

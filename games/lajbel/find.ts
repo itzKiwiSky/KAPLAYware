@@ -1,5 +1,5 @@
 import { assets } from "@kaplayjs/crew";
-import { Minigame } from "../../../src/types.ts";
+import { Minigame } from "../../src/types.ts";
 
 const newGame: Minigame = {
 	prompt: "find",
