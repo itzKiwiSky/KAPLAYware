@@ -204,6 +204,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 	const coolPrompt = (prompt: string) => prompt.toUpperCase() + (prompt[prompt.length - 1] == "!" ? "" : "!");
 	const getGameID = (g: Minigame) => `${g.author}:${g.prompt}`;
 	let wonLastGame: boolean = null;
+	let visibleCursor: boolean = false;
 
 	k.setCursor("none");
 
@@ -213,26 +214,26 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 	/** The container for minigames, if you want to pause the minigame you should pause this */
 	const gameBox = GameScene.add([k.fixed(), k.pos()]);
 
-	GameScene.onUpdate(() => {
-		gameBox.paused = !wareCtx.gameRunning;
-	});
-
+	/** The cursor object :) */
 	const cursor = k.add([
 		k.sprite("@cursor"),
 		k.pos(),
 		k.anchor("topleft"),
-		k.stay(["game"]),
 		k.scale(2),
+		k.opacity(),
 		k.z(999),
+		k.stay(["game"]),
 	]);
 
-	cursor.onUpdate(() => {
-		if (cursor.hidden) return;
-		if (!cursor.hidden && wonLastGame == true) {
-			cursor.sprite = "@cursor_like";
-			return;
-		}
+	GameScene.onUpdate(() => {
+		gameBox.paused = !wareCtx.gameRunning;
+	});
 
+	cursor.onUpdate(() => {
+		if (visibleCursor) cursor.opacity = k.lerp(cursor.opacity, 1, 0.5);
+		else cursor.opacity = k.lerp(cursor.opacity, 0, 0.5);
+
+		if (!visibleCursor) return;
 		const hovered = gameBox.get("area", { recursive: true }).filter((obj) => obj.isHovering() && wareCtx.gameRunning).length > 0;
 		if (k.isMouseDown("left")) cursor.sprite = "@cursor_knock";
 		if (hovered && !k.isMouseDown("left")) cursor.sprite = "@cursor_point";
@@ -440,9 +441,6 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 					clockRunning = false;
 					wonLastGame = false;
 				},
-				hideCursor() {
-					cursor.hidden = true;
-				},
 				finish: () => {
 					inputEvents.forEach((ev) => ev.cancel());
 					timerEvents.forEach((ev) => ev.cancel());
@@ -455,7 +453,6 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 				difficulty: wareCtx.difficulty,
 				lives: wareCtx.lives,
 				speed: wareCtx.speed,
-				timeLeft: wareCtx.time,
 			};
 
 			wareCtx.time = g.duration / wareCtx.speed;
@@ -467,8 +464,8 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 			gameBox.onUpdate(() => {
 				if (clockRunning) {
 					if (!canPlaySounds) {
-						queuedSounds.forEach((sound) => sound.paused = false);
 						canPlaySounds = true;
+						queuedSounds.forEach((sound) => sound.paused = false);
 					}
 
 					wareCtx.time -= k.dt();
@@ -504,10 +501,20 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 				}));
 				wareCtx.gameIdx = games.indexOf(nextGame);
 				wareCtx.runGame(nextGame);
+
+				if (nextGame.mouse) visibleCursor = true;
+				else visibleCursor = false;
+
 				let prompt: ReturnType<typeof addPrompt> = null;
 
 				const prepTrans = prepTransition(k, wareCtx);
-				prepTrans.onHalf(() => prompt = addPrompt(k, coolPrompt(nextGame.prompt)));
+				prepTrans.onHalf(() => {
+					prompt = addPrompt(k, coolPrompt(nextGame.prompt));
+
+					if (nextGame.mouse && nextGame.mouse.hidden) visibleCursor = false;
+					else if (nextGame.mouse && !nextGame.mouse.hidden) visibleCursor = true;
+				});
+
 				prepTrans.onEnd(() => {
 					k.wait(0.15 / wareCtx.speed, () => {
 						prompt.fadeOut(0.15 / wareCtx.speed).onEnd(() => prompt.destroy());
@@ -515,8 +522,6 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 					wareCtx.inputEnabled = true;
 					wareCtx.gameRunning = true;
 				});
-
-				cursor.hidden = !nextGame.mouse;
 			}
 
 			if (wonLastGame != null) {
@@ -524,6 +529,8 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 				if (wonLastGame) transition = winTransition(k, wareCtx);
 				else transition = loseTransition(k, wareCtx);
 				wonLastGame = null;
+
+				if (wareCtx.curGame().mouse) visibleCursor = true;
 
 				transition.onEnd(() => {
 					if (!wonLastGame && wareCtx.lives == 0) {

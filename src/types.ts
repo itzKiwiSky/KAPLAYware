@@ -27,10 +27,6 @@ export type MinigameAPI = {
 	 */
 	onButtonDown(btn: Button, action: () => void): KEventController;
 	/**
-	 *  Wheter to hide the cursor, you can hide it and then make an object which would serve as a custom cursor for your game
-	 */
-	hideCursor: () => void;
-	/**
 	 * Register an event that runs once when timer runs out.
 	 */
 	onTimeout: (action: () => void) => KEventController;

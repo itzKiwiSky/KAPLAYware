@@ -6,7 +6,7 @@ import kaplayware from "./kaplayware";
 
 const games = [
 	getGame,
-	spamGame,
+	// spamGame,
 	knockGame,
 	chaseGame,
 ];
