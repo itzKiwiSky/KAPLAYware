@@ -104,49 +104,64 @@ export function makeFriend(k: KAPLAYCtx, name: string) {
 export function addBomb(k: KAPLAYCtx, ware: KaplayWareCtx) {
 	const timeAtCreate = ware.time;
 
-	const fuse = k.add([
-		k.sprite("@bomb_wire", { tiled: true }),
-		k.pos(k.vec2()),
+	const BOMB_POS = k.vec2(40, k.height() - 40);
+
+	const stupid = k.add([
+		k.text(""),
+	]);
+
+	const cord = k.add([
+		k.sprite("@bomb_cord", { tiled: true }),
+		k.pos(69, 527),
 		k.anchor("left"),
 	]);
 
-	const bomb = k.add([
-		k.sprite("@bomb"),
-		k.pos(k.vec2(40, k.height() - 40)),
-		k.anchor("center"),
-		k.scale(1.25),
-		k.color(),
+	const cord1 = k.add([
+		k.sprite("@bomb_cord1"),
+		k.pos(29, 528),
 	]);
 
-	const flame = k.add([
-		k.sprite("@bomb_flame"),
+	const fuse = k.add([
+		k.sprite("@bomb_fuse"),
 		k.pos(),
 		k.anchor("center"),
 		k.scale(),
 		k.opacity(),
 	]);
 
-	const ogFuseWidth = fuse.width;
+	const bomb = k.add([
+		k.sprite("@bomb"),
+		k.pos(BOMB_POS),
+		k.anchor("center"),
+		k.scale(),
+		k.color(),
+	]);
+
+	cord.width = k.width() - 100;
+	const fullCordWidth = cord.width;
 	const totalBeats = 6;
 	let beatsLeft = totalBeats;
-	let fuseWidth = ogFuseWidth;
-	let flamePos = fuse.pos.add(k.vec2(fuse.width, flame.height / 2));
+	let cordWidth = fullCordWidth;
 
 	function destroy() {
+		cord1.destroy();
 		bomb.destroy();
+		cord.destroy();
 		fuse.destroy();
-		flame.destroy();
 	}
 
+	let fuseYThing = 0;
 	bomb.onUpdate(() => {
 		if (beatsLeft < -1) return;
 
-		if (ware.time <= (timeAtCreate / totalBeats) * beatsLeft) {
-			fuseWidth -= ogFuseWidth / totalBeats;
+		cordWidth = (fullCordWidth / totalBeats) * beatsLeft;
+		if (ware.time <= (timeAtCreate / (totalBeats + 1)) * beatsLeft) {
 			beatsLeft--;
+			// k.debug.log(beatsLeft);
 
 			if (beatsLeft == 0 || beatsLeft == 1 || beatsLeft == 2) {
-				k.tween(k.vec2(1.5), k.vec2(1.25), timeAtCreate / totalBeats, (p) => bomb.scale = p, k.easings.easeOutQuint);
+				const tweenMult = 2 - beatsLeft + 1; // goes from 1 to 3;
+				k.tween(k.vec2(1).add(0.33 * tweenMult), k.vec2(1).add((0.33 * tweenMult) / 2), timeAtCreate / totalBeats, (p) => bomb.scale = p, k.easings.easeOutQuint);
 				k.play("@tick", { detune: 25 * 2 - beatsLeft });
 			}
 
@@ -158,6 +173,7 @@ export function addBomb(k: KAPLAYCtx, ware: KaplayWareCtx) {
 			}
 			else if (beatsLeft == 0) {
 				bomb.color = k.RED;
+				// cord1.destroy();
 			}
 
 			if (beatsLeft == -1) {
@@ -167,18 +183,22 @@ export function addBomb(k: KAPLAYCtx, ware: KaplayWareCtx) {
 			}
 		}
 
-		if (beatsLeft != 0) flamePos = fuse.pos.add(fuse.width, flame.height / 2);
-		else flamePos = bomb.pos.sub(0, bomb.height * 0.75);
+		if (beatsLeft != 0) {
+			fuse.pos = k.lerp(fuse.pos, cord.pos.add(cord.width, 50), 0.75);
+		}
+		else {
+			fuseYThing += 1.5;
+			if (cord1.exists()) cord1.destroy();
+			fuse.pos = k.lerp(fuse.pos, k.vec2(cord.pos.x + cord.width, cord.pos.y + 50 - fuseYThing), 0.75);
+		}
 
-		fuse.pos = bomb.pos.sub(0, bomb.height);
-		fuse.width = k.lerp(fuse.width, fuseWidth, 0.75);
-		flame.pos = k.lerp(flame.pos, flamePos, 0.75);
+		cord.width = k.lerp(cord.width, cordWidth, 0.75);
 	});
 
 	return {
 		destroy,
 		turnOff: () => {
-			flame.fadeOut(timeAtCreate / totalBeats).onEnd(() => flame.destroy());
+			fuse.fadeOut(timeAtCreate / totalBeats).onEnd(() => fuse.destroy());
 		},
 	};
 }

@@ -1,5 +1,5 @@
 import { assets } from "@kaplayjs/crew";
-import kaplay, { AreaComp, Asset, Color, GameObj, KAPLAYOpt, KEventController, Key, SpriteCompOpt, SpriteData } from "kaplay";
+import kaplay, { AreaComp, Asset, AudioPlayOpt, Color, GameObj, KAPLAYOpt, KEventController, Key, SpriteCompOpt, SpriteData } from "kaplay";
 import { addBomb, addPrompt } from "./objects";
 import { overload2 } from "./overload";
 import { loseTransition, prepTransition, speedupTransition, winTransition } from "./transitions";
@@ -140,11 +140,13 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 		...opts,
 		width: 800,
 		height: 600,
-		font: "apl386",
+		font: "happy-o",
 		focus: false,
 	});
 
-	k.loadFont("apl386", "fonts/apl386.ttf", { outline: { width: 4, color: k.BLACK } });
+	k.setVolume(0.5);
+
+	k.loadBitmapFont("happy-o", "fonts/happy-o.png", 31, 39);
 
 	k.loadSound("@prepJingle", "sounds/prepJingle.ogg");
 	k.loadSound("@winJingle", "sounds/winJingle.ogg");
@@ -152,6 +154,11 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 	k.loadSound("@speedJingle", "sounds/speedJingle.ogg");
 	k.loadSound("@tick", "sounds/bombtick.mp3");
 	k.loadSound("@explosion", "sounds/explosion.mp3");
+
+	k.loadSprite("@bomb", "sprites/bomb.png");
+	k.loadSprite("@bomb_cord", "sprites/bomb_cord.png");
+	k.loadSprite("@bomb_cord1", "sprites/bomb_cord1.png");
+	k.loadSprite("@bomb_fuse", "sprites/bomb_fuse.png");
 
 	k.loadSprite("@bean", assets.bean.sprite);
 	k.loadSprite("@beant", assets.beant.sprite);
@@ -162,9 +169,6 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 	k.loadSprite("@cloud", assets.cloud.sprite);
 	k.loadSprite("@grass_tile", "sprites/grass.png");
 	k.loadSprite("@trophy", "sprites/trophy.png");
-	k.loadSprite("@bomb", "sprites/bomb.png");
-	k.loadSprite("@bomb_wire", "sprites/wire.png");
-	k.loadSprite("@bomb_flame", "sprites/flame.png");
 	k.loadSpriteAtlas("sprites/cursor.png", {
 		"@cursor": {
 			width: 28,
@@ -340,6 +344,11 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 						const level = k.addLevel(...args);
 						level.onUpdate(() => level.paused = !wareCtx.gameRunning);
 						return level;
+					};
+				}
+				else if (api == "play") {
+					gameCtx[api] = (soundName: any, opts: any) => {
+						return k.play(`${getGameID(g)}-${soundName}`, opts);
 					};
 				}
 			}
@@ -548,6 +557,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 
 	const game = k.add([k.stay(["game"])]);
 	game.onUpdate(() => {
+		if (k.isKeyPressed("f8")) wareCtx.gameRunning = !wareCtx.gameRunning;
 		gameBox.paused = !wareCtx.gameRunning;
 		inputEvents.forEach((ev) => ev.paused = !wareCtx.gameRunning);
 		timerEvents.forEach((ev) => ev.paused = !wareCtx.gameRunning);

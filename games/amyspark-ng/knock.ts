@@ -10,9 +10,10 @@ const newGame: Minigame = {
 	load(ctx) {
 		ctx.loadSprite("bean", assets.bean.sprite);
 		ctx.loadSprite("door", "/sprites/door.png");
+		ctx.loadSound("knock", "/sounds/knock.ogg");
 	},
 	start(ctx) {
-		const game = ctx.make([ctx.timer()]);
+		const game = ctx.make();
 
 		let knocksLeft = ctx.randi(4, 5);
 		if (ctx.difficulty == 1) knocksLeft = ctx.randi(2, 4);
@@ -27,12 +28,12 @@ const newGame: Minigame = {
 			ctx.area(),
 		]);
 
-		ctx.onClick(() => {
+		door.onClick(() => {
 			if (!door.isHovering()) return;
-			ctx.debug.log(knocksLeft);
 
 			if (knocksLeft > 0) {
 				knocksLeft--;
+				ctx.play("knock");
 				return;
 			}
 			else if (knocksLeft == 0) {
@@ -52,7 +53,7 @@ const newGame: Minigame = {
 
 				ctx.win();
 
-				game.wait(1, () => {
+				ctx.wait(1, () => {
 					ctx.finish();
 				});
 			}
@@ -60,7 +61,7 @@ const newGame: Minigame = {
 
 		ctx.onTimeout(() => {
 			if (knocksLeft > 0) ctx.lose();
-			game.wait(1, () => {
+			ctx.wait(1, () => {
 				ctx.finish();
 			});
 		});
