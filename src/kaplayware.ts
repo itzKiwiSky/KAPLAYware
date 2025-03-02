@@ -1,5 +1,5 @@
 import { assets } from "@kaplayjs/crew";
-import kaplay, { AreaComp, Asset, AudioPlayOpt, Color, GameObj, KAPLAYOpt, KEventController, Key, SpriteCompOpt, SpriteData } from "kaplay";
+import kaplay, { AreaComp, Asset, AudioPlay, AudioPlayOpt, Color, GameObj, KAPLAYOpt, KEventController, Key, SpriteCompOpt, SpriteData } from "kaplay";
 import { addBomb, addPrompt } from "./objects";
 import { overload2 } from "./overload";
 import { loseTransition, prepTransition, speedupTransition, winTransition } from "./transitions";
@@ -204,18 +204,18 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 	const coolPrompt = (prompt: string) => prompt.toUpperCase() + (prompt[prompt.length - 1] == "!" ? "" : "!");
 	const getGameID = (g: Minigame) => `${g.author}:${g.prompt}`;
 	let wonLastGame: boolean = null;
-	const timerEvents: KEventController[] = [];
-	const inputEvents: KEventController[] = [];
 
 	k.setCursor("none");
 
-	// INITIALIZE THE GAME
-	const gameBox = k.add([
-		k.fixed(),
-		k.pos(),
-		k.timer(),
-		k.stay(["game"]),
-	]);
+	/** Game object that runs everything in the gamescene */
+	const GameScene = k.add([k.stay(["game"])]);
+
+	/** The container for minigames, if you want to pause the minigame you should pause this */
+	const gameBox = GameScene.add([k.fixed(), k.pos()]);
+
+	GameScene.onUpdate(() => {
+		gameBox.paused = !wareCtx.gameRunning;
+	});
 
 	const cursor = k.add([
 		k.sprite("@cursor"),
@@ -233,7 +233,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 			return;
 		}
 
-		const hovered = gameBox.get("area", { recursive: true }).filter((obj) => obj.isHovering() && !gameBox.paused).length > 0;
+		const hovered = gameBox.get("area", { recursive: true }).filter((obj) => obj.isHovering() && wareCtx.gameRunning).length > 0;
 		if (k.isMouseDown("left")) cursor.sprite = "@cursor_knock";
 		if (hovered && !k.isMouseDown("left")) cursor.sprite = "@cursor_point";
 		else if (!hovered && !k.isMouseDown("left")) cursor.sprite = "@cursor";
@@ -268,7 +268,22 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 		runGame(g) {
 			// SETUP
 			if (g.prompt.length > 12) throw new Error("Prompt cannot exceed 12 characters!");
+
 			const onTimeoutEvent = new k.KEvent();
+			const timerEvents: KEventController[] = [];
+			const inputEvents: KEventController[] = [];
+			const queuedSounds: AudioPlay[] = [];
+			const audioPlays: AudioPlay[] = [];
+
+			let bomb: ReturnType<typeof addBomb> = null;
+			let addedBomb = false;
+			let clockRunning = true;
+			let canPlaySounds = false;
+
+			const minigameUpdate = GameScene.onUpdate(() => {
+				timerEvents.forEach((ev) => ev.paused = !wareCtx.gameRunning);
+				inputEvents.forEach((ev) => ev.paused = !wareCtx.gameRunning);
+			});
 
 			const gameCtx = {};
 			for (const api of gameAPIs) {
@@ -347,13 +362,41 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 					};
 				}
 				else if (api == "play") {
-					gameCtx[api] = (soundName: any, opts: any) => {
-						return k.play(`${getGameID(g)}-${soundName}`, opts);
+					gameCtx[api] = (soundName: any, opts: AudioPlayOpt) => {
+						const sound = k.play(`${getGameID(g)}-${soundName}`, opts);
+						const newSound = {
+							...sound,
+							set paused(param: boolean) {
+								// this means that it was queued to play but the user paused it
+								if (!canPlaySounds && queuedSounds.includes(sound) && param == true) {
+									queuedSounds.splice(queuedSounds.indexOf(sound), 1);
+									sound.paused = true;
+								}
+
+								// this means the user removed it from queue but wants to add it again probably
+								if (!canPlaySounds && !queuedSounds.includes(sound) && param == false) {
+									queuedSounds.push(sound);
+									sound.paused = true;
+								}
+
+								if (canPlaySounds) sound.paused = param;
+							},
+							get paused() {
+								return sound.paused;
+							},
+						};
+
+						if (!canPlaySounds) {
+							if (opts && opts.paused) return;
+							queuedSounds.push(sound);
+							sound.paused = true;
+						}
+
+						audioPlays.push(newSound);
+						return newSound;
 					};
 				}
 			}
-
-			// TODO: CUSTOM CURSOR HIDDEN API i hate this....
 
 			// OBJECT STUFF
 			gameBox.removeAll();
@@ -388,44 +431,49 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 				onTimeout: (action) => onTimeoutEvent.add(action),
 				win: () => {
 					wareCtx.score++;
-					runClock = false;
+					clockRunning = false;
 					wonLastGame = true;
 					if (bomb) bomb.turnOff();
 				},
 				lose: () => {
 					wareCtx.lives--;
-					runClock = false;
+					clockRunning = false;
 					wonLastGame = false;
 				},
 				hideCursor() {
 					cursor.hidden = true;
 				},
 				finish: () => {
-					minigameScene.clearEvents();
-					wareCtx.nextGame();
 					inputEvents.forEach((ev) => ev.cancel());
 					timerEvents.forEach((ev) => ev.cancel());
+					audioPlays.forEach((sound) => sound.stop());
+					minigame.clearEvents();
+					wareCtx.nextGame();
+
 					if (bomb) bomb.destroy();
 				},
 				difficulty: wareCtx.difficulty,
 				lives: wareCtx.lives,
 				speed: wareCtx.speed,
+				timeLeft: wareCtx.time,
 			};
 
 			wareCtx.time = g.duration / wareCtx.speed;
-			const minigameScene = gameBox.add(g.start({
+			const minigame = gameBox.add(g.start({
 				...gameCtx,
 				...gameAPI,
 			} as unknown as MinigameCtx));
 
-			let bomb: ReturnType<typeof addBomb> = null;
-			let runClock = true;
-			let addedBomb = false;
 			gameBox.onUpdate(() => {
-				if (runClock) {
+				if (clockRunning) {
+					if (!canPlaySounds) {
+						queuedSounds.forEach((sound) => sound.paused = false);
+						canPlaySounds = true;
+					}
+
 					wareCtx.time -= k.dt();
-					if (wareCtx.time <= 0 && runClock) {
-						runClock = false;
+					if (wareCtx.time <= 0 && clockRunning) {
+						clockRunning = false;
 						onTimeoutEvent.trigger();
 						wareCtx.inputEnabled = false;
 					}
@@ -437,7 +485,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 				}
 			});
 
-			return minigameScene;
+			return minigame;
 		},
 		curGame() {
 			return games[wareCtx.gameIdx];
@@ -447,6 +495,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 			if (wareCtx.gamesPlayed < 10) wareCtx.difficulty = 1;
 			else if (wareCtx.gamesPlayed >= 10) wareCtx.difficulty = 2;
 			else if (wareCtx.gamesPlayed >= 20) wareCtx.difficulty = 3;
+			wareCtx.gameRunning = false;
 
 			function prep() {
 				const nextGame = k.choose(games.filter((game) => {
@@ -455,7 +504,6 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 				}));
 				wareCtx.gameIdx = games.indexOf(nextGame);
 				wareCtx.runGame(nextGame);
-				wareCtx.gameRunning = false;
 				let prompt: ReturnType<typeof addPrompt> = null;
 
 				const prepTrans = prepTransition(k, wareCtx);
@@ -554,14 +602,6 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 			loadCtx["loadRoot"] = k.loadRoot;
 		}
 	}
-
-	const game = k.add([k.stay(["game"])]);
-	game.onUpdate(() => {
-		if (k.isKeyPressed("f8")) wareCtx.gameRunning = !wareCtx.gameRunning;
-		gameBox.paused = !wareCtx.gameRunning;
-		inputEvents.forEach((ev) => ev.paused = !wareCtx.gameRunning);
-		timerEvents.forEach((ev) => ev.paused = !wareCtx.gameRunning);
-	});
 
 	gameBox.onDraw(() => {
 		const BG_S = 0.27;

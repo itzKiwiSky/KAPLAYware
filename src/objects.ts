@@ -157,7 +157,6 @@ export function addBomb(k: KAPLAYCtx, ware: KaplayWareCtx) {
 		cordWidth = (fullCordWidth / totalBeats) * beatsLeft;
 		if (ware.time <= (timeAtCreate / (totalBeats + 1)) * beatsLeft) {
 			beatsLeft--;
-			// k.debug.log(beatsLeft);
 
 			if (beatsLeft == 0 || beatsLeft == 1 || beatsLeft == 2) {
 				const tweenMult = 2 - beatsLeft + 1; // goes from 1 to 3;
@@ -165,16 +164,9 @@ export function addBomb(k: KAPLAYCtx, ware: KaplayWareCtx) {
 				k.play("@tick", { detune: 25 * 2 - beatsLeft });
 			}
 
-			if (beatsLeft == 2) {
-				bomb.color = k.YELLOW;
-			}
-			else if (beatsLeft == 1) {
-				bomb.color = k.RED.lerp(k.YELLOW, 0.5);
-			}
-			else if (beatsLeft == 0) {
-				bomb.color = k.RED;
-				// cord1.destroy();
-			}
+			if (beatsLeft == 2) bomb.color = k.YELLOW;
+			else if (beatsLeft == 1) bomb.color = k.RED.lerp(k.YELLOW, 0.5);
+			else if (beatsLeft == 0) bomb.color = k.RED;
 
 			if (beatsLeft == -1) {
 				destroy();

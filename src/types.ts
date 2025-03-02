@@ -1,4 +1,4 @@
-import { GameObj, KAPLAYCtx, KEvent, KEventController, TimerComp } from "kaplay";
+import { AudioPlay, AudioPlayOpt, GameObj, KAPLAYCtx, KEvent, KEventController, TimerComp } from "kaplay";
 import { gameAPIs, loadAPIs } from "./kaplayware";
 
 /** A button */

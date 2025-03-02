@@ -8,15 +8,14 @@ const spamGame: Minigame = {
 	urlPrefix: "/games/amyspark-ng/assets",
 	load(ctx) {
 		ctx.loadSprite("hexagon", "/sprites/hexagon.png");
+		ctx.loadSound("music", "/sounds/clicker.ogg");
 	},
 	start(ctx) {
+		const game = ctx.make();
 		let score = 0;
 		const SCORE_TO_WIN = ctx.difficulty == 1 ? 20 : ctx.difficulty == 2 ? 60 : ctx.difficulty == 3 ? 100 : 100;
-		const game = ctx.make();
 
-		const wait = ctx.wait(1, () => {
-			console.log("WAIT FINISHED");
-		});
+		ctx.play("music");
 
 		const scoreText = game.add([
 			ctx.text("0"),
