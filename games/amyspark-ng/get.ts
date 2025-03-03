@@ -20,29 +20,35 @@ const getGame: Minigame = {
 			ctx.pos(),
 			ctx.area(),
 			ctx.anchor("center"),
+			ctx.scale(1.5),
 		]);
 
 		const apple = game.add([
 			ctx.sprite("apple"),
 			ctx.pos(),
-			ctx.area(),
+			ctx.area({ scale: ctx.vec2(0.5) }),
+			ctx.scale(1.5),
+			ctx.anchor("center"),
 			"apple",
 		]);
 
 		// TODO: Fix this
-		const getBeanPos = () => ctx.vec2(ctx.rand(0, ctx.width() - bean.width), ctx.rand(0, ctx.height() - bean.height));
 		const getApplePos = () => {
-			const randOffset = ctx.difficulty == 1
-				? ctx.vec2(ctx.rand(60, 80), ctx.rand(60, 80))
+			const randAngle = ctx.rand(0, 360);
+			const magnitude = ctx.difficulty == 1
+				? 150
 				: ctx.difficulty == 2
-				? ctx.vec2(ctx.rand(40, 60), ctx.rand(40, 60))
+				? 250
 				: ctx.difficulty == 3
-				? ctx.vec2(ctx.rand(60, 70), ctx.rand(60, 70))
-				: ctx.vec2();
-			return bean.pos.add(randOffset);
+				? 350
+				: 0;
+
+			const X = ctx.center().x + magnitude * Math.cos(randAngle);
+			const Y = ctx.center().y + magnitude * Math.sin(randAngle);
+			return ctx.vec2(X, Y);
 		};
 
-		bean.pos = getBeanPos();
+		bean.pos = ctx.center();
 		apple.pos = getApplePos();
 
 		bean.onUpdate(() => {

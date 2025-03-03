@@ -43,10 +43,12 @@ const newGame: Minigame = {
 		const SIZE = ctx.vec2(100, 100);
 		const sockets: GameObj[] = [];
 		const plugs: GameObj[] = [];
-		const plugsConnected: number[] = [];
-		let curPlugIdx: number = null;
+		const plugSocketState: ("wiring" | "connected" | "disconnected")[] = [];
+		const winCondition = () => !plugSocketState.some((state) => state != "connected");
 
 		gameColors.forEach((color, index, arr) => {
+			plugSocketState[index] = "disconnected";
+
 			const socket = game.add([
 				ctx.rect(SIZE.x, SIZE.y),
 				ctx.color(color),
@@ -54,6 +56,7 @@ const newGame: Minigame = {
 				ctx.outline(5, ctx.BLACK),
 				ctx.anchor("center"),
 				ctx.area(),
+				"socket",
 			]);
 
 			// create plug
@@ -66,18 +69,21 @@ const newGame: Minigame = {
 				ctx.outline(5, ctx.BLACK),
 				ctx.anchor("center"),
 				ctx.area(),
+				"plug",
 			]);
 
 			plug.onClick(() => {
-				if (plugsConnected.includes(index)) return;
-				curPlugIdx = index;
+				if (plugSocketState[index] == "disconnected") {
+					plugSocketState[index] = "wiring";
+				}
 			});
 
 			ctx.onButtonRelease("click", () => {
-				curPlugIdx = null;
-
 				if (socket.isHovering()) {
-					plugsConnected.push(index);
+					plugSocketState[index] = "connected";
+				}
+				else {
+					if (plugSocketState[index] != "connected") plugSocketState[index] = "disconnected";
 				}
 			});
 
@@ -86,21 +92,20 @@ const newGame: Minigame = {
 		});
 
 		ctx.onButtonRelease("click", () => {
-			if (plugsConnected.length == gameColors.length) {
+			if (winCondition()) {
 				ctx.win();
-				ctx.wait(1, () => {
-					ctx.debug.log("FINISHED WON CONNECT GAME");
-					ctx.finish();
-				});
+				ctx.wait(1, () => ctx.finish());
 			}
 		});
 
 		game.onDraw(() => {
 			// draw the connected ones
-			plugsConnected.forEach((index) => {
+			gameColors.forEach((color, index) => {
+				if (plugSocketState[index] == "disconnected") return;
+
 				ctx.drawLine({
 					p1: plugs[index].pos,
-					p2: sockets[index].pos,
+					p2: plugSocketState[index] == "wiring" ? ctx.mousePos() : sockets[index].pos,
 					color: gameColors[index],
 					width: 10,
 					outline: {
@@ -109,29 +114,14 @@ const newGame: Minigame = {
 					},
 				});
 			});
-
-			// draw the current wire
-			if (curPlugIdx != null) {
-				ctx.drawLine({
-					p1: plugs[curPlugIdx].pos,
-					p2: ctx.mousePos(),
-					color: gameColors[curPlugIdx],
-					width: 10,
-					outline: {
-						width: 5,
-						color: ctx.BLACK,
-					},
-				});
-			}
 		});
 
 		ctx.onTimeout(() => {
-			if (plugsConnected.length < gameColors.length) {
+			if (!winCondition()) {
+				ctx.lose();
 				ctx.wait(1, () => {
 					ctx.finish();
-					ctx.debug.log("FINISHED LOST CONNECT GAME");
 				});
-				ctx.lose();
 			}
 		});
 

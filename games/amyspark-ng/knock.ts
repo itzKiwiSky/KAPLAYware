@@ -14,11 +14,7 @@ const newGame: Minigame = {
 	},
 	start(ctx) {
 		const game = ctx.make();
-
-		let knocksLeft = ctx.randi(4, 5);
-		if (ctx.difficulty == 1) knocksLeft = ctx.randi(2, 4);
-		else if (ctx.difficulty == 2) knocksLeft = ctx.randi(4, 6);
-		else if (ctx.difficulty == 3) knocksLeft = ctx.randi(6, 8);
+		let knocksLeft = ctx.difficulty == 1 ? 3 : ctx.difficulty == 2 ? 6 : ctx.difficulty == 3 ? 10 : 10;
 
 		const door = game.add([
 			ctx.sprite("door"),

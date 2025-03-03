@@ -126,6 +126,9 @@ export const gameAPIs = [
 	"GREEN",
 	"BLUE",
 	"YELLOW",
+	"WHITE",
+	"setGravity",
+	"shake",
 ] as const;
 
 export const friends = [
@@ -209,8 +212,10 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 
 	const coolPrompt = (prompt: string) => prompt.toUpperCase() + (prompt[prompt.length - 1] == "!" ? "" : "!");
 	const getGameID = (g: Minigame) => `${g.author}:${g.prompt}`;
+	const getByID = (id: string) => games.find((minigame) => `${minigame.author}:${minigame.prompt}` == id);
 	let wonLastGame: boolean = null;
 	let visibleCursor: boolean = false;
+	let minigameHistory: string[] = []; // this is so you can't get X minigame, Y minigame, then X minigame again
 
 	k.setCursor("none");
 
@@ -508,10 +513,16 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 			function prep() {
 				const nextGame = k.choose(games.filter((game) => {
 					if (games.length == 1) return game;
-					else return game != wareCtx.curGame();
+					else {
+						return game != wareCtx.curGame();
+						// const previousMinigame = getByID(minigameHistory[wareCtx.gamesPlayed - 1]);
+						// if (previousMinigame) return game != wareCtx.curGame() && game != previousMinigame;
+						// else return game != wareCtx.curGame();
+					}
 				}));
 				wareCtx.gameIdx = games.indexOf(nextGame);
 				wareCtx.runGame(nextGame);
+				minigameHistory[wareCtx.gamesPlayed - 1] = getGameID(nextGame);
 
 				if (nextGame.mouse) visibleCursor = true;
 				else visibleCursor = false;

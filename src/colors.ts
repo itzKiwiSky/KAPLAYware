@@ -1,5 +1,3 @@
-import { k } from "./main";
-
 // export const mulfokColors = {
 // 	BEAN_GREEN: k.Color.fromHex("#5ba675"),
 // 	GREEN: k.Color.fromHex("#6bc96c"),

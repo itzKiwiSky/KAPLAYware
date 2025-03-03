@@ -4,7 +4,7 @@ const spamGame: Minigame = {
 	prompt: "spam",
 	author: "amyspark-ng",
 	rgb: [26, 26, 26],
-	duration: 6,
+	duration: 4,
 	urlPrefix: "/games/amyspark-ng/assets",
 	load(ctx) {
 		ctx.loadSprite("hexagon", "/sprites/hexagon.png");
@@ -13,7 +13,7 @@ const spamGame: Minigame = {
 	start(ctx) {
 		const game = ctx.make();
 		let score = 0;
-		const SCORE_TO_WIN = ctx.difficulty == 1 ? 20 : ctx.difficulty == 2 ? 60 : ctx.difficulty == 3 ? 100 : 100;
+		const SCORE_TO_WIN = ctx.difficulty == 1 ? 5 : ctx.difficulty == 2 ? 10 : ctx.difficulty == 3 ? 20 : 20;
 
 		ctx.play("music");
 
