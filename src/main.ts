@@ -22,6 +22,7 @@ const games = [
 export const k = kaplay({
 	width: 800,
 	height: 600,
+	letterbox: true,
 	font: "happy-o",
 	focus: false,
 	plugins: [dragCompPlugin],
