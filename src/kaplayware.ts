@@ -1,7 +1,8 @@
 import { assets } from "@kaplayjs/crew";
-import kaplay, { AreaComp, Asset, AudioPlay, AudioPlayOpt, Color, GameObj, KAPLAYOpt, KEventController, Key, SpriteCompOpt, SpriteData } from "kaplay";
+import kaplay, { AreaComp, Asset, AudioPlay, AudioPlayOpt, Color, GameObj, KAPLAYCtx, KAPLAYOpt, KEventController, Key, SpriteCompOpt, SpriteData } from "kaplay";
 import { addBomb, addPrompt } from "./objects";
 import { overload2 } from "./overload";
+import { dragCompPlugin } from "./plugins/drag";
 import { loseTransition, prepTransition, speedupTransition, winTransition } from "./transitions";
 import { Button, KaplayWareCtx, LoadCtx, Minigame, MinigameAPI, MinigameCtx } from "./types";
 
@@ -129,6 +130,7 @@ export const gameAPIs = [
 	"WHITE",
 	"setGravity",
 	"shake",
+	"drag",
 ] as const;
 
 export const friends = [
@@ -144,15 +146,7 @@ export const friends = [
 const DEFAULT_DURATION = 4;
 const FORCE_SPEED_ON_GAME = false;
 
-export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {}): KaplayWareCtx {
-	const k = kaplay({
-		...opts,
-		width: 800,
-		height: 600,
-		font: "happy-o",
-		focus: false,
-	});
-
+export default function kaplayware(k: KAPLAYCtx, games: Minigame[] = [], opts: KAPLAYOpt = {}): KaplayWareCtx {
 	k.setVolume(0.5);
 
 	k.loadBitmapFont("happy-o", "fonts/happy-o.png", 31, 39);

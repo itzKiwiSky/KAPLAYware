@@ -18,7 +18,7 @@ const spamGame: Minigame = {
 		ctx.play("music");
 
 		const scoreText = game.add([
-			ctx.text("0"),
+			ctx.text(`0/${SCORE_TO_WIN}`),
 			ctx.color(ctx.rgb(255, 255, 255)),
 			ctx.pos(ctx.center().x, 60),
 			ctx.anchor("center"),

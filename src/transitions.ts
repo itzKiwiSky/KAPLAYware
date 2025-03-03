@@ -464,7 +464,7 @@ export function speedupTransition(k: KAPLAYCtx, ware: KaplayWareCtx) {
 		k.pos(k.center().x, k.height() - 40),
 	]);
 
-	const scoreText = transition.add(makeScoreText(k, ware.score));
+	const scoreText = transition.add(makeScoreText(k, ware.score - 1));
 	const hearts = makeHearts(k, bg, ware.lives);
 	hearts.forEach((heart) => heart.pos.x -= 50);
 

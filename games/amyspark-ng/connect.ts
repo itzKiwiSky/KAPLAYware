@@ -79,7 +79,7 @@ const newGame: Minigame = {
 			});
 
 			ctx.onButtonRelease("click", () => {
-				if (socket.isHovering()) {
+				if (socket.isHovering() && plugSocketState[index] == "wiring") {
 					plugSocketState[index] = "connected";
 				}
 				else {

@@ -1,5 +1,6 @@
 import { AudioPlay, AudioPlayOpt, GameObj, KAPLAYCtx, KEvent, KEventController, TimerComp } from "kaplay";
 import { gameAPIs, loadAPIs } from "./kaplayware";
+import { k } from "./main";
 
 /** A button */
 export type Button =
@@ -58,7 +59,7 @@ export type MinigameAPI = {
 };
 
 /** The context for the allowed functions in a minigame */
-export type MinigameCtx = Pick<KAPLAYCtx, typeof gameAPIs[number]> & MinigameAPI;
+export type MinigameCtx = Pick<typeof k, typeof gameAPIs[number]> & MinigameAPI;
 
 /** The type for a minigame */
 export type Minigame = {
