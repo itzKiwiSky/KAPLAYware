@@ -7,7 +7,8 @@ export type Button =
 	| "left"
 	| "right"
 	| "up"
-	| "down";
+	| "down"
+	| "click";
 
 /** The allowed load functions */
 export type LoadCtx = Pick<KAPLAYCtx, typeof loadAPIs[number]>;

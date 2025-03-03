@@ -1,3 +1,4 @@
+import connectGame from "../games/amyspark-ng/connect";
 import getGame from "../games/amyspark-ng/get";
 import knockGame from "../games/amyspark-ng/knock";
 import spamGame from "../games/amyspark-ng/spam";
@@ -6,8 +7,9 @@ import kaplayware from "./kaplayware";
 
 const games = [
 	getGame,
-	// spamGame,
+	spamGame,
 	knockGame,
+	connectGame,
 	chaseGame,
 ];
 

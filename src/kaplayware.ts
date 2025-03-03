@@ -120,6 +120,12 @@ export const gameAPIs = [
 	"wait",
 	"tween",
 	"addLevel",
+	// colors
+	"BLACK",
+	"RED",
+	"GREEN",
+	"BLUE",
+	"YELLOW",
 ] as const;
 
 export const friends = [
@@ -413,24 +419,30 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 			const gameAPI: MinigameAPI = {
 				onButtonPress: (btn, action) => {
 					const func = () => wareCtx.inputEnabled ? action() : false;
-					const ev = gameBox.onKeyPress(dirToKeys(btn), func);
+					let ev: KEventController = null;
+					if (btn == "click") ev = gameBox.onMousePress("left", func);
+					else ev = gameBox.onKeyPress(dirToKeys(btn), func);
 					inputEvents.push(ev);
 					return ev;
 				},
 				onButtonRelease: (btn, action) => {
 					const func = () => wareCtx.inputEnabled ? action() : false;
-					const ev = gameBox.onKeyRelease(dirToKeys(btn), func);
+					let ev: KEventController = null;
+					if (btn == "click") ev = gameBox.onMouseRelease("left", func);
+					else ev = gameBox.onKeyRelease(dirToKeys(btn), func);
 					inputEvents.push(ev);
 					return ev;
 				},
 				onButtonDown: (btn, action) => {
 					const func = () => wareCtx.inputEnabled ? action() : false;
-					const ev = gameBox.onKeyDown(dirToKeys(btn), func);
+					let ev: KEventController = null;
+					if (btn == "click") ev = gameBox.onMouseDown("left", func);
+					else ev = gameBox.onKeyDown(dirToKeys(btn), func);
 					inputEvents.push(ev);
 					return ev;
 				},
 				onTimeout: (action) => onTimeoutEvent.add(action),
-				win: () => {
+				win() {
 					wareCtx.score++;
 					clockRunning = false;
 					wonLastGame = true;
@@ -445,7 +457,6 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 					inputEvents.forEach((ev) => ev.cancel());
 					timerEvents.forEach((ev) => ev.cancel());
 					audioPlays.forEach((sound) => sound.stop());
-					minigame.clearEvents();
 					wareCtx.nextGame();
 
 					if (bomb) bomb.destroy();
@@ -456,7 +467,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 			};
 
 			wareCtx.time = g.duration / wareCtx.speed;
-			const minigame = gameBox.add(g.start({
+			const minigameScene = gameBox.add(g.start({
 				...gameCtx,
 				...gameAPI,
 			} as unknown as MinigameCtx));
@@ -482,7 +493,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYOpt = {})
 				}
 			});
 
-			return minigame;
+			return minigameScene;
 		},
 		curGame() {
 			return games[wareCtx.gameIdx];

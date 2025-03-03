@@ -25,7 +25,7 @@ const newGame: Minigame = {
 		ctx.loadSprite("bean", assets.bean.sprite);
 	},
 	start(ctx) {
-		const game = ctx.make([ctx.timer()]);
+		const game = ctx.make();
 
 		const bean = game.add([
 			ctx.sprite("bean"),

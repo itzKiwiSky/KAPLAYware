@@ -13,7 +13,7 @@ const newGame: Minigame = {
 		ctx.loadSprite("steel", assets.steel.sprite);
 	},
 	start(ctx) {
-		const game = ctx.make([ctx.timer()]);
+		const game = ctx.make();
 
 		const moveRate = 0.5 / ctx.speed;
 		let level;
@@ -172,7 +172,7 @@ const newGame: Minigame = {
 			moveTo(kat, moveCoords);
 		});
 
-		let karatMoveLoop = game.loop(moveRate, () => {
+		let karatMoveLoop = ctx.loop(moveRate, () => {
 			let availableDirections = [];
 			var cellCoords = grid.getCellCoords(karat.pos);
 			for (const [k, dir] of Object.entries(directions)) {
@@ -194,7 +194,7 @@ const newGame: Minigame = {
 			karat.destroy();
 			ctx.win();
 			ctx.burp().onEnd(() => {
-				game.wait(0.1, () => {
+				ctx.wait(0.1, () => {
 					ctx.finish();
 				});
 			});
@@ -203,7 +203,7 @@ const newGame: Minigame = {
 		ctx.onTimeout(() => {
 			if (karat.exists()) {
 				ctx.lose();
-				game.wait(0.5, () => ctx.finish());
+				ctx.wait(0.5, () => ctx.finish());
 			}
 		});
 
