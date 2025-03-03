@@ -15,6 +15,7 @@ const newGame: Minigame = {
 	start(ctx) {
 		const game = ctx.make();
 		let knocksLeft = ctx.difficulty == 1 ? 3 : ctx.difficulty == 2 ? 6 : ctx.difficulty == 3 ? 10 : 10;
+		let hasWon = false;
 
 		const door = game.add([
 			ctx.sprite("door"),
@@ -33,6 +34,8 @@ const newGame: Minigame = {
 				return;
 			}
 			else if (knocksLeft == 0) {
+				if (hasWon) return;
+				if (!hasWon) hasWon = true;
 				door.destroy();
 
 				const bean = game.add([
@@ -56,10 +59,14 @@ const newGame: Minigame = {
 		});
 
 		ctx.onTimeout(() => {
-			if (knocksLeft > 0) ctx.lose();
-			ctx.wait(1, () => {
-				ctx.finish();
-			});
+			if (hasWon) return;
+
+			if (knocksLeft > 0) {
+				ctx.lose();
+				ctx.wait(1, () => {
+					ctx.finish();
+				});
+			}
 		});
 
 		return game;

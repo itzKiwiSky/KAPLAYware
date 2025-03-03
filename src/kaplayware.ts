@@ -1,10 +1,20 @@
-import { assets } from "@kaplayjs/crew";
-import kaplay, { AreaComp, Asset, AudioPlay, AudioPlayOpt, Color, GameObj, KAPLAYCtx, KAPLAYOpt, KEventController, Key, SpriteCompOpt, SpriteData } from "kaplay";
+import { Asset, AudioPlay, AudioPlayOpt, Color, GameObj, KAPLAYCtx, KAPLAYOpt, KEventController, Key, SpriteCompOpt, SpriteData } from "kaplay";
+import k from "./engine";
 import { addBomb, addPrompt } from "./objects";
 import { overload2 } from "./overload";
-import { dragCompPlugin } from "./plugins/drag";
+import cursor from "./plugins/cursor";
 import { loseTransition, prepTransition, speedupTransition, winTransition } from "./transitions";
-import { Button, KaplayWareCtx, LoadCtx, Minigame, MinigameAPI, MinigameCtx } from "./types";
+import { Button, KaplayWareCtx, KAPLAYwareOpts, LoadCtx, Minigame, MinigameAPI, MinigameCtx } from "./types";
+
+export const friends = [
+	"bobo",
+	"bag",
+	"ghosty",
+	"goldfly",
+	"marroc",
+	"tga",
+	"gigagantrum",
+];
 
 export const loadAPIs = [
 	"loadRoot",
@@ -31,6 +41,7 @@ export const gameAPIs = [
 	"color",
 	"opacity",
 	"sprite",
+	// "sprite",
 	"text",
 	"rect",
 	"circle",
@@ -133,124 +144,28 @@ export const gameAPIs = [
 	"drag",
 ] as const;
 
-export const friends = [
-	"bobo",
-	"bag",
-	"ghosty",
-	"goldfly",
-	"marroc",
-	"tga",
-	"gigagantrum",
-];
-
 const DEFAULT_DURATION = 4;
 const FORCE_SPEED_ON_GAME = false;
 
-export default function kaplayware(k: KAPLAYCtx, games: Minigame[] = [], opts: KAPLAYOpt = {}): KaplayWareCtx {
-	k.setVolume(0.5);
-
-	k.loadBitmapFont("happy-o", "fonts/happy-o.png", 31, 39);
-
-	k.loadSound("@prepJingle", "sounds/prepJingle.ogg");
-	k.loadSound("@winJingle", "sounds/winJingle.ogg");
-	k.loadSound("@loseJingle", "sounds/loseJingle.ogg");
-	k.loadSound("@speedJingle", "sounds/speedJingle.ogg");
-	k.loadSound("@tick", "sounds/bombtick.mp3");
-	k.loadSound("@explosion", "sounds/explosion.mp3");
-
-	k.loadSprite("@bomb", "sprites/bomb.png");
-	k.loadSprite("@bomb_cord", "sprites/bomb_cord.png");
-	k.loadSprite("@bomb_cord1", "sprites/bomb_cord1.png");
-	k.loadSprite("@bomb_fuse", "sprites/bomb_fuse.png");
-
-	k.loadSprite("@bean", assets.bean.sprite);
-	k.loadSprite("@beant", assets.beant.sprite);
-	k.loadSprite("@mark", assets.mark.sprite);
-	k.loadSprite("@cloud", assets.cloud.sprite);
-	k.loadSprite("@heart", assets.heart.sprite);
-	k.loadSprite("@sun", assets.sun.sprite);
-	k.loadSprite("@cloud", assets.cloud.sprite);
-	k.loadSprite("@grass_tile", "sprites/grass.png");
-	k.loadSprite("@trophy", "sprites/trophy.png");
-	k.loadSpriteAtlas("sprites/cursor.png", {
-		"@cursor": {
-			width: 28,
-			height: 32,
-			x: 0,
-			y: 0,
-		},
-		"@cursor_point": {
-			width: 28,
-			height: 32,
-			x: 28,
-			y: 0,
-		},
-		"@cursor_like": {
-			width: 28,
-			height: 32,
-			x: 28 * 2,
-			y: 0,
-		},
-		"@cursor_knock": {
-			width: 28,
-			height: 32,
-			x: 28 * 3,
-			y: 0,
-		},
-	});
-
-	// friends for speed up
-	friends.forEach((friend) => {
-		k.loadSprite(`@${friend}`, assets[friend].sprite);
-	});
-
+export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts = {}): KaplayWareCtx {
 	const coolPrompt = (prompt: string) => prompt.toUpperCase() + (prompt[prompt.length - 1] == "!" ? "" : "!");
 	const getGameID = (g: Minigame) => `${g.author}:${g.prompt}`;
 	const getByID = (id: string) => games.find((minigame) => `${minigame.author}:${minigame.prompt}` == id);
 	let wonLastGame: boolean = null;
-	let visibleCursor: boolean = !k.isFocused();
 	let minigameHistory: string[] = []; // this is so you can't get X minigame, Y minigame, then X minigame again
 
-	k.setCursor("none");
-
 	/** Game object that runs everything in the gamescene */
-	const GameScene = k.add([k.stay()]);
+	const GameScene = k.add([]);
 
 	/** The container for minigames, if you want to pause the minigame you should pause this */
 	const gameBox = GameScene.add([k.fixed(), k.pos()]);
 
-	/** The cursor object :) */
-	const cursor = k.add([
-		k.sprite("@cursor"),
-		k.pos(Infinity),
-		k.anchor("topleft"),
-		k.scale(2),
-		k.opacity(),
-		k.z(999),
-		k.stay(),
-	]);
-
 	GameScene.onUpdate(() => {
 		gameBox.paused = !wareCtx.gameRunning;
-	});
-
-	cursor.onUpdate(() => {
-		if (visibleCursor) cursor.opacity = k.lerp(cursor.opacity, 1, 0.5);
-		else cursor.opacity = k.lerp(cursor.opacity, 0, 0.5);
-
-		if (!visibleCursor) return;
-		const hovered = gameBox.get("area", { recursive: true }).filter((obj) => obj.isHovering() && wareCtx.gameRunning).length > 0;
-		if (k.isMouseDown("left")) cursor.sprite = "@cursor_knock";
-		if (hovered && !k.isMouseDown("left")) cursor.sprite = "@cursor_point";
-		else if (!hovered && !k.isMouseDown("left")) cursor.sprite = "@cursor";
-	});
-
-	cursor.onMouseMove(() => {
-		cursor.pos = k.mousePos();
+		cursor.canPoint = wareCtx.gameRunning;
 	});
 
 	const wareCtx: KaplayWareCtx = {
-		kCtx: k,
 		inputEnabled: false,
 		gameRunning: false,
 		time: 0,
@@ -261,15 +176,6 @@ export default function kaplayware(k: KAPLAYCtx, games: Minigame[] = [], opts: K
 		gameIdx: 0,
 		timesSpeed: 0,
 		gamesPlayed: 0,
-		reset() {
-			this.lives = 4;
-			this.score = 1;
-			this.speed = 1;
-			this.difficulty = 1;
-			this.timesSpeed = 0;
-			this.gamesPlayed = 0;
-			wonLastGame = null;
-		},
 
 		runGame(g) {
 			// SETUP
@@ -460,6 +366,11 @@ export default function kaplayware(k: KAPLAYCtx, games: Minigame[] = [], opts: K
 
 					if (bomb) bomb.destroy();
 				},
+				cursor: {
+					set color(param: Color) {
+						cursor.color = param;
+					},
+				},
 				difficulty: wareCtx.difficulty,
 				lives: wareCtx.lives,
 				speed: wareCtx.speed,
@@ -505,6 +416,7 @@ export default function kaplayware(k: KAPLAYCtx, games: Minigame[] = [], opts: K
 			wareCtx.gameRunning = false;
 
 			function prep() {
+				if (opts.onlyMouse) games = games.filter((game) => game.mouse);
 				const nextGame = k.choose(games.filter((game) => {
 					if (games.length == 1) return game;
 					else {
@@ -518,8 +430,8 @@ export default function kaplayware(k: KAPLAYCtx, games: Minigame[] = [], opts: K
 				wareCtx.runGame(nextGame);
 				minigameHistory[wareCtx.gamesPlayed - 1] = getGameID(nextGame);
 
-				if (nextGame.mouse) visibleCursor = true;
-				else visibleCursor = false;
+				if (nextGame.mouse) cursor.visible = true;
+				else cursor.visible = false;
 
 				let prompt: ReturnType<typeof addPrompt> = null;
 
@@ -527,8 +439,8 @@ export default function kaplayware(k: KAPLAYCtx, games: Minigame[] = [], opts: K
 				prepTrans.onHalf(() => {
 					prompt = addPrompt(k, coolPrompt(nextGame.prompt));
 
-					if (nextGame.mouse && nextGame.mouse.hidden) visibleCursor = false;
-					else if (nextGame.mouse && !nextGame.mouse.hidden) visibleCursor = true;
+					if (nextGame.mouse && nextGame.mouse.hidden) cursor.visible = false;
+					else if (nextGame.mouse && !nextGame.mouse.hidden) cursor.visible = true;
 				});
 
 				prepTrans.onEnd(() => {
@@ -546,7 +458,7 @@ export default function kaplayware(k: KAPLAYCtx, games: Minigame[] = [], opts: K
 				else transition = loseTransition(k, wareCtx);
 				wonLastGame = null;
 
-				if (wareCtx.curGame().mouse) visibleCursor = true;
+				if (wareCtx.curGame().mouse) cursor.visible = true;
 
 				transition.onEnd(() => {
 					if (!wonLastGame && wareCtx.lives == 0) {
@@ -584,6 +496,7 @@ export default function kaplayware(k: KAPLAYCtx, games: Minigame[] = [], opts: K
 		game.urlPrefix = game.urlPrefix ?? "";
 		game.duration = game.duration ?? DEFAULT_DURATION;
 		game.rgb = game.rgb ?? [0, 0, 0];
+		if ("r" in game.rgb) game.rgb = [game.rgb.r, game.rgb.g, game.rgb.b];
 
 		if (game.load) {
 			// patch loadXXX() functions to scoped asset names
@@ -627,8 +540,6 @@ export default function kaplayware(k: KAPLAYCtx, games: Minigame[] = [], opts: K
 	}
 
 	gameBox.onDraw(() => {
-		if (k.getSceneName() == "focus") return;
-
 		const BG_S = 0.27;
 		const BG_L = 0.52;
 

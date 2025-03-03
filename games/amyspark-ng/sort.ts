@@ -1,5 +1,4 @@
 import { assets } from "@kaplayjs/crew";
-import { GameObj } from "kaplay";
 import { curDraggin, setCurDragging } from "../../src/plugins/drag.ts";
 import { Minigame } from "../../src/types.ts";
 

@@ -1,4 +1,7 @@
-import kaplay from "kaplay";
+import k from "./engine";
+import "./loader";
+import "./plugins/cursor";
+
 import connectGame from "../games/amyspark-ng/connect";
 import dodgeGame from "../games/amyspark-ng/dodge";
 import getGame from "../games/amyspark-ng/get";
@@ -7,7 +10,6 @@ import sortGame from "../games/amyspark-ng/sort";
 import spamGame from "../games/amyspark-ng/spam";
 import chaseGame from "../games/nanopoison/chase";
 import kaplayware from "./kaplayware";
-import { dragCompPlugin } from "./plugins/drag";
 
 const games = [
 	getGame,
@@ -19,17 +21,7 @@ const games = [
 	sortGame,
 ];
 
-export const k = kaplay({
-	width: 800,
-	height: 600,
-	letterbox: true,
-	background: [0, 0, 0],
-	font: "happy-o",
-	focus: false,
-	plugins: [dragCompPlugin],
-});
-
-const ware = kaplayware(k, games);
+k.setCursor("none");
 
 k.scene("focus", () => {
 	k.add([
@@ -47,7 +39,7 @@ k.scene("focus", () => {
 });
 
 k.scene("game", () => {
-	ware.reset();
+	const ware = kaplayware(games, { onlyMouse: true });
 	ware.nextGame();
 });
 
