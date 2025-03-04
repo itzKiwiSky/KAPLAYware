@@ -1,4 +1,4 @@
-import { Asset, AudioPlay, AudioPlayOpt, Color, GameObj, KAPLAYCtx, KAPLAYOpt, KEventController, Key, SpriteCompOpt, SpriteData } from "kaplay";
+import { Asset, AudioPlay, AudioPlayOpt, Color, GameObj, KAPLAYCtx, KAPLAYOpt, KEventController, Key, SpriteCompOpt, SpriteData, Vec2 } from "kaplay";
 import k from "./engine";
 import { addBomb, addPrompt } from "./objects";
 import { overload2 } from "./overload";
@@ -179,19 +179,19 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			let clockRunning = true;
 			let canPlaySounds = false;
 
-			const minigameUpdate = GameScene.onUpdate(() => {
-				timerEvents.forEach((ev) => ev.paused = !wareCtx.gameRunning);
-				inputEvents.forEach((ev) => ev.paused = !wareCtx.gameRunning);
-			});
-
 			const gameCtx = {};
 			for (const api of gameAPIs) {
 				gameCtx[api] = k[api];
 
-				if (api == "sprite") {
+				if (api == "make") {
+					gameCtx[api] = (...args: any) => {
+						return k.make(...args);
+					};
+				}
+				else if (api == "sprite") {
 					gameCtx[api] = (spr: string | SpriteData | Asset<SpriteData>, opts?: SpriteCompOpt) => {
 						const hasAt = (t: any) => typeof t == "string" && t.startsWith("@");
-						const getSpriteThing = (t: any) => hasAt(t) ? t : `${getGameID(g)}-${spr}`;
+						const getSpriteThing = (t: any) => hasAt(t) ? t : `${getGameID(g)}-${t}`;
 						const spriteComp = k.sprite(getSpriteThing(spr), opts);
 
 						return {
@@ -266,7 +266,8 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				}
 				else if (api == "play") {
 					gameCtx[api] = (soundName: any, opts: AudioPlayOpt) => {
-						const sound = k.play(`${getGameID(g)}-${soundName}`, opts);
+						const sound = k.play(soundName.startsWith("@") ? soundName : `${getGameID(g)}-${soundName}`, opts);
+
 						const newSound = {
 							...sound,
 							set paused(param: boolean) {
@@ -290,13 +291,18 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 						};
 
 						if (!canPlaySounds) {
-							if (opts && opts.paused) return;
+							if (opts?.paused) return;
 							queuedSounds.push(sound);
 							sound.paused = true;
 						}
 
 						audioPlays.push(newSound);
 						return newSound;
+					};
+				}
+				else if (api == "burp") {
+					gameCtx[api] = (opts: AudioPlayOpt) => {
+						return gameCtx["play"]("@burp", opts);
 					};
 				}
 			}
@@ -337,6 +343,11 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 					inputEvents.push(ev);
 					return ev;
 				},
+				onMouseMove(action) {
+					const ev = k.onMouseMove(action);
+					inputEvents.push(ev);
+					return ev;
+				},
 				onTimeout: (action) => onTimeoutEvent.add(action),
 				win() {
 					wareCtx.score++;
@@ -353,8 +364,9 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 					inputEvents.forEach((ev) => ev.cancel());
 					timerEvents.forEach((ev) => ev.cancel());
 					audioPlays.forEach((sound) => sound.stop());
-					minigameUpdate.cancel();
+					GAMEBOXUPDATE.cancel();
 					wareCtx.nextGame();
+					canPlaySounds = false;
 
 					if (bomb) bomb.destroy();
 				},
@@ -374,7 +386,12 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				...gameAPI,
 			} as unknown as MinigameCtx));
 
-			gameBox.onUpdate(() => {
+			const GAMEBOXUPDATE = k.onUpdate(() => {
+				timerEvents.forEach((ev) => ev.paused = !wareCtx.gameRunning);
+				inputEvents.forEach((ev) => ev.paused = !wareCtx.gameRunning);
+
+				if (!wareCtx.gameRunning) return;
+
 				if (clockRunning) {
 					if (!canPlaySounds) {
 						canPlaySounds = true;
@@ -405,6 +422,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			if (wareCtx.gamesPlayed < 10) wareCtx.difficulty = 1;
 			else if (wareCtx.gamesPlayed >= 10) wareCtx.difficulty = 2;
 			else if (wareCtx.gamesPlayed >= 20) wareCtx.difficulty = 3;
+			wareCtx.difficulty = 3;
 			wareCtx.gameRunning = false;
 
 			function prep() {
