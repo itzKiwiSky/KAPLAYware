@@ -5,16 +5,7 @@ import { overload2 } from "./overload";
 import cursor from "./plugins/cursor";
 import { loseTransition, prepTransition, speedupTransition, winTransition } from "./transitions";
 import { Button, KaplayWareCtx, KAPLAYwareOpts, LoadCtx, Minigame, MinigameAPI, MinigameCtx } from "./types";
-
-export const friends = [
-	"bobo",
-	"bag",
-	"ghosty",
-	"goldfly",
-	"marroc",
-	"tga",
-	"gigagantrum",
-];
+import { coolPrompt, getGameID } from "./utils";
 
 export const loadAPIs = [
 	"loadRoot",
@@ -41,7 +32,6 @@ export const gameAPIs = [
 	"color",
 	"opacity",
 	"sprite",
-	// "sprite",
 	"text",
 	"rect",
 	"circle",
@@ -148,9 +138,6 @@ const DEFAULT_DURATION = 4;
 const FORCE_SPEED_ON_GAME = false;
 
 export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts = {}): KaplayWareCtx {
-	const coolPrompt = (prompt: string) => prompt.toUpperCase() + (prompt[prompt.length - 1] == "!" ? "" : "!");
-	const getGameID = (g: Minigame) => `${g.author}:${g.prompt}`;
-	const getByID = (id: string) => games.find((minigame) => `${minigame.author}:${minigame.prompt}` == id);
 	let wonLastGame: boolean = null;
 	let minigameHistory: string[] = []; // this is so you can't get X minigame, Y minigame, then X minigame again
 
@@ -203,15 +190,19 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 
 				if (api == "sprite") {
 					gameCtx[api] = (spr: string | SpriteData | Asset<SpriteData>, opts?: SpriteCompOpt) => {
-						const spriteComp = k.sprite(`${getGameID(g)}-${spr}`, opts);
+						const hasAt = (t: any) => typeof t == "string" && t.startsWith("@");
+						const getSpriteThing = (t: any) => hasAt(t) ? t : `${getGameID(g)}-${spr}`;
+						const spriteComp = k.sprite(getSpriteThing(spr), opts);
+
 						return {
 							...spriteComp,
 							set sprite(val: string) {
-								spriteComp.sprite = `${getGameID(g)}-${val}`;
+								spriteComp.sprite = getSpriteThing(val);
 							},
 
 							get sprite() {
-								return spr.toString();
+								if (spriteComp.sprite.startsWith(getGameID(g))) return spriteComp.sprite.replace(`${getGameID(g)}-`, "");
+								else return spriteComp.sprite;
 							},
 						};
 					};
@@ -362,6 +353,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 					inputEvents.forEach((ev) => ev.cancel());
 					timerEvents.forEach((ev) => ev.cancel());
 					audioPlays.forEach((sound) => sound.stop());
+					minigameUpdate.cancel();
 					wareCtx.nextGame();
 
 					if (bomb) bomb.destroy();
@@ -485,58 +477,11 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 		},
 	};
 
-	// # LOADING
-	const loadCtx = {};
-	// TODO: report error msg when calling forbidden functions
-	for (const api of loadAPIs) {
-		loadCtx[api] = k[api];
-	}
-
 	for (const game of games) {
 		game.urlPrefix = game.urlPrefix ?? "";
 		game.duration = game.duration ?? DEFAULT_DURATION;
 		game.rgb = game.rgb ?? [0, 0, 0];
 		if ("r" in game.rgb) game.rgb = [game.rgb.r, game.rgb.g, game.rgb.b];
-
-		if (game.load) {
-			// patch loadXXX() functions to scoped asset names
-			const loaders = [
-				"loadSprite",
-				"loadSpriteAtlas",
-				"loadAseprite",
-				"loadPedit",
-				"loadJSON",
-				"loadSound",
-				"loadFont",
-				"loadBitmapFont",
-				"loadShader",
-				"loadShaderURL",
-			];
-
-			for (const loader of loaders) {
-				loadCtx[loader] = (name: string, ...args: any) => {
-					if (typeof name === "string") {
-						name = `${getGameID(game)}-${name}`;
-					}
-					return k[loader](name, ...args);
-				};
-			}
-
-			// patch loadRoot() to consider g.urlPrefix
-			if (game.urlPrefix != undefined) {
-				loadCtx["loadRoot"] = (p: string) => {
-					if (p) k.loadRoot(game.urlPrefix + p);
-					return k.loadRoot().slice(game.urlPrefix.length);
-				};
-				k.loadRoot(game.urlPrefix);
-			}
-			else {
-				k.loadRoot("");
-			}
-
-			game.load(loadCtx as LoadCtx);
-			loadCtx["loadRoot"] = k.loadRoot;
-		}
 	}
 
 	gameBox.onDraw(() => {

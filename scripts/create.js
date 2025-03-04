@@ -22,13 +22,12 @@ const newGame: Minigame = {
 	rgb: [0, 0, 0],
 	urlPrefix: "${assets_dir}",
 	load(ctx) {
-		ctx.loadSprite("bean", assets.bean.sprite);
 	},
 	start(ctx) {
 		const game = ctx.make();
 
 		const bean = game.add([
-			ctx.sprite("bean"),
+			ctx.sprite("@bean"),
 			ctx.pos(),
 		]);
 

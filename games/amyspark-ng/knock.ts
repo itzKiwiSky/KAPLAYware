@@ -8,9 +8,6 @@ const newGame: Minigame = {
 	rgb: [74, 48, 82],
 	urlPrefix: "/games/amyspark-ng/assets",
 	load(ctx) {
-		ctx.loadSprite("bean", assets.bean.sprite);
-		ctx.loadSprite("door", "/sprites/door.png");
-		ctx.loadSound("knock", "/sounds/knock.ogg");
 	},
 	start(ctx) {
 		const game = ctx.make();
@@ -18,7 +15,7 @@ const newGame: Minigame = {
 		let hasWon = false;
 
 		const door = game.add([
-			ctx.sprite("door"),
+			ctx.sprite("@door"),
 			ctx.anchor("center"),
 			ctx.pos(ctx.center()),
 			ctx.scale(2),
@@ -39,7 +36,7 @@ const newGame: Minigame = {
 				door.destroy();
 
 				const bean = game.add([
-					ctx.sprite("bean"),
+					ctx.sprite("@bean"),
 					ctx.pos(ctx.center()),
 					ctx.scale(3),
 					ctx.anchor("center"),

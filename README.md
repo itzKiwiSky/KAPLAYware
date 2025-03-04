@@ -21,5 +21,13 @@ Then you can reference this folder in your games like
 }
 ```
 
+If you want to use assets created by kaplay, you can use all the assets found in the `crew` package! but you have to prefix your sprite with "@"
+
+```ts
+ctx.add([
+    ctx.sprite("@bean")
+])
+```
+
 ### Notes:
 - Please refrain to use `onMousePress`!! You can use `ctx.onClick()` and `obj.onClick`, but no mouse button (mouse minigames are only allowed to be played with left click)
