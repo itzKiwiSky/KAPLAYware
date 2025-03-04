@@ -14,7 +14,6 @@ const file_path = `games/${author}/${gamePrompt}.ts`;
 const assets_dir = `${author_dir}/assets/`;
 
 const template = `
-import { assets } from "@kaplayjs/crew";
 import { Minigame } from "../../src/types";
 
 const newGame: Minigame = {

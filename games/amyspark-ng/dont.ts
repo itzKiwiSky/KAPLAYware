@@ -6,7 +6,7 @@ const dontGame: Minigame = {
 	prompt: "don't",
 	author: "amyspark-ng",
 	rgb: mulfokColors.DARK_BLUE,
-	duration: 6,
+	duration: 4,
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {
 		ctx.loadSprite("button", "sprites/button.png", {
