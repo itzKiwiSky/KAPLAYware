@@ -327,6 +327,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 					inputEvents.push(ev);
 					return ev;
 				},
+				isButtonPressed: (btn) => k.isKeyPressed(dirToKeys(btn)),
 				onButtonRelease: (btn, action) => {
 					const func = () => wareCtx.inputEnabled ? action() : false;
 					let ev: KEventController = null;
@@ -335,6 +336,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 					inputEvents.push(ev);
 					return ev;
 				},
+				isButtonReleased: (btn) => k.isKeyReleased(dirToKeys(btn)),
 				onButtonDown: (btn, action) => {
 					const func = () => wareCtx.inputEnabled ? action() : false;
 					let ev: KEventController = null;
@@ -343,6 +345,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 					inputEvents.push(ev);
 					return ev;
 				},
+				isButtonDown: (btn) => k.isKeyDown(dirToKeys(btn)),
 				onMouseMove(action) {
 					const ev = k.onMouseMove(action);
 					inputEvents.push(ev);
@@ -422,7 +425,6 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			if (wareCtx.gamesPlayed < 10) wareCtx.difficulty = 1;
 			else if (wareCtx.gamesPlayed >= 10) wareCtx.difficulty = 2;
 			else if (wareCtx.gamesPlayed >= 20) wareCtx.difficulty = 3;
-			wareCtx.difficulty = 3;
 			wareCtx.gameRunning = false;
 
 			function prep() {

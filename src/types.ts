@@ -28,6 +28,10 @@ export type MinigameAPI = {
 	 * Register an event that runs every frame when a button is held down.
 	 */
 	onButtonDown(btn: Button, action: () => void): KEventController;
+	isButtonPressed(btn: Button): boolean;
+	isButtonDown(btn: Button): boolean;
+	isButtonReleased(btn: Button): boolean;
+
 	onMouseMove(action: (pos: Vec2, delta: Vec2) => void): KEventController;
 	/**
 	 * Register an event that runs once when timer runs out.

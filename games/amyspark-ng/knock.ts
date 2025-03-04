@@ -8,6 +8,7 @@ const newGame: Minigame = {
 	rgb: [74, 48, 82],
 	urlPrefix: "/games/amyspark-ng/assets",
 	load(ctx) {
+		ctx.loadSound("knock", "sounds/knock.ogg");
 	},
 	start(ctx) {
 		const game = ctx.make();

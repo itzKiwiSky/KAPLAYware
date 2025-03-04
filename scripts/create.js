@@ -10,11 +10,12 @@ if (!author || !gamePrompt) {
 
 const author_dir = `games/${author}`;
 const game_dir = `games/${author}`;
+const file_path = `games/${author}/${gamePrompt}.ts`;
 const assets_dir = `${author_dir}/assets/`;
 
 const template = `
 import { assets } from "@kaplayjs/crew";
-import { Minigame } from "../../../src/types.ts";
+import { Minigame } from "../../src/types";
 
 const newGame: Minigame = {
 	prompt: "${gamePrompt}",
@@ -44,13 +45,13 @@ const isDir = (path) =>
 		.then((stat) => stat.isDirectory())
 		.catch(() => false);
 
-if (await isDir(game_dir)) {
-	console.error(`Game already exists at "${game_dir}/${gamePrompt}.ts"!`);
+if (await isDir(file_path)) {
+	console.error(`Game already exists at "${file_path}"!`);
 	process.exit(1);
 }
 
 await fs.mkdir(game_dir, { recursive: true }); // makes the actual game dir
 await fs.mkdir(assets_dir, { recursive: true }); // makes the assets dir
-await fs.writeFile(`${game_dir}/${gamePrompt}.ts`, template); // writes the template code to game.ts
+await fs.writeFile(`${file_path}`, template); // writes the template code to game.ts
 
-console.log(`Game created at ${game_dir}!`);
+console.log(`Game created at ${file_path}!`);
