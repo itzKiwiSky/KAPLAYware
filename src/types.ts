@@ -33,6 +33,7 @@ export type MinigameAPI = {
 	isButtonReleased(btn: Button): boolean;
 
 	onMouseMove(action: (pos: Vec2, delta: Vec2) => void): KEventController;
+	onMouseRelease(action: () => void): KEventController;
 	/**
 	 * Register an event that runs once when timer runs out.
 	 */

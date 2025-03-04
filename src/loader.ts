@@ -5,6 +5,7 @@ import { loadAPIs } from "./kaplayware";
 import { LoadCtx } from "./types";
 import { getGameID } from "./utils";
 
+k.loadBitmapFont("happy", "fonts/happy.png", 31, 39);
 k.loadBitmapFont("happy-o", "fonts/happy-o.png", 31, 39);
 
 k.loadSound("@prepJingle", "sounds/prepJingle.ogg");

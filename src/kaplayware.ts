@@ -351,6 +351,11 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 					inputEvents.push(ev);
 					return ev;
 				},
+				onMouseRelease(action) {
+					const ev = k.onMouseRelease(action);
+					inputEvents.push(ev);
+					return ev;
+				},
 				onTimeout: (action) => onTimeoutEvent.add(action),
 				win() {
 					wareCtx.score++;
@@ -364,6 +369,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 					wonLastGame = false;
 				},
 				finish: () => {
+					// TODO: Make it so it throws an error if you've finished without winning/losing
 					inputEvents.forEach((ev) => ev.cancel());
 					timerEvents.forEach((ev) => ev.cancel());
 					audioPlays.forEach((sound) => sound.stop());
@@ -423,7 +429,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 		nextGame() {
 			wareCtx.gamesPlayed++;
 			if (wareCtx.gamesPlayed < 10) wareCtx.difficulty = 1;
-			else if (wareCtx.gamesPlayed >= 10) wareCtx.difficulty = 2;
+			else if (wareCtx.gamesPlayed >= 10 && wareCtx.gamesPlayed < 20) wareCtx.difficulty = 2;
 			else if (wareCtx.gamesPlayed >= 20) wareCtx.difficulty = 3;
 			wareCtx.gameRunning = false;
 

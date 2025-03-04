@@ -29,7 +29,7 @@ cursor.onUpdate(() => {
 	cursor.opacity = k.lerp(cursor.opacity, opacity, 0.5);
 
 	if (opacity == 0) return;
-	const hovered = k.get("area", { recursive: true }).filter((obj) => obj.isHovering() && canPoint).length > 0;
+	const hovered = k.get("area", { recursive: true }).filter((obj) => obj.isHovering() && canPoint && !obj.is("ignorepoint")).length > 0;
 	if (k.isMouseDown("left")) cursor.sprite = "@cursor_knock";
 	if (hovered && !k.isMouseDown("left")) cursor.sprite = "@cursor_point";
 	else if (!hovered && !k.isMouseDown("left")) cursor.sprite = "@cursor";

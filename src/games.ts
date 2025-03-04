@@ -8,20 +8,22 @@ import knockGame from "../games/amyspark-ng/knock";
 import slapGame from "../games/amyspark-ng/slap";
 import sortGame from "../games/amyspark-ng/sort";
 import spamGame from "../games/amyspark-ng/spam";
+import uploadGame from "../games/amyspark-ng/upload";
 import chaseGame from "../games/nanopoison/chase";
 
 const games = [
-	// hitGame,
-	// getGame,
 	// spamGame,
+	// getGame,
+	// chaseGame,
 	// knockGame,
 	// connectGame,
-	// chaseGame,
 	// dodgeGame,
 	// sortGame,
+	// hitGame,
 	// avoidGame,
 	// dontGame,
-	slapGame,
+	// slapGame,
+	uploadGame,
 ];
 
 export default games;
