@@ -11,6 +11,7 @@ export const k = kaplay({
 	font: "happy-o",
 	focus: false,
 	plugins: [dragCompPlugin, wareSpriteCompPlugin, watchPlugin],
+	debug: true,
 });
 
 console.log("KAPLAY RAN");

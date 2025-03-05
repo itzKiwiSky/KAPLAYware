@@ -132,6 +132,7 @@ export const gameAPIs = [
 	"setGravity",
 	"shake",
 	"drag",
+	"isMouseMoved",
 ] as const;
 
 const DEFAULT_DURATION = 4;
