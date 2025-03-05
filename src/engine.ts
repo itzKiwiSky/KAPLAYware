@@ -1,6 +1,7 @@
 import kaplay from "kaplay";
-import { dragCompPlugin } from "./plugins/drag";
-import { spriteCompPlugin } from "./plugins/sprite";
+import dragCompPlugin from "./plugins/drag";
+import wareSpriteCompPlugin from "./plugins/sprite";
+import watchPlugin from "./plugins/watch";
 
 export const k = kaplay({
 	width: 800,
@@ -9,7 +10,7 @@ export const k = kaplay({
 	background: [0, 0, 0],
 	font: "happy-o",
 	focus: false,
-	plugins: [dragCompPlugin, spriteCompPlugin],
+	plugins: [dragCompPlugin, wareSpriteCompPlugin, watchPlugin],
 });
 
 console.log("KAPLAY RAN");

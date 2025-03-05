@@ -12,7 +12,7 @@ export function wareSprite(spr: CustomSprite<string> | SpriteData | Asset<Sprite
 	return k.sprite(spr, opt);
 }
 
-export function spriteCompPlugin() {
+export default function wareSpriteCompPlugin() {
 	return {
 		wareSprite,
 	};

@@ -111,6 +111,7 @@ export type Minigame = {
 };
 
 export type KAPLAYwareOpts = {
+	debug?: boolean;
 	onlyMouse?: boolean;
 };
 

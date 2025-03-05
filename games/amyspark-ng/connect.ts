@@ -34,7 +34,7 @@ const newGame: Minigame = {
 			ctx.Color.fromHex("#ee8fcb"),
 		];
 
-		const COLOR_AMOUNT = ctx.difficulty == 1 ? 3 : ctx.difficulty == 2 ? 4 : ctx.difficulty == 3 ? 5 : 0;
+		const COLOR_AMOUNT = ctx.difficulty == 1 ? 2 : ctx.difficulty == 2 ? 3 : ctx.difficulty == 3 ? 4 : 0;
 
 		const gameColors = pickRandom(allColors, COLOR_AMOUNT);
 		const shuffledColors = shuffleArray(gameColors);

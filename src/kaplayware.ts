@@ -135,11 +135,16 @@ export const gameAPIs = [
 ] as const;
 
 const DEFAULT_DURATION = 4;
-const FORCE_SPEED_ON_GAME = false;
 
 export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts = {}): KaplayWareCtx {
 	let wonLastGame: boolean = null;
 	let minigameHistory: string[] = []; // this is so you can't get X minigame, Y minigame, then X minigame again
+
+	// debug variables
+	let skipMinigame = false;
+	let forceSpeed = false;
+	let restartMinigame = false;
+	let overrideDifficulty = null as 1 | 2 | 3;
 
 	/** Game object that runs everything in the gamescene */
 	const GameScene = k.add([]);
@@ -150,6 +155,39 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 	GameScene.onUpdate(() => {
 		gameBox.paused = !wareCtx.gameRunning;
 		cursor.canPoint = wareCtx.gameRunning;
+
+		if (opts.debug) {
+			if (k.isKeyPressed("q")) {
+				restartMinigame = true;
+				if (k.isKeyDown("shift")) {
+					skipMinigame = true;
+					k.debug.log("SKIPPED: " + getGameID(wareCtx.curGame()));
+				}
+				else k.debug.log("RESTARTED: " + getGameID(wareCtx.curGame()));
+			}
+
+			if (k.isKeyDown("shift") && k.isKeyPressed("w")) {
+				restartMinigame = true;
+				forceSpeed = true;
+				k.debug.log("RESTARTED + SPEED UP: " + getGameID(wareCtx.curGame()));
+			}
+
+			if (k.isKeyPressed("1")) {
+				overrideDifficulty = 1;
+				restartMinigame = true;
+				k.debug.log("NEW DIFFICULTY: " + overrideDifficulty);
+			}
+			else if (k.isKeyPressed("2")) {
+				overrideDifficulty = 2;
+				restartMinigame = true;
+				k.debug.log("NEW DIFFICULTY: " + overrideDifficulty);
+			}
+			else if (k.isKeyPressed("3")) {
+				overrideDifficulty = 3;
+				restartMinigame = true;
+				k.debug.log("NEW DIFFICULTY: " + overrideDifficulty);
+			}
+		}
 	});
 
 	const wareCtx: KaplayWareCtx = {
@@ -363,12 +401,12 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 					wonLastGame = true;
 					if (bomb) bomb.turnOff();
 				},
-				lose: () => {
+				lose() {
 					wareCtx.lives--;
 					clockRunning = false;
 					wonLastGame = false;
 				},
-				finish: () => {
+				finish() {
 					// TODO: Make it so it throws an error if you've finished without winning/losing
 					inputEvents.forEach((ev) => ev.cancel());
 					timerEvents.forEach((ev) => ev.cancel());
@@ -399,8 +437,12 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				timerEvents.forEach((ev) => ev.paused = !wareCtx.gameRunning);
 				inputEvents.forEach((ev) => ev.paused = !wareCtx.gameRunning);
 
-				if (!wareCtx.gameRunning) return;
+				if (restartMinigame) {
+					gameAPI.win();
+					gameAPI.finish();
+				}
 
+				if (!wareCtx.gameRunning) return;
 				if (clockRunning) {
 					if (!canPlaySounds) {
 						canPlaySounds = true;
@@ -433,20 +475,28 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			else if (wareCtx.gamesPlayed >= 20) wareCtx.difficulty = 3;
 			wareCtx.gameRunning = false;
 
+			if (overrideDifficulty) wareCtx.difficulty = overrideDifficulty;
+
 			function prep() {
 				if (opts.onlyMouse) games = games.filter((game) => game.mouse);
-				const nextGame = k.choose(games.filter((game) => {
-					if (games.length == 1) return game;
+
+				const availableGames = games.filter((game) => {
+					if (restartMinigame && !skipMinigame) return game == wareCtx.curGame();
+					else if (games.length == 1) return game;
 					else {
 						return game != wareCtx.curGame();
 						// const previousMinigame = getByID(minigameHistory[wareCtx.gamesPlayed - 1]);
 						// if (previousMinigame) return game != wareCtx.curGame() && game != previousMinigame;
 						// else return game != wareCtx.curGame();
 					}
-				}));
+				});
+
+				const nextGame = k.choose(availableGames);
 				wareCtx.gameIdx = games.indexOf(nextGame);
 				wareCtx.runGame(nextGame);
 				minigameHistory[wareCtx.gamesPlayed - 1] = getGameID(nextGame);
+				restartMinigame = false;
+				skipMinigame = false;
 
 				if (nextGame.mouse) cursor.visible = true;
 				else cursor.visible = false;
@@ -484,14 +534,15 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 						return;
 					}
 
-					const timeToSpeedUP = FORCE_SPEED_ON_GAME || wareCtx.gamesPlayed % 5 == 0;
+					const timeToSpeedUP = forceSpeed || wareCtx.gamesPlayed % 5 == 0;
 					if (timeToSpeedUP) {
+						if (forceSpeed == true) forceSpeed = false;
 						wareCtx.timesSpeed++;
+						wareCtx.speedUp();
 						speedupTransition(k, wareCtx).onEnd(() => {
 							k.tween(k.getCamPos(), k.center(), 0.5 / wareCtx.speed, (p) => k.setCamPos(p), k.easings.easeOutQuint);
 							prep();
 						});
-						wareCtx.speedUp();
 					}
 					else prep();
 				});
@@ -502,6 +553,13 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			this.speed += this.speed * 0.07;
 		},
 	};
+
+	k.watch(wareCtx, "score", "Score");
+	k.watch(wareCtx, "lives", "Lives");
+	k.watch(wareCtx, "gamesPlayed", "Games played");
+	k.watch(wareCtx, "difficulty", "Difficulty");
+	k.watch(wareCtx, "speed", "Speed");
+	k.watch(wareCtx, "inputEnabled", "Input enabled");
 
 	for (const game of games) {
 		game.urlPrefix = game.urlPrefix ?? "";

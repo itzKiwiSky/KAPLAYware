@@ -23,7 +23,7 @@ k.scene("focus", () => {
 });
 
 k.scene("game", () => {
-	const ware = kaplayware(games);
+	const ware = kaplayware(games, { debug: true });
 	ware.nextGame();
 });
 
