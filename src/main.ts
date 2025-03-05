@@ -14,7 +14,7 @@ k.scene("focus", () => {
 	]);
 
 	k.add([
-		k.text("CLICK TO FOCUS"),
+		k.text("CLICK TO FOCUS", { font: "happy" }),
 		k.pos(k.center()),
 		k.anchor("center"),
 	]);
