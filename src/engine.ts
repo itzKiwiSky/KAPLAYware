@@ -1,6 +1,5 @@
 import kaplay from "kaplay";
 import dragCompPlugin from "./plugins/drag";
-import wareSpriteCompPlugin from "./plugins/sprite";
 import watchPlugin from "./plugins/watch";
 
 export const k = kaplay({
@@ -10,7 +9,7 @@ export const k = kaplay({
 	background: [0, 0, 0],
 	font: "happy-o",
 	focus: false,
-	plugins: [dragCompPlugin, wareSpriteCompPlugin, watchPlugin],
+	plugins: [dragCompPlugin, watchPlugin],
 	debug: true,
 });
 

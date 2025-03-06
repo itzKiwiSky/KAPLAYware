@@ -13,19 +13,19 @@ import uploadGame from "../games/amyspark-ng/upload";
 import chaseGame from "../games/nanopoison/chase";
 
 const games = [
-	spamGame,
-	getGame,
-	chaseGame,
-	knockGame,
+	// spamGame,
+	// getGame,
+	// chaseGame,
+	// knockGame,
 	connectGame,
-	dodgeGame,
-	sortGame,
-	hitGame,
-	avoidGame,
-	dontGame,
-	slapGame,
-	uploadGame,
-	spreadGame,
+	// dodgeGame,
+	// sortGame,
+	// hitGame,
+	// avoidGame,
+	// dontGame,
+	// slapGame,
+	// uploadGame,
+	// spreadGame,
 ];
 
 export default games;
