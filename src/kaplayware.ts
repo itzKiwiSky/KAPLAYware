@@ -1,5 +1,5 @@
 import { assets } from "@kaplayjs/crew";
-import { Asset, AudioPlay, AudioPlayOpt, Color, GameObj, KAPLAYCtx, KAPLAYOpt, KEventController, Key, SpriteCompOpt, SpriteData, Vec2 } from "kaplay";
+import { Asset, AudioPlay, AudioPlayOpt, Color, DrawSpriteOpt, GameObj, KAPLAYCtx, KAPLAYOpt, KEventController, Key, SpriteCompOpt, SpriteData, Vec2 } from "kaplay";
 import k from "./engine";
 import { addBomb, addPrompt } from "./objects";
 import cursor from "./plugins/cursor";
@@ -157,11 +157,14 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 	let restartMinigame = false;
 	let overrideDifficulty = null as 1 | 2 | 3;
 
-	/** Game object that runs everything in the gamescene */
-	const WareObject = k.add([]);
-
 	/** The container for minigames, if you want to pause the minigame you should pause this */
-	const gameBox = WareObject.add([k.fixed(), k.pos(), k.scale(), k.rotate(), k.anchor("center")]);
+	const gameBox = k.add([
+		// k.rect(k.width(), k.height()),
+		k.pos(),
+		k.fixed(),
+		k.scale(),
+		k.rotate(),
+	]);
 
 	function clearInput() {
 		inputEvents.forEach((ev) => {
@@ -189,7 +192,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 		});
 	}
 
-	WareObject.onUpdate(() => {
+	k.onUpdate(() => {
 		gameBox.paused = !wareCtx.gameRunning;
 		cursor.canPoint = wareCtx.gameRunning;
 
@@ -350,6 +353,12 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 						return gameCtx["play"]("@burp", opts);
 					};
 				}
+				else if (api == "drawSprite") {
+					gameCtx[api] = (opts: DrawSpriteOpt) => {
+						opts.sprite = `${getGameID(g)}-${opts.sprite}`;
+						return k.drawSprite(opts);
+					};
+				}
 			}
 
 			// OBJECT STUFF
@@ -364,6 +373,13 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			}
 
 			const gameAPI: MinigameAPI = {
+				getCamAngle: () => gameBox.angle,
+				setCamAngle: (val: number) => gameBox.angle = val,
+				getCamPos: () => gameBox.pos,
+				setCamPos: (val: Vec2) => gameBox.pos = val,
+				getCamScale: () => gameBox.scale,
+				setCamScale: (val: Vec2) => gameBox.scale = val,
+
 				onButtonPress: (btn, action) => {
 					let ev: KEventController = null;
 					if (btn == "click") ev = gameBox.onMousePress("left", action);

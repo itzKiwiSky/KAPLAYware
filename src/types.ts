@@ -35,6 +35,13 @@ export type MinigameAPI = {
 	onMouseMove(action: (pos: Vec2, delta: Vec2) => void): KEventController;
 	onMouseRelease(action: () => void): KEventController;
 
+	setCamScale(val: Vec2): Vec2;
+	getCamScale(): Vec2;
+	setCamAngle(val: number): number;
+	getCamAngle(): number;
+	setCamPos(val: Vec2): Vec2;
+	getCamPos(): Vec2;
+
 	/** Custom sprite thing for kaplayware that holds default assets */
 	sprite(spr: CustomSprite<string> | SpriteData | Asset<SpriteData>, opt?: SpriteCompOpt): SpriteComp;
 	/**
