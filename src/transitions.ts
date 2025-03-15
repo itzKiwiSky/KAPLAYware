@@ -105,7 +105,7 @@ export function prepTransition(ware: KaplayWareCtx) {
 		k.pos(k.vec2(k.width() / 2, 0)),
 	]);
 
-	const scoreText = topBg.add(makeScoreText(ware.score - 1));
+	const scoreText = topBg.add(makeScoreText(ware.gamesPlayed - 1));
 	const hearts = makeHearts(botBg, ware.lives);
 
 	let scoreTextAngle = 0;
@@ -124,7 +124,7 @@ export function prepTransition(ware: KaplayWareCtx) {
 	scoreText.onUpdate(() => scoreText.angle = k.lerp(scoreText.angle, scoreTextAngle, 0.25));
 	transition.wait(DURATION / 4, () => {
 		const TIME_LEFT = DURATION - DURATION / 4;
-		scoreText.text = ware.score.toString();
+		scoreText.text = ware.gamesPlayed.toString();
 		transition.tween(k.vec2(4), k.vec2(6), TIME_LEFT / 4, (p) => scoreText.scale = p, k.easings.easeOutQuint).onEnd(() => {
 			transition.wait(TIME_LEFT / 4, () => {
 				transition.tween(k.vec2(6), k.vec2(4), TIME_LEFT / 4, (p) => scoreText.scale = p, k.easings.easeOutQuint);
@@ -226,7 +226,7 @@ export function winTransition(ware: KaplayWareCtx) {
 		k.rotate(0),
 	]);
 
-	const scoreText = topBg.add(makeScoreText(ware.score - 1));
+	const scoreText = topBg.add(makeScoreText(ware.gamesPlayed - 1));
 	const hearts = makeHearts(botBg, ware.lives);
 
 	let heartToBop = -1;
@@ -341,8 +341,7 @@ export function loseTransition(ware: KaplayWareCtx) {
 
 	const scoreText = topBg.add(makeScoreText(ware.score - 1));
 	const hearts = makeHearts(botBg, k.clamp(ware.lives + 1, 0, 4));
-	k.debug.log(ware.lives);
-	hearts[ware.lives].kill();
+	// hearts[ware.lives].kill();
 
 	let soundAtHalf = false;
 	let quarterToEnd = false;
@@ -466,7 +465,7 @@ export function speedupTransition(ware: KaplayWareCtx) {
 		k.pos(k.center().x, k.height() - 40),
 	]);
 
-	const scoreText = transition.add(makeScoreText(ware.score - 1));
+	const scoreText = transition.add(makeScoreText(ware.gamesPlayed - 1));
 	const hearts = makeHearts(bg, ware.lives);
 	hearts.forEach((heart) => heart.pos.x -= 50);
 

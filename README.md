@@ -1,6 +1,9 @@
 # KAPLAYWARE
 yea
 
+## Credits
+- [STRIKE! art](/games/amyspark-ng/assets/sprites/strike): [DevkyRD](https://devkyrd.newgrounds.com)
+
 ## How to add game????
 To make a new game do:
 ```sh
@@ -56,7 +59,7 @@ const newGame: Minigame = {
 }
 ```
 
-You can also use `hidden: true` If you're going to make a game that uses a custom cursor, for more info you can check the [SLAP!](/games/amyspark-ng/slap.ts) minigame or the [HIT!](/games/amyspark-ng/hit.ts) minigame, which use a custom cursor (hand sprites)
+You can also use `hidden: true` If you're going to make a game that uses a custom cursor, for more info you can check the [SWAT!](/games/amyspark-ng/swat.ts) minigame or the [HIT!](/games/amyspark-ng/hit.ts) minigame, which use a custom cursor (hand sprites)
 
 - Please refrain to use `onMousePress`!! You can use `ctx.onClick()` and `obj.onClick`, but no mouse button (mouse minigames are only allowed to be played with left click)
 ```ts

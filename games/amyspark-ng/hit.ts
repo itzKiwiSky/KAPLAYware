@@ -46,8 +46,8 @@ const hitGame: Minigame = {
 		ctx.onMouseMove(() => {
 			const WALL_X = screen.width + 60;
 
-			hand.pos.y = ctx.mousePos().y;
-			hand.pos.x = ctx.clamp(ctx.mousePos().x, WALL_X, ctx.width());
+			hand.pos.y = ctx.lerp(hand.pos.y, ctx.mousePos().y, 0.8);
+			hand.pos.x = ctx.lerp(hand.pos.x, ctx.clamp(ctx.mousePos().x, WALL_X, ctx.width()), 0.8);
 
 			// got inside of the tv
 			if (ctx.mousePos().x <= WALL_X && !mouseInsideTV) {

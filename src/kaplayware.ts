@@ -127,7 +127,6 @@ export const gameAPIs = [
 	"wait",
 	"tween",
 	"addLevel",
-	// colors
 	"BLACK",
 	"RED",
 	"GREEN",
@@ -138,6 +137,8 @@ export const gameAPIs = [
 	"shake",
 	"drag",
 	"isMouseMoved",
+	"isMouseReleased",
+	"animate",
 ] as const;
 
 const DEFAULT_DURATION = 4;
@@ -191,9 +192,6 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			queuedSounds[i].stop();
 			queuedSounds.pop();
 		}
-	}
-
-	function createMinigameCtx(g: Minigame) {
 	}
 
 	k.onUpdate(() => {
@@ -323,29 +321,35 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 						const newSound = {
 							...sound,
 							set paused(param: boolean) {
+								if (canPlaySounds) {
+									sound.paused = param;
+									return;
+								}
+
+								// ALL OF THIS HAPPENS IF YOU CAN'T PLAY SOUNDS (queue stuff)
+								sound.paused = true;
+
 								// this means that it was queued to play but the user paused it
-								if (!canPlaySounds && queuedSounds.includes(sound) && param == true) {
+								if (queuedSounds.includes(sound) && param == true) {
 									queuedSounds.splice(queuedSounds.indexOf(sound), 1);
-									sound.paused = true;
 								}
 
 								// this means the user removed it from queue but wants to add it again probably
-								if (!canPlaySounds && !queuedSounds.includes(sound) && param == false) {
+								if (!queuedSounds.includes(sound) && param == false) {
 									queuedSounds.push(sound);
-									sound.paused = true;
 								}
-
-								if (canPlaySounds) sound.paused = param;
 							},
 							get paused() {
 								return sound.paused;
 							},
 						};
 
+						// if can't play sounds and the user intended to play it at start, pause it
 						if (!canPlaySounds) {
-							if (opts?.paused) return;
-							queuedSounds.push(sound);
-							sound.paused = true;
+							if (!opts?.paused) {
+								queuedSounds.push(sound);
+								sound.paused = true;
+							}
 						}
 
 						sounds.push(newSound);
@@ -431,10 +435,12 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 					wonLastGame = false;
 				},
 				finish() {
+					onTimeoutEvent.clear();
 					clearSounds();
 					clearTimers();
 					clearInput();
 					GAMEBOXUPDATE.cancel();
+					k.wait(0.2, () => minigameScene.destroy());
 					wareCtx.nextGame();
 					canPlaySounds = false;
 					if (bomb) bomb.destroy();
@@ -466,8 +472,8 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				speed: wareCtx.speed,
 			};
 			const minigameCtx = { ...gameCtx, ...gameAPI } as unknown as MinigameCtx;
-			const duration = typeof g.duration == "number" ? g.duration : g.duration(minigameCtx);
-			wareCtx.time = duration / wareCtx.speed;
+			const gDuration = typeof g.duration == "number" ? g.duration : g.duration(minigameCtx);
+			wareCtx.time = gDuration / wareCtx.speed;
 			const minigameScene = gameBox.add(g.start(minigameCtx));
 
 			onTimeoutEvent.add(() => {
@@ -493,7 +499,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 						onTimeoutEvent.trigger();
 					}
 
-					if (wareCtx.time <= duration / 2 && !addedBomb) {
+					if (wareCtx.time <= gDuration / 2 && !addedBomb) {
 						addedBomb = true;
 						bomb = addBomb(wareCtx);
 					}
@@ -530,6 +536,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 
 				const nextGame = k.choose(availableGames);
 				wareCtx.gameIdx = games.indexOf(nextGame);
+				clearSounds(); // hit minigame has an issue with causes queuedSounds to stay
 				wareCtx.runGame(nextGame);
 				minigameHistory[wareCtx.gamesPlayed - 1] = getGameID(nextGame);
 

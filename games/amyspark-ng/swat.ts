@@ -1,8 +1,8 @@
 import mulfokColors from "../../src/plugins/colors";
 import { Minigame } from "../../src/types";
 
-const slapGame: Minigame = {
-	prompt: "slap",
+const swatGame: Minigame = {
+	prompt: "swat",
 	author: "amyspark-ng",
 	rgb: mulfokColors.LIGHT_BROWN,
 	duration: 4,
@@ -99,4 +99,4 @@ const slapGame: Minigame = {
 	},
 };
 
-export default slapGame;
+export default swatGame;
