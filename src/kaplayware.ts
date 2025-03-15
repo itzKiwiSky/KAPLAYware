@@ -65,6 +65,8 @@ export const gameAPIs = [
 	"rgb",
 	"hsl2rgb",
 	"choose",
+	"chooseMultiple",
+	"shuffle",
 	"chance",
 	"easings",
 	"map",
