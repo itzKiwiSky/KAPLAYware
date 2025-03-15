@@ -191,6 +191,9 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 		}
 	}
 
+	function createMinigameCtx(g: Minigame) {
+	}
+
 	k.onUpdate(() => {
 		gameBox.paused = !wareCtx.gameRunning;
 		cursor.canPoint = wareCtx.gameRunning;
@@ -460,12 +463,10 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				lives: wareCtx.lives,
 				speed: wareCtx.speed,
 			};
-
-			wareCtx.time = g.duration / wareCtx.speed;
-			const minigameScene = gameBox.add(g.start({
-				...gameCtx,
-				...gameAPI,
-			} as unknown as MinigameCtx));
+			const minigameCtx = { ...gameCtx, ...gameAPI } as unknown as MinigameCtx;
+			const duration = typeof g.duration == "number" ? g.duration : g.duration(minigameCtx);
+			wareCtx.time = duration / wareCtx.speed;
+			const minigameScene = gameBox.add(g.start(minigameCtx));
 
 			onTimeoutEvent.add(() => {
 				wareCtx.inputEnabled = false;
@@ -490,7 +491,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 						onTimeoutEvent.trigger();
 					}
 
-					if (wareCtx.time <= g.duration / 2 && !addedBomb) {
+					if (wareCtx.time <= duration / 2 && !addedBomb) {
 						addedBomb = true;
 						bomb = addBomb(wareCtx);
 					}
@@ -540,7 +541,11 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 
 				const prepTrans = prepTransition(wareCtx);
 				prepTrans.onHalf(() => {
-					prompt = addPrompt(coolPrompt(nextGame.prompt));
+					if (typeof nextGame.prompt == "string") prompt = addPrompt(coolPrompt(nextGame.prompt));
+					else {
+						prompt = addPrompt("");
+						nextGame.prompt(k as unknown as MinigameCtx, prompt);
+					}
 
 					if (nextGame.mouse && nextGame.mouse.hidden) cursor.visible = false;
 					else if (nextGame.mouse && !nextGame.mouse.hidden) cursor.visible = true;
@@ -604,9 +609,6 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 	}
 
 	gameBox.onDraw(() => {
-		const BG_S = 0.27;
-		const BG_L = 0.52;
-
 		const bgColor = k.rgb(wareCtx.curGame().rgb[0], wareCtx.curGame().rgb[1], wareCtx.curGame().rgb[2]);
 		k.drawRect({
 			width: k.width(),
