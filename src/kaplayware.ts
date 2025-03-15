@@ -9,7 +9,6 @@ import { coolPrompt, getByID, getGameID } from "./utils";
 
 type Friend = keyof typeof assets | `${keyof typeof assets}-o`;
 type AtFriend = `@${Friend}`;
-
 export type CustomSprite<T extends string> = T extends AtFriend | string & {} ? AtFriend | string & {} : string;
 
 export const loadAPIs = [
@@ -141,15 +140,15 @@ export const gameAPIs = [
 
 const DEFAULT_DURATION = 4;
 
-const onTimeoutEvent = new k.KEvent();
-let timerEvents: KEventController[] = [];
-let inputEvents: KEventController[] = [];
-let queuedSounds: AudioPlay[] = [];
-let sounds: AudioPlay[] = [];
-
 export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts = {}): KaplayWareCtx {
 	let wonLastGame: boolean = null;
 	let minigameHistory: string[] = []; // this is so you can't get X minigame, Y minigame, then X minigame again
+
+	const onTimeoutEvent = new k.KEvent();
+	let timerEvents: KEventController[] = [];
+	let inputEvents: KEventController[] = [];
+	let queuedSounds: AudioPlay[] = [];
+	let sounds: AudioPlay[] = [];
 
 	// debug variables
 	let skipMinigame = false;
@@ -167,29 +166,29 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 	]);
 
 	function clearInput() {
-		inputEvents.forEach((ev) => {
-			ev.cancel();
+		for (let i = inputEvents.length - 1; i >= 0; i--) {
+			inputEvents[i].cancel();
 			inputEvents.pop();
-		});
+		}
 	}
 
 	function clearTimers() {
-		timerEvents.forEach((ev) => {
-			ev.cancel();
+		for (let i = timerEvents.length - 1; i >= 0; i--) {
+			timerEvents[i].cancel();
 			timerEvents.pop();
-		});
+		}
 	}
 
 	function clearSounds() {
-		sounds.forEach((sound) => {
-			sound.stop();
+		for (let i = sounds.length - 1; i >= 0; i--) {
+			sounds[i].stop();
 			sounds.pop();
-		});
+		}
 
-		queuedSounds.forEach((sound) => {
-			sound.stop();
+		for (let i = queuedSounds.length - 1; i >= 0; i--) {
+			queuedSounds[i].stop();
 			queuedSounds.pop();
-		});
+		}
 	}
 
 	k.onUpdate(() => {
@@ -493,7 +492,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 
 					if (wareCtx.time <= g.duration / 2 && !addedBomb) {
 						addedBomb = true;
-						bomb = addBomb(k, wareCtx);
+						bomb = addBomb(wareCtx);
 					}
 				}
 			});
@@ -539,9 +538,9 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 
 				let prompt: ReturnType<typeof addPrompt> = null;
 
-				const prepTrans = prepTransition(k, wareCtx);
+				const prepTrans = prepTransition(wareCtx);
 				prepTrans.onHalf(() => {
-					prompt = addPrompt(k, coolPrompt(nextGame.prompt));
+					prompt = addPrompt(coolPrompt(nextGame.prompt));
 
 					if (nextGame.mouse && nextGame.mouse.hidden) cursor.visible = false;
 					else if (nextGame.mouse && !nextGame.mouse.hidden) cursor.visible = true;
@@ -558,8 +557,8 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 
 			if (wonLastGame != null) {
 				let transition: ReturnType<typeof prepTransition> = null;
-				if (wonLastGame) transition = winTransition(k, wareCtx);
-				else transition = loseTransition(k, wareCtx);
+				if (wonLastGame) transition = winTransition(wareCtx);
+				else transition = loseTransition(wareCtx);
 				wonLastGame = null;
 
 				if (wareCtx.curGame().mouse) cursor.visible = true;
@@ -575,15 +574,13 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 						if (forceSpeed == true) forceSpeed = false;
 						wareCtx.timesSpeed++;
 						wareCtx.speedUp();
-						speedupTransition(k, wareCtx).onEnd(() => {
+						speedupTransition(wareCtx).onEnd(() => {
 							k.tween(k.getCamPos(), k.center(), 0.5 / wareCtx.speed, (p) => k.setCamPos(p), k.easings.easeOutQuint);
 							prep();
 						});
 					}
 					else prep();
 				});
-
-				wonLastGame = null;
 			}
 			else prep();
 		},
