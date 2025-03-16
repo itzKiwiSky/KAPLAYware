@@ -95,16 +95,18 @@ const mineGame: Minigame = {
 
 				// you hit too soft
 				if (ctx.mouseDeltaPos().y < 40) return;
-				hitParticles();
-				ctx.play("rockhit", { detune: ctx.rand(-50, 50) });
 
-				if (!timeOut) {
+				if (!timeOut && hitsLeft > 0) {
 					hitsLeft--;
+					hitParticles();
+					ctx.play("rockhit", { detune: ctx.rand(-50, 50) });
 					rocks.frame = ctx.mapc(hitsLeft, 1, totalHits, 3, 0);
 					ctx.tween(0.1, 1, 0.15 / ctx.speed, (p) => rocks.scale.y = p, ctx.easings.easeOutQuint);
 				}
 
 				if (hitsLeft == 0 && !timeOut) {
+					hitParticles();
+					ctx.play("rockhit", { detune: ctx.rand(-50, 50) });
 					rocks.play("diamond", { speed: 5 * ctx.speed });
 					ctx.play("bling", { detune: ctx.rand(-50, 50), speed: ctx.speed });
 					ctx.tween(ctx.vec2(1.5), ctx.vec2(1), 0.15 / ctx.speed, (p) => rocks.scale = p, ctx.easings.easeOutQuint);

@@ -140,6 +140,9 @@ export const gameAPIs = [
 	"animate",
 	"particles",
 	"getSprite",
+	"onCollide",
+	"onCollideEnd",
+	"onCollideUpdate",
 ] as const;
 
 const DEFAULT_DURATION = 4;

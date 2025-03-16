@@ -38,7 +38,7 @@ const strikeGame: Minigame = {
 		let bolaZ = 0;
 		let ballDirection = -1;
 		let catLastHit = true;
-		const SPEED = ctx.speed * 1.25;
+		const SPEED = ctx.speed * 1.75;
 		ctx.play("ballhit", { detune: ctx.rand(50, 100) });
 
 		const gato = game.add([
