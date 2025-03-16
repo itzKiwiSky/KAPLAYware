@@ -3,3 +3,5 @@ www/main.js
 dist/
 .env*
 !.env*.example
+ideas.txt
+aseprites

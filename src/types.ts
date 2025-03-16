@@ -42,6 +42,7 @@ export type MinigameAPI = {
 	getCamAngle(): number;
 	setCamPos(val: Vec2): Vec2;
 	getCamPos(): Vec2;
+	shakeCam(val?: number): void;
 
 	/** Custom sprite thing for kaplayware that holds default assets */
 	sprite(spr: CustomSprite<string> | SpriteData | Asset<SpriteData>, opt?: SpriteCompOpt): SpriteComp;

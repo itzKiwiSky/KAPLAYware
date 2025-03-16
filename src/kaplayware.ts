@@ -134,11 +134,12 @@ export const gameAPIs = [
 	"YELLOW",
 	"WHITE",
 	"setGravity",
-	"shake",
 	"drag",
 	"isMouseMoved",
 	"isMouseReleased",
 	"animate",
+	"particles",
+	"getSprite",
 ] as const;
 
 const DEFAULT_DURATION = 4;
@@ -163,7 +164,6 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 	const gameBox = k.add([
 		// k.rect(k.width(), k.height()),
 		k.pos(),
-		k.fixed(),
 		k.scale(),
 		k.rotate(),
 	]);
@@ -367,6 +367,11 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 						return k.drawSprite(opts);
 					};
 				}
+				else if (api == "getSprite") {
+					gameCtx[api] = (name: string) => {
+						return k.getSprite(`${getGameID(g)}-${name}`);
+					};
+				}
 			}
 
 			// OBJECT STUFF
@@ -387,6 +392,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				setCamPos: (val: Vec2) => gameBox.pos = val,
 				getCamScale: () => gameBox.scale,
 				setCamScale: (val: Vec2) => gameBox.scale = val,
+				shakeCam: (val?: number) => k.shake(val),
 
 				onButtonPress: (btn, action) => {
 					let ev: KEventController = null;
@@ -435,6 +441,9 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 					wonLastGame = false;
 				},
 				finish() {
+					if (wonLastGame == null) {
+						throw new Error("Finished minigame without setting the win condition!! Please call ctx.win() or ctx.lose() before calling ctx.finish()");
+					}
 					onTimeoutEvent.clear();
 					clearSounds();
 					clearTimers();

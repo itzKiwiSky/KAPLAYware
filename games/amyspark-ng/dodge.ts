@@ -96,7 +96,7 @@ const newGame: Minigame = {
 				bean.sprite = "@beant";
 				jump();
 				ctx.addKaboom(bean.pos);
-				ctx.shake();
+				ctx.shakeCam();
 				bean.area.scale = ctx.vec2(0);
 				bean.onUpdate(() => {
 					bean.angle -= 1;
