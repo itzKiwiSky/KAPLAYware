@@ -11,8 +11,8 @@ const pickGame: Minigame = {
 		ctx.loadSound("sniff", "sounds/sniff.mp3");
 		ctx.loadSprite("hand", "sprites/pick/hand.png", { sliceY: 1, sliceX: 3 });
 		ctx.loadSprite("booger", "sprites/pick/booger.png", { sliceY: 1, sliceX: 3 });
-		ctx.loadSprite("nosetop", "sprites/pick/nosetop.png", { sliceY: 1, sliceX: 2 });
-		ctx.loadSprite("nosebot", "sprites/pick/nosebot.png", { sliceY: 1, sliceX: 2 });
+		ctx.loadSprite("nosetop", "sprites/pick/nosetop.png", { sliceY: 1, sliceX: 3 });
+		ctx.loadSprite("nosebot", "sprites/pick/nosebot.png", { sliceY: 1, sliceX: 3 });
 	},
 	start(ctx) {
 		const game = ctx.make();
@@ -64,6 +64,7 @@ const pickGame: Minigame = {
 			ctx.sprite("nosetop"),
 			ctx.pos(ctx.center().x, 0),
 			ctx.anchor("top"),
+			ctx.scale(),
 			ctx.z(2),
 		]);
 
@@ -78,6 +79,9 @@ const pickGame: Minigame = {
 		let pressedAction = false;
 		game.onUpdate(() => {
 			if (!moving) return;
+
+			// nosebot.pos.y = ctx.mousePos().y;
+			// ctx.debug.log(nosebot.pos.y);
 
 			const x = ctx.wave(hand.width, ctx.width() - hand.width, ctx.time() * ctx.speed);
 			hand.pos.x = ctx.lerp(hand.pos.x, x, 0.5);
@@ -99,13 +103,14 @@ const pickGame: Minigame = {
 					ctx.lose();
 					ctx.wait(0.5 / ctx.speed, () => ctx.finish());
 				}
-			});
+			}, ctx.easings.easeInBack);
 
 			const collide = ctx.onCollide("handarea", "nostril", (fingerarea, boogernostril, col) => {
 				boogersLeft--;
 				if (boogersLeft == 0 || collidedWithMiddle) collide.cancel();
 				if (collidedWithMiddle) return;
 				ctx.wait(0.1 / ctx.speed, () => {
+					ctx.tween(ctx.vec2(1.1), ctx.vec2(1), 0.25 / ctx.speed, (p) => nosetop.scale = p, ctx.easings.easeOutQuint);
 					const booger = hand.add([
 						ctx.sprite("booger"),
 						ctx.pos(fingerarea.pos.x, fingerarea.pos.y - 20),
@@ -136,19 +141,35 @@ const pickGame: Minigame = {
 			moveUpTween.onEnd(() => {
 				ctx.wait(0.5 / ctx.speed, () => {
 					ctx.win();
-					const moveDownTween = ctx.tween(hand.pos.y, ctx.height() + hand.height / 2, 0.5 / ctx.speed, (p) => hand.pos.y = p).onEnd(() => {
+					const moveDownTween = ctx.tween(hand.pos.y, ctx.height() + hand.height / 2, 0.5 / ctx.speed, (p) => hand.pos.y = p, ctx.easings.easeOutQuint).onEnd(() => {
 						if (boogersLeft > 0) {
 							ctx.lose();
 							ctx.wait(0.5 / ctx.speed, () => ctx.finish());
 						}
 						else if (boogersLeft == 0) {
 							ctx.win();
-							ctx.play("sniff", { detune: ctx.rand(-50, 50), volume: 0.5 });
+							ctx.play("sniff", { detune: ctx.rand(-50, 50), volume: 0.5, speed: ctx.speed });
+							nosetop.frame = 2;
+							nosebot.frame = 2;
+							ctx.tween(ctx.vec2(1.1), ctx.vec2(1), 0.15 / ctx.speed, (p) => nosetop.scale = p, ctx.easings.easeOutQuint);
+							ctx.wait(0.15 / ctx.speed, () => {
+								nosetop.frame = 0;
+								nosebot.frame = 0;
+							});
 							ctx.wait(0.5 / ctx.speed, () => ctx.finish());
 						}
 					});
 				});
 			});
+		});
+
+		ctx.onTimeout(() => {
+			if (boogersLeft > 0) {
+				ctx.lose();
+				ctx.wait(0.5 / ctx.speed, () => {
+					ctx.finish();
+				});
+			}
 		});
 
 		return game;

@@ -143,6 +143,7 @@ export const gameAPIs = [
 	"onCollide",
 	"onCollideEnd",
 	"onCollideUpdate",
+	"isMouseDown",
 ] as const;
 
 const DEFAULT_DURATION = 4;
