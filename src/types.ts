@@ -44,6 +44,11 @@ export type MinigameAPI = {
 	getCamPos(): Vec2;
 	shakeCam(val?: number): void;
 
+	/** Gets the current RGB of the background of your minigame */
+	getRGB(): Color;
+	/** Sets the RGB to the background of your minigame */
+	setRGB(val: Color): void;
+
 	/** Custom sprite thing for kaplayware that holds default assets */
 	sprite(spr: CustomSprite<string> | SpriteData | Asset<SpriteData>, opt?: SpriteCompOpt): SpriteComp;
 	/**

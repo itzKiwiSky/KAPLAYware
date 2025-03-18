@@ -5,3 +5,7 @@ dist/
 !.env*.example
 ideas.txt
 aseprites
+.vscode
+builds
+ship.bat
+web-build.zip

@@ -7,6 +7,7 @@ import kaplayware from "./kaplayware";
 
 k.setVolume(0.5);
 k.setCursor("none");
+k.loadRoot("./");
 
 k.scene("focus", () => {
 	k.add([
@@ -28,7 +29,7 @@ k.scene("game", () => {
 	ware.nextGame();
 });
 
-k.scene("gameover", () => {
+k.scene("gameover", (score: number) => {
 	k.add([
 		k.rect(k.width(), k.height()),
 		k.color(k.BLACK),
@@ -37,6 +38,12 @@ k.scene("gameover", () => {
 	k.add([
 		k.text("you lost :("),
 		k.pos(k.center()),
+		k.anchor("center"),
+	]);
+
+	k.add([
+		k.text(score.toString()),
+		k.pos(k.center().x, k.center().y + 30),
 		k.anchor("center"),
 	]);
 

@@ -4,7 +4,7 @@ const spamGame: Minigame = {
 	prompt: "spam",
 	author: "amyspark-ng",
 	rgb: [26, 26, 26],
-	duration: 4,
+	duration: (ctx) => ctx.difficulty == 3 ? 6 : 4,
 	urlPrefix: "games/amyspark-ng/assets",
 	load(ctx) {
 		ctx.loadSprite("hexagon", "/sprites/hexagon.png");

@@ -143,7 +143,6 @@ export const gameAPIs = [
 	"onCollide",
 	"onCollideEnd",
 	"onCollideUpdate",
-	"isMouseDown",
 ] as const;
 
 const DEFAULT_DURATION = 4;
@@ -157,6 +156,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 	let inputEvents: KEventController[] = [];
 	let queuedSounds: AudioPlay[] = [];
 	let sounds: AudioPlay[] = [];
+	let rgbColor: Color = k.WHITE;
 
 	// debug variables
 	let skipMinigame = false;
@@ -376,6 +376,11 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 						return k.getSprite(`${getGameID(g)}-${name}`);
 					};
 				}
+				else if (api == "shader") {
+					gameCtx[api] = (name, uniform) => {
+						return k.shader(`${getGameID(g)}-${name}`, uniform);
+					};
+				}
 			}
 
 			// OBJECT STUFF
@@ -397,6 +402,8 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				getCamScale: () => gameBox.scale,
 				setCamScale: (val: Vec2) => gameBox.scale = val,
 				shakeCam: (val?: number) => k.shake(val),
+				getRGB: () => rgbColor,
+				setRGB: (val) => rgbColor = val,
 
 				onButtonPress: (btn, action) => {
 					let ev: KEventController = null;
@@ -487,6 +494,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			const minigameCtx = { ...gameCtx, ...gameAPI } as unknown as MinigameCtx;
 			const gDuration = typeof g.duration == "number" ? g.duration : g.duration(minigameCtx);
 			wareCtx.time = gDuration / wareCtx.speed;
+			rgbColor = "r" in g.rgb ? g.rgb : k.rgb(g.rgb[0], g.rgb[1], g.rgb[2]);
 			const minigameScene = gameBox.add(g.start(minigameCtx));
 
 			onTimeoutEvent.add(() => {
@@ -592,7 +600,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 
 				transition.onEnd(() => {
 					if (!wonLastGame && wareCtx.lives == 0) {
-						k.go("gameover");
+						k.go("gameover", wareCtx.gamesPlayed);
 						return;
 					}
 
@@ -631,11 +639,10 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 	}
 
 	gameBox.onDraw(() => {
-		const bgColor = k.rgb(wareCtx.curGame().rgb[0], wareCtx.curGame().rgb[1], wareCtx.curGame().rgb[2]);
 		k.drawRect({
 			width: k.width(),
 			height: k.height(),
-			color: bgColor,
+			color: rgbColor,
 		});
 	});
 

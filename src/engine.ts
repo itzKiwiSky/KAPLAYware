@@ -11,6 +11,7 @@ export const k = kaplay({
 	focus: false,
 	plugins: [dragCompPlugin, watchPlugin],
 	debug: true,
+	maxFPS: 120,
 });
 
 console.log("KAPLAY RAN");

@@ -8,7 +8,7 @@ const newGame: Minigame = {
 	author: "amyspark-ng",
 	mouse: { hidden: false },
 	rgb: mulfokColors.DARK_PURPLE,
-	duration: 5,
+	duration: (ctx) => ctx.difficulty == 3 ? 7 : 5,
 	urlPrefix: "games/amyspark-ng/assets",
 	load(ctx) {
 		ctx.loadSprite("plug", "/sprites/connect/plug.png");
