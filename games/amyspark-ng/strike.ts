@@ -21,7 +21,7 @@ const strikeGame: Minigame = {
 	prompt: "strike",
 	author: "amyspark-ng",
 	rgb: k.WHITE,
-	mouse: { hidden: true },
+	input: { cursor: { hide: true } },
 	duration: 5,
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {

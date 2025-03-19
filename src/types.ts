@@ -87,15 +87,64 @@ export type MinigameCtx = Pick<typeof k, typeof gameAPIs[number]> & MinigameAPI;
 
 /** The type for a minigame */
 export type Minigame = {
-	/** Prompt of the mini game! */
+	/** Prompt of the mini game!
+	 *
+	 * You can also change it depending on difficulty and certain game conditions
+	 * @example
+	 * ```ts
+	 * prompt: (ctx) => `GET ${ctx.difficulty} APPLES!`
+	 * ```
+	 *
+	 * Or if you're feeling fancy, modify the prompt object itself (NOT WORKING RIGHT NOW)
+	 * @example
+	 * ```ts
+	 * prompt: (ctx, promptObj) => {
+	 * 		promptObj.textStyles = {
+	 * 			"red": {
+	 * 				color: ctx.RED
+	 * 			}
+	 * 		}
+	 * 		promptObj.text = `GET [red]${ctx.difficulty}[/red] APPLES!`
+	 * }
+	 * ```
+	 *
+	 * Please keep the prompt text in the cool format (All uppercase, single exclamation mark at the end)
+	 */
 	prompt: string | ((ctx: MinigameCtx, prompt: ReturnType<typeof addPrompt>) => void);
 	/** The author of the game */
 	author: string;
-	/** The RGB code for the game's backgroun */
+	/** The RGB code for the game's background
+	 *
+	 * You can also use a regular kaplay color, you can get some from the mulfok32 palette
+	 * @example
+	 * ```ts
+	 * import mulfokColors from "../../src/plugins/colors";
+	 * rgb: mulfokColors.VOID_PURPLE
+	 * ```
+	 */
 	rgb?: [number, number, number] | Color;
-	/** Wheter the games use the mouse, If you want to use a custom mouse you can set `hidden` to true */
-	mouse?: { hidden: boolean; };
-	/** How long the minigames goes for (choose a reasonable number) */
+	/** The input the minigame uses, if both are empty will assume keys
+	 *
+	 * @cursor You can configure your game's cursor this way
+	 * ```ts
+	 * cursor: { hide: true } // you can use a custom cursor in your minigame
+	 * ```
+	 * ```ts
+	 * cursor: true // will simply use kaplayware's cursor
+	 * ```
+	 * ```ts
+	 * cursor: false // the game will not use cursor in any way
+	 * ```
+	 */
+	input?: { cursor?: boolean | { hide: boolean; }; keys?: boolean; };
+	/** How long the minigames goes for (choose a reasonable number)
+	 *
+	 * You can also use a callback, to change it based on difficulty
+	 * @example
+	 * ```ts
+	 * duration: (ctx) => ctx.difficulty == 3 ? 6 : 4
+	 * ```
+	 */
 	duration?: number | ((ctx: MinigameCtx) => number);
 	/**
 	 * Assets URL prefix.
@@ -130,6 +179,7 @@ export type Minigame = {
 export type KAPLAYwareOpts = {
 	debug?: boolean;
 	onlyMouse?: boolean;
+	inOrder?: boolean;
 };
 
 export type KaplayWareCtx = {

@@ -6,7 +6,7 @@ import { Minigame } from "../../src/types.ts";
 const newGame: Minigame = {
 	prompt: "connect",
 	author: "amyspark-ng",
-	mouse: { hidden: false },
+	input: { cursor: { hide: false } },
 	rgb: mulfokColors.DARK_PURPLE,
 	duration: (ctx) => ctx.difficulty == 3 ? 7 : 5,
 	urlPrefix: "games/amyspark-ng/assets",

@@ -5,7 +5,7 @@ import { addBomb, addPrompt } from "./objects";
 import cursor from "./plugins/cursor";
 import { loseTransition, prepTransition, speedupTransition, winTransition } from "./transitions";
 import { Button, KaplayWareCtx, KAPLAYwareOpts, LoadCtx, Minigame, MinigameAPI, MinigameCtx } from "./types";
-import { coolPrompt, getByID, getGameID } from "./utils";
+import { coolPrompt, gameHidesCursor, gameUsesMouse, getByID, getGameID, getGameInput } from "./utils";
 
 type Friend = keyof typeof assets | `${keyof typeof assets}-o`;
 type AtFriend = `@${Friend}`;
@@ -148,6 +148,11 @@ export const gameAPIs = [
 const DEFAULT_DURATION = 4;
 
 export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts = {}): KaplayWareCtx {
+	opts = opts ?? {};
+	opts.debug ?? false;
+	opts.inOrder ?? false;
+	opts.onlyMouse ?? false;
+
 	let wonLastGame: boolean = null;
 	let minigameHistory: string[] = []; // this is so you can't get X minigame, Y minigame, then X minigame again
 
@@ -428,7 +433,10 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 					inputEvents.push(ev);
 					return ev;
 				},
-				isButtonDown: (btn) => k.isKeyDown(dirToKeys(btn)),
+				isButtonDown: (btn) => {
+					if (btn == "click") return k.isMouseDown("left");
+					else return k.isKeyDown(dirToKeys(btn));
+				},
 				onMouseMove(action) {
 					const ev = k.onMouseMove(action);
 					inputEvents.push(ev);
@@ -540,22 +548,22 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			wareCtx.gameRunning = false;
 
 			if (overrideDifficulty) wareCtx.difficulty = overrideDifficulty;
+			if (opts.onlyMouse) games = games.filter((game) => gameUsesMouse(game) && !game.input.keys);
+
+			const availableGames = games.filter((game) => {
+				if (minigameHistory.length == 0 || games.length == 1) return true;
+				else if (restartMinigame && !skipMinigame) return game == wareCtx.curGame();
+				else {
+					const previousPreviousID = minigameHistory[wareCtx.gamesPlayed - 3];
+					const previousPreviousGame = games.find((game) => getGameID(game) == previousPreviousID);
+					if (previousPreviousGame) return game != wareCtx.curGame() && game != previousPreviousGame;
+					else return game != wareCtx.curGame();
+				}
+			});
+
+			const nextGame = opts.inOrder ? availableGames[wareCtx.gamesPlayed % availableGames.length] : k.choose(availableGames);
 
 			function prep() {
-				if (opts.onlyMouse) games = games.filter((game) => game.mouse);
-
-				const availableGames = games.filter((game) => {
-					if (minigameHistory.length == 0 || games.length == 1) return true;
-					else if (restartMinigame && !skipMinigame) return game == wareCtx.curGame();
-					else {
-						const previousPreviousID = minigameHistory[wareCtx.gamesPlayed - 3];
-						const previousPreviousGame = games.find((game) => getGameID(game) == previousPreviousID);
-						if (previousPreviousGame) return game != wareCtx.curGame() && game != previousPreviousGame;
-						else return game != wareCtx.curGame();
-					}
-				});
-
-				const nextGame = k.choose(availableGames);
 				wareCtx.gameIdx = games.indexOf(nextGame);
 				clearSounds(); // hit minigame has an issue with causes queuedSounds to stay
 				wareCtx.runGame(nextGame);
@@ -564,25 +572,32 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				restartMinigame = false;
 				skipMinigame = false;
 
-				if (nextGame.mouse) cursor.visible = true;
-				else cursor.visible = false;
+				const gameinput = getGameInput(nextGame);
+				cursor.visible = !gameHidesCursor(nextGame);
 
 				let prompt: ReturnType<typeof addPrompt> = null;
 
 				const prepTrans = prepTransition(wareCtx);
+				const inputprompt = k.add([
+					k.sprite("inputprompt_" + gameinput),
+					k.anchor("center"),
+					k.pos(k.center()),
+					k.scale(),
+				]);
+
+				k.tween(k.vec2(0), k.vec2(1), 0.15 / wareCtx.speed, (p) => inputprompt.scale = p, k.easings.easeOutElastic);
 				prepTrans.onHalf(() => {
+					k.tween(inputprompt.scale, k.vec2(0), 0.15 / wareCtx.speed, (p) => inputprompt.scale = p, k.easings.easeOutQuint).onEnd(() => inputprompt.destroy());
 					if (typeof nextGame.prompt == "string") prompt = addPrompt(coolPrompt(nextGame.prompt));
 					else {
 						prompt = addPrompt("");
 						nextGame.prompt(k as unknown as MinigameCtx, prompt);
 					}
-
-					if (nextGame.mouse && nextGame.mouse.hidden) cursor.visible = false;
-					else if (nextGame.mouse && !nextGame.mouse.hidden) cursor.visible = true;
 				});
 
 				prepTrans.onEnd(() => {
 					k.wait(0.15 / wareCtx.speed, () => {
+						cursor.visible = !gameHidesCursor(nextGame);
 						prompt.fadeOut(0.15 / wareCtx.speed).onEnd(() => prompt.destroy());
 					});
 					wareCtx.inputEnabled = true;
@@ -596,7 +611,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				else transition = loseTransition(wareCtx);
 				wonLastGame = null;
 
-				if (wareCtx.curGame().mouse) cursor.visible = true;
+				if (gameUsesMouse(nextGame)) cursor.visible = true;
 
 				transition.onEnd(() => {
 					if (!wonLastGame && wareCtx.lives == 0) {
@@ -635,6 +650,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 		game.urlPrefix = game.urlPrefix ?? "";
 		game.duration = game.duration ?? DEFAULT_DURATION;
 		game.rgb = game.rgb ?? [0, 0, 0];
+		game.input = game.input ?? { cursor: undefined, keys: true };
 		if ("r" in game.rgb) game.rgb = [game.rgb.r, game.rgb.g, game.rgb.b];
 	}
 

@@ -6,7 +6,7 @@ const swatGame: Minigame = {
 	author: "amyspark-ng",
 	rgb: mulfokColors.LIGHT_BROWN,
 	duration: (ctx) => ctx.difficulty == 3 ? 5 : 4,
-	mouse: { hidden: true },
+	input: { cursor: { hide: true } },
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {
 		ctx.loadSprite("hand", "sprites/hand.png");

@@ -5,7 +5,7 @@ const hitGame: Minigame = {
 	prompt: "hit",
 	author: "amyspark-ng",
 	rgb: mulfokColors.DARK_PINK,
-	mouse: { hidden: true },
+	input: { cursor: { hide: true } },
 	duration: 5,
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {

@@ -2,12 +2,12 @@ import { GameObj } from "kaplay";
 import { curDraggin, setCurDragging } from "../../src/plugins/drag.ts";
 import { Minigame } from "../../src/types.ts";
 
-const newGame: Minigame = {
+const sortGame: Minigame = {
 	prompt: "sort",
 	author: "amyspark-ng",
 	duration: 5,
 	rgb: [212, 110, 179],
-	mouse: { hidden: false },
+	input: { cursor: { hide: false } },
 	urlPrefix: "games/amyspark-ng/assets",
 	load(ctx) {
 	},
@@ -148,4 +148,4 @@ const newGame: Minigame = {
 	},
 };
 
-export default newGame;
+export default sortGame;

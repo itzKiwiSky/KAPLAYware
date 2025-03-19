@@ -6,8 +6,8 @@ const tapGame: Minigame = {
 	prompt: "tap",
 	author: "amyspark-ng",
 	rgb: [0, 0, 0],
-	mouse: { hidden: true },
-	duration: 8,
+	input: { cursor: { hide: true } },
+	duration: (ctx) => ctx.difficulty == 3 ? 10 : 8,
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {
 		ctx.loadSprite("screenframe", "sprites/tap/screenframe.png");
@@ -23,15 +23,15 @@ const tapGame: Minigame = {
 		const screenframe = game.add([ctx.sprite("screenframe")]);
 		const screen = game.add([ctx.sprite("screen"), ctx.color(mulfokColors.VOID_PURPLE)]);
 		const hand = game.add([ctx.sprite("hand"), ctx.pos(), ctx.z(1)]);
-		const getNumbers = () => {
-			if (ctx.difficulty == 1) return [0, 1, 2, 3];
-			else if (ctx.difficulty == 2) return [0, 1, 2, 3, 4, 5, 6];
-			else return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-		};
 
-		ctx.difficulty = 3;
+		const numbers = ctx.difficulty == 1
+			? [0, 1, 2, 3]
+			: ctx.difficulty == 2
+			? [0, 1, 2, 3, 4, 5, 6]
+			: ctx.difficulty == 3
+			? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+			: [];
 
-		const numbers = getNumbers();
 		const numbersHit: number[] = [0];
 		let lost = false;
 
