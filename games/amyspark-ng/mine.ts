@@ -38,6 +38,7 @@ const mineGame: Minigame = {
 		let hitsLeft = totalHits;
 		let timeOut = false;
 		let insideRock = false;
+		let hasWon = false;
 
 		const rocks = game.add([
 			ctx.sprite("rocks"),
@@ -104,7 +105,8 @@ const mineGame: Minigame = {
 					ctx.tween(0.1, 1, 0.15 / ctx.speed, (p) => rocks.scale.y = p, ctx.easings.easeOutQuint);
 				}
 
-				if (hitsLeft == 0 && !timeOut) {
+				if (hitsLeft == 0 && !timeOut && !hasWon) {
+					hasWon = true;
 					hitParticles();
 					ctx.play("rockhit", { detune: ctx.rand(-50, 50) });
 					rocks.play("diamond", { speed: 5 * ctx.speed });

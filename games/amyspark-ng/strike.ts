@@ -40,6 +40,7 @@ const strikeGame: Minigame = {
 		let catLastHit = true;
 		const SPEED = ctx.speed * 1.75;
 		ctx.play("ballhit", { detune: ctx.rand(50, 100) });
+		let timeout = false;
 
 		const gato = game.add([
 			ctx.sprite("gato"),
@@ -82,6 +83,7 @@ const strikeGame: Minigame = {
 			else bolaZ -= 0.01 * SPEED;
 
 			if (bolaZ >= 1 || bolaZ <= 0) {
+				// you're supposed to hit now
 				if (catLastHit && !didntHitBall) {
 					if (markbola.isHovering()) {
 						catLastHit = !catLastHit;
@@ -95,7 +97,12 @@ const strikeGame: Minigame = {
 					}
 				}
 				else {
+					// cat is supposed to hit now
 					if (!didntHitBall) {
+						if (timeout) {
+							markbola.destroy();
+							return;
+						}
 						catLastHit = !catLastHit;
 						ctx.play("ballhit", { detune: ctx.rand(50, 100) });
 						if (ctx.difficulty == 1) ballDirection *= -1;
@@ -118,6 +125,7 @@ const strikeGame: Minigame = {
 		});
 
 		ctx.onTimeout(() => {
+			timeout = true;
 			if (!didntHitBall) {
 				ctx.win();
 				ctx.play("cheer");

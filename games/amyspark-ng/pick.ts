@@ -15,6 +15,7 @@ const pickGame: Minigame = {
 		ctx.loadSprite("nosebot", "sprites/pick/nosebot.png", { sliceY: 1, sliceX: 3 });
 	},
 	start(ctx) {
+		ctx.difficulty = 3;
 		const game = ctx.make();
 
 		const hand = game.add([
@@ -29,14 +30,14 @@ const pickGame: Minigame = {
 			ctx.rect(40, 40),
 			ctx.area(),
 			ctx.pos(),
+			ctx.opacity(0),
 			"handarea",
 		]);
 
 		hand.pos.y = ctx.height() + hand.height / 2;
 		hand.frame = ctx.difficulty - 1;
 		indexFingerArea.pos.y = -hand.height + 40;
-		indexFingerArea.pos.x = -hand.width / 2 + 40;
-		indexFingerArea.hidden = true;
+		indexFingerArea.pos.x = ctx.difficulty == 1 || ctx.difficulty == 3 ? -hand.width / 2 + 40 : hand.width / 2 - 40;
 
 		let pinkyFingerArea: typeof indexFingerArea;
 		if (ctx.difficulty == 3) {
@@ -45,12 +46,12 @@ const pickGame: Minigame = {
 				ctx.rect(40, 40),
 				ctx.area(),
 				ctx.pos(),
+				ctx.opacity(0),
 				"handarea",
 			]);
 
 			pinkyFingerArea.pos.y = -hand.height + 40;
 			pinkyFingerArea.pos.x = hand.width / 2 - 40;
-			pinkyFingerArea.hidden = true;
 		}
 
 		const nosebot = game.add([
@@ -68,12 +69,9 @@ const pickGame: Minigame = {
 			ctx.z(2),
 		]);
 
-		const leftnostril = nosebot.add([ctx.area(), ctx.rect(50, 40), ctx.pos(-90, 0), "nostril"]);
-		const middleofnose = nosebot.add([ctx.area(), ctx.rect(30, 40), ctx.pos(-15, 0)]);
-		const rightnostril = nosebot.add([ctx.area(), ctx.rect(50, 40), ctx.pos(30, 0), "nostril"]);
-		leftnostril.hidden = true;
-		middleofnose.hidden = true;
-		rightnostril.hidden = true;
+		const leftnostril = nosebot.add([ctx.area(), ctx.opacity(0), ctx.rect(50, 40), ctx.pos(-90, 0), "nostril"]);
+		const middleofnose = nosebot.add([ctx.area(), ctx.opacity(0), ctx.rect(30, 40), ctx.pos(-15, 0)]);
+		const rightnostril = nosebot.add([ctx.area(), ctx.opacity(0), ctx.rect(50, 40), ctx.pos(30, 0), "nostril"]);
 
 		let moving = true;
 		let pressedAction = false;
@@ -140,7 +138,6 @@ const pickGame: Minigame = {
 
 			moveUpTween.onEnd(() => {
 				ctx.wait(0.5 / ctx.speed, () => {
-					ctx.win();
 					const moveDownTween = ctx.tween(hand.pos.y, ctx.height() + hand.height / 2, 0.5 / ctx.speed, (p) => hand.pos.y = p, ctx.easings.easeOutQuint).onEnd(() => {
 						if (boogersLeft > 0) {
 							ctx.lose();

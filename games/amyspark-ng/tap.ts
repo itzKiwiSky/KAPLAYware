@@ -7,7 +7,7 @@ const tapGame: Minigame = {
 	author: "amyspark-ng",
 	rgb: [0, 0, 0],
 	input: { cursor: { hide: true } },
-	duration: (ctx) => ctx.difficulty == 3 ? 10 : 8,
+	duration: (ctx) => ctx.difficulty == 3 ? 9 : 8,
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {
 		ctx.loadSprite("screenframe", "sprites/tap/screenframe.png");
@@ -25,11 +25,11 @@ const tapGame: Minigame = {
 		const hand = game.add([ctx.sprite("hand"), ctx.pos(), ctx.z(1)]);
 
 		const numbers = ctx.difficulty == 1
-			? [0, 1, 2, 3]
+			? [0, 1, 2, 3, 4]
 			: ctx.difficulty == 2
 			? [0, 1, 2, 3, 4, 5, 6]
 			: ctx.difficulty == 3
-			? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+			? [0, 1, 2, 3, 4, 5, 6, 7, 8]
 			: [];
 
 		const numbersHit: number[] = [0];

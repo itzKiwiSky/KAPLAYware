@@ -1,7 +1,6 @@
 import { Asset, AudioPlay, AudioPlayOpt, Color, GameObj, KAPLAYCtx, KEvent, KEventController, SpriteComp, SpriteCompOpt, SpriteData, TimerComp, Vec2 } from "kaplay";
 import k from "./engine";
 import { CustomSprite, gameAPIs, loadAPIs } from "./kaplayware";
-import { addPrompt } from "./objects";
 
 /** A button */
 export type Button =
@@ -80,6 +79,10 @@ export type MinigameAPI = {
 	 * The lives the player has left
 	 */
 	lives: number;
+	/** The time left for the minigame to finish */
+	timeLeft: number;
+	/** Wheter ctx.win() has been called */
+	hasWon: boolean;
 };
 
 /** The context for the allowed functions in a minigame */
@@ -110,7 +113,7 @@ export type Minigame = {
 	 *
 	 * Please keep the prompt text in the cool format (All uppercase, single exclamation mark at the end)
 	 */
-	prompt: string | ((ctx: MinigameCtx, prompt: ReturnType<typeof addPrompt>) => void);
+	prompt: string | ((ctx: MinigameCtx, prompt: ReturnType<typeof k.addPrompt>) => void);
 	/** The author of the game */
 	author: string;
 	/** The RGB code for the game's background
@@ -195,8 +198,6 @@ export type KaplayWareCtx = {
 	time: number;
 	/** The current score for the player */
 	score: number;
-	/** The amount of games played counting loses */
-	gamesPlayed: number;
 	/** The lives left */
 	lives: number;
 	/** The index of the game in the games array */

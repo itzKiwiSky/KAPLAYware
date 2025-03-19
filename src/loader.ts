@@ -18,8 +18,9 @@ k.loadSound("@explosion", "sounds/explosion.mp3");
 k.loadSound("@burp", "sounds/burp.mp3");
 
 k.loadSprite("@bomb", "sprites/bomb.png");
+k.loadSprite("@bomb_cord_start", "sprites/bomb_cord_start.png");
 k.loadSprite("@bomb_cord", "sprites/bomb_cord.png");
-k.loadSprite("@bomb_cord1", "sprites/bomb_cord1.png");
+k.loadSprite("@bomb_cord_tip", "sprites/bomb_cord_tip.png");
 k.loadSprite("@bomb_fuse", "sprites/bomb_fuse.png");
 
 k.loadSprite("inputprompt_keys", "sprites/keys.png");

@@ -26,7 +26,6 @@ const getGame: Minigame = {
 			"apple",
 		]);
 
-		// TODO: Fix this
 		const getApplePos = () => {
 			const randAngle = ctx.rand(0, 360);
 			const magnitude = ctx.difficulty == 1

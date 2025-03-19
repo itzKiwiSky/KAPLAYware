@@ -1,7 +1,6 @@
 import { assets } from "@kaplayjs/crew";
 import { Asset, AudioPlay, AudioPlayOpt, Color, DrawSpriteOpt, GameObj, KAPLAYCtx, KAPLAYOpt, KEventController, Key, SpriteCompOpt, SpriteData, Vec2 } from "kaplay";
 import k from "./engine";
-import { addBomb, addPrompt } from "./objects";
 import cursor from "./plugins/cursor";
 import { loseTransition, prepTransition, speedupTransition, winTransition } from "./transitions";
 import { Button, KaplayWareCtx, KAPLAYwareOpts, LoadCtx, Minigame, MinigameAPI, MinigameCtx } from "./types";
@@ -143,11 +142,13 @@ export const gameAPIs = [
 	"onCollide",
 	"onCollideEnd",
 	"onCollideUpdate",
+	"conductor",
+	"addPrompt",
 ] as const;
 
-const DEFAULT_DURATION = 4;
-
 export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts = {}): KaplayWareCtx {
+	const DEFAULT_DURATION = 4;
+
 	opts = opts ?? {};
 	opts.debug ?? false;
 	opts.inOrder ?? false;
@@ -157,11 +158,19 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 	let minigameHistory: string[] = []; // this is so you can't get X minigame, Y minigame, then X minigame again
 
 	const onTimeoutEvent = new k.KEvent();
+	const conductor = k.conductor(140);
+	let gameboxUpdate: KEventController = null;
 	let timerEvents: KEventController[] = [];
 	let inputEvents: KEventController[] = [];
+	let canPlaySounds = true;
 	let queuedSounds: AudioPlay[] = [];
 	let sounds: AudioPlay[] = [];
 	let rgbColor: Color = k.WHITE;
+	let addedBomb = false;
+	let currentBomb: ReturnType<typeof k.addBomb> = null;
+	let clockRunning = true;
+	let currentMinigameScene: GameObj = null;
+	let currentMinigameCtx: MinigameCtx = null;
 
 	// debug variables
 	let skipMinigame = false;
@@ -171,7 +180,6 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 
 	/** The container for minigames, if you want to pause the minigame you should pause this */
 	const gameBox = k.add([
-		// k.rect(k.width(), k.height()),
 		k.pos(),
 		k.scale(),
 		k.rotate(),
@@ -203,9 +211,254 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 		}
 	}
 
+	function getGameContext(g: Minigame) {
+		const gameCtx = {};
+		for (const api of gameAPIs) {
+			gameCtx[api] = k[api];
+
+			if (api == "make") {
+				gameCtx[api] = (...args: any) => {
+					return k.make(...args);
+				};
+			}
+			else if (api == "onClick") {
+				gameCtx[api] = (...args: any[]) => {
+					// @ts-ignore
+					const ev = k.onClick(...args);
+					inputEvents.push(ev);
+					return ev;
+				};
+			}
+			else if (api == "area") {
+				// override area onClick too!!
+				gameCtx[api] = (...args: any[]) => {
+					const areaComp = k.area(...args);
+					return {
+						...areaComp,
+						onClick(action: () => void) {
+							const ev = k.onMousePress("left", () => this.isHovering() ? action() : false);
+							inputEvents.push(ev); // doesn't return because onClick returns void here
+						},
+					};
+				};
+			}
+			else if (api == "wait") {
+				gameCtx[api] = (...args: any[]) => {
+					const ev = k.wait(args[0], args[1]);
+					timerEvents.push(ev);
+					return ev;
+				};
+			}
+			else if (api == "loop") {
+				gameCtx[api] = (...args: any[]) => {
+					const ev = k.loop(args[0], args[1]);
+					timerEvents.push(ev);
+					return ev;
+				};
+			}
+			else if (api == "tween") {
+				gameCtx[api] = (...args: any[]) => {
+					// @ts-ignore
+					const ev = k.tween(...args);
+					timerEvents.push(ev);
+					return ev;
+				};
+			}
+			else if (api == "addLevel") {
+				gameCtx[api] = (...args: any[]) => {
+					// @ts-ignore
+					const level = k.addLevel(...args);
+					level.onUpdate(() => level.paused = !wareCtx.gameRunning);
+					return level;
+				};
+			}
+			else if (api == "play") {
+				gameCtx[api] = (soundName: any, opts: AudioPlayOpt) => {
+					const sound = k.play(soundName.startsWith("@") ? soundName : `${getGameID(g)}-${soundName}`, opts);
+
+					const newSound = {
+						...sound,
+						set paused(param: boolean) {
+							if (canPlaySounds) {
+								sound.paused = param;
+								return;
+							}
+
+							// ALL OF THIS HAPPENS IF YOU CAN'T PLAY SOUNDS (queue stuff)
+							sound.paused = true;
+
+							// this means that it was queued to play but the user paused it
+							if (queuedSounds.includes(sound) && param == true) {
+								queuedSounds.splice(queuedSounds.indexOf(sound), 1);
+							}
+
+							// this means the user removed it from queue but wants to add it again probably
+							if (!queuedSounds.includes(sound) && param == false) {
+								queuedSounds.push(sound);
+							}
+						},
+						get paused() {
+							return sound.paused;
+						},
+					};
+
+					// if can't play sounds and the user intended to play it at start, pause it
+					if (!canPlaySounds) {
+						if (!opts?.paused) {
+							queuedSounds.push(sound);
+							sound.paused = true;
+						}
+					}
+
+					sounds.push(newSound);
+					return newSound;
+				};
+			}
+			else if (api == "burp") {
+				gameCtx[api] = (opts: AudioPlayOpt) => {
+					return gameCtx["play"]("@burp", opts);
+				};
+			}
+			else if (api == "drawSprite") {
+				gameCtx[api] = (opts: DrawSpriteOpt) => {
+					opts.sprite = `${getGameID(g)}-${opts.sprite}`;
+					return k.drawSprite(opts);
+				};
+			}
+			else if (api == "getSprite") {
+				gameCtx[api] = (name: string) => {
+					return k.getSprite(`${getGameID(g)}-${name}`);
+				};
+			}
+			else if (api == "shader") {
+				gameCtx[api] = (name, uniform) => {
+					return k.shader(`${getGameID(g)}-${name}`, uniform);
+				};
+			}
+		}
+		function dirToKeys(button: Button): Key[] {
+			if (button == "left") return ["left", "a"];
+			else if (button == "down") return ["down", "s"];
+			else if (button == "up") return ["up", "w"];
+			else if (button == "right") return ["right", "d"];
+			else if (button == "action") return ["space"];
+		}
+
+		const gameAPI: MinigameAPI = {
+			getCamAngle: () => gameBox.angle,
+			setCamAngle: (val: number) => gameBox.angle = val,
+			getCamPos: () => gameBox.pos,
+			setCamPos: (val: Vec2) => gameBox.pos = val,
+			getCamScale: () => gameBox.scale,
+			setCamScale: (val: Vec2) => gameBox.scale = val,
+			shakeCam: (val?: number) => k.shake(val),
+			getRGB: () => rgbColor,
+			setRGB: (val) => rgbColor = val,
+
+			onButtonPress: (btn, action) => {
+				let ev: KEventController = null;
+				if (btn == "click") ev = gameBox.onMousePress("left", action);
+				else ev = gameBox.onKeyPress(dirToKeys(btn), action);
+				inputEvents.push(ev);
+				return ev;
+			},
+			isButtonPressed: (btn) => k.isKeyPressed(dirToKeys(btn)),
+			onButtonRelease: (btn, action) => {
+				let ev: KEventController = null;
+				if (btn == "click") ev = gameBox.onMouseRelease("left", action);
+				else ev = gameBox.onKeyRelease(dirToKeys(btn), action);
+				inputEvents.push(ev);
+				return ev;
+			},
+			isButtonReleased: (btn) => k.isKeyReleased(dirToKeys(btn)),
+			onButtonDown: (btn, action) => {
+				let ev: KEventController = null;
+				if (btn == "click") ev = gameBox.onMouseDown("left", action);
+				else ev = gameBox.onKeyDown(dirToKeys(btn), action);
+				inputEvents.push(ev);
+				return ev;
+			},
+			isButtonDown: (btn) => {
+				if (btn == "click") return k.isMouseDown("left");
+				else return k.isKeyDown(dirToKeys(btn));
+			},
+			onMouseMove(action) {
+				const ev = k.onMouseMove(action);
+				inputEvents.push(ev);
+				return ev;
+			},
+			onMouseRelease(action) {
+				const ev = k.onMouseRelease(action);
+				inputEvents.push(ev);
+				return ev;
+			},
+			onTimeout: (action) => onTimeoutEvent.add(action),
+			win() {
+				wareCtx.score++;
+				clockRunning = false;
+				wonLastGame = true;
+				if (currentBomb) currentBomb.turnOff();
+			},
+			lose() {
+				wareCtx.lives--;
+				clockRunning = false;
+				wonLastGame = false;
+			},
+			finish() {
+				if (wonLastGame == null) {
+					throw new Error("Finished minigame without setting the win condition!! Please call ctx.win() or ctx.lose() before calling ctx.finish()");
+				}
+				clearSounds();
+				clearTimers();
+				clearInput();
+				onTimeoutEvent.clear();
+				gameboxUpdate?.cancel();
+				k.wait(0.2, () => currentMinigameScene?.destroy());
+				wareCtx.nextGame();
+				canPlaySounds = false;
+				if (currentBomb) currentBomb.destroy();
+			},
+			sprite: (spr: CustomSprite<string> | SpriteData | Asset<SpriteData>, opts?: SpriteCompOpt) => {
+				const hasAt = (t: any) => typeof t == "string" && t.startsWith("@");
+				const getSpriteThing = (t: any) => hasAt(t) ? t : `${getGameID(g)}-${t}`;
+				const spriteComp = k.sprite(getSpriteThing(spr), opts);
+
+				return {
+					...spriteComp,
+					set sprite(val: string) {
+						spriteComp.sprite = getSpriteThing(val);
+					},
+
+					get sprite() {
+						if (spriteComp.sprite.startsWith(getGameID(g))) return spriteComp.sprite.replace(`${getGameID(g)}-`, "");
+						else return spriteComp.sprite;
+					},
+				};
+			},
+			cursor: {
+				set color(param: Color) {
+					cursor.color = param;
+				},
+			},
+			difficulty: wareCtx.difficulty,
+			lives: wareCtx.lives,
+			speed: wareCtx.speed,
+			timeLeft: wareCtx.time,
+			get hasWon() {
+				return wonLastGame != undefined && wonLastGame == true;
+			},
+		};
+
+		return {
+			...gameCtx,
+			...gameAPI,
+		};
+	}
+
 	k.onUpdate(() => {
 		gameBox.paused = !wareCtx.gameRunning;
 		cursor.canPoint = wareCtx.gameRunning;
+		conductor.bpm = 140 * wareCtx.speed;
 
 		inputEvents.forEach((ev) => ev.paused = !wareCtx.inputEnabled || !wareCtx.gameRunning);
 		timerEvents.forEach((ev) => ev.paused = !wareCtx.gameRunning);
@@ -249,270 +502,38 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 		inputEnabled: false,
 		gameRunning: false,
 		time: 0,
-		score: 1,
 		lives: 4,
 		speed: 1,
 		difficulty: 1,
 		gameIdx: k.randi(0, games.length - 1),
 		timesSpeed: 0,
-		gamesPlayed: 0,
+		score: 1, // transition will show 0 to 1
+		curGame: () => games[wareCtx.gameIdx],
+		speedUp() {
+			this.speed += this.speed * 0.07;
+		},
 
 		runGame(g) {
-			let bomb: ReturnType<typeof addBomb> = null;
-			let addedBomb = false;
-			let clockRunning = true;
-			let canPlaySounds = false;
-
-			const gameCtx = {};
-			for (const api of gameAPIs) {
-				gameCtx[api] = k[api];
-
-				if (api == "make") {
-					gameCtx[api] = (...args: any) => {
-						return k.make(...args);
-					};
-				}
-				else if (api == "onClick") {
-					gameCtx[api] = (...args: any[]) => {
-						// @ts-ignore
-						const ev = k.onClick(...args);
-						inputEvents.push(ev);
-						return ev;
-					};
-				}
-				else if (api == "area") {
-					// override area onClick too!!
-					gameCtx[api] = (...args: any[]) => {
-						const areaComp = k.area(...args);
-						return {
-							...areaComp,
-							onClick(action: () => void) {
-								const ev = k.onMousePress("left", () => this.isHovering() ? action() : false);
-								inputEvents.push(ev); // doesn't return because onClick returns void here
-							},
-						};
-					};
-				}
-				else if (api == "wait") {
-					gameCtx[api] = (...args: any[]) => {
-						const ev = k.wait(args[0], args[1]);
-						timerEvents.push(ev);
-						return ev;
-					};
-				}
-				else if (api == "loop") {
-					gameCtx[api] = (...args: any[]) => {
-						const ev = k.loop(args[0], args[1]);
-						timerEvents.push(ev);
-						return ev;
-					};
-				}
-				else if (api == "tween") {
-					gameCtx[api] = (...args: any[]) => {
-						// @ts-ignore
-						const ev = k.tween(...args);
-						timerEvents.push(ev);
-						return ev;
-					};
-				}
-				else if (api == "addLevel") {
-					gameCtx[api] = (...args: any[]) => {
-						// @ts-ignore
-						const level = k.addLevel(...args);
-						level.onUpdate(() => level.paused = !wareCtx.gameRunning);
-						return level;
-					};
-				}
-				else if (api == "play") {
-					gameCtx[api] = (soundName: any, opts: AudioPlayOpt) => {
-						const sound = k.play(soundName.startsWith("@") ? soundName : `${getGameID(g)}-${soundName}`, opts);
-
-						const newSound = {
-							...sound,
-							set paused(param: boolean) {
-								if (canPlaySounds) {
-									sound.paused = param;
-									return;
-								}
-
-								// ALL OF THIS HAPPENS IF YOU CAN'T PLAY SOUNDS (queue stuff)
-								sound.paused = true;
-
-								// this means that it was queued to play but the user paused it
-								if (queuedSounds.includes(sound) && param == true) {
-									queuedSounds.splice(queuedSounds.indexOf(sound), 1);
-								}
-
-								// this means the user removed it from queue but wants to add it again probably
-								if (!queuedSounds.includes(sound) && param == false) {
-									queuedSounds.push(sound);
-								}
-							},
-							get paused() {
-								return sound.paused;
-							},
-						};
-
-						// if can't play sounds and the user intended to play it at start, pause it
-						if (!canPlaySounds) {
-							if (!opts?.paused) {
-								queuedSounds.push(sound);
-								sound.paused = true;
-							}
-						}
-
-						sounds.push(newSound);
-						return newSound;
-					};
-				}
-				else if (api == "burp") {
-					gameCtx[api] = (opts: AudioPlayOpt) => {
-						return gameCtx["play"]("@burp", opts);
-					};
-				}
-				else if (api == "drawSprite") {
-					gameCtx[api] = (opts: DrawSpriteOpt) => {
-						opts.sprite = `${getGameID(g)}-${opts.sprite}`;
-						return k.drawSprite(opts);
-					};
-				}
-				else if (api == "getSprite") {
-					gameCtx[api] = (name: string) => {
-						return k.getSprite(`${getGameID(g)}-${name}`);
-					};
-				}
-				else if (api == "shader") {
-					gameCtx[api] = (name, uniform) => {
-						return k.shader(`${getGameID(g)}-${name}`, uniform);
-					};
-				}
-			}
-
 			// OBJECT STUFF
 			gameBox.removeAll();
 
-			function dirToKeys(button: Button): Key[] {
-				if (button == "left") return ["left", "a"];
-				else if (button == "down") return ["down", "s"];
-				else if (button == "up") return ["up", "w"];
-				else if (button == "right") return ["right", "d"];
-				else if (button == "action") return ["space"];
-			}
-
-			const gameAPI: MinigameAPI = {
-				getCamAngle: () => gameBox.angle,
-				setCamAngle: (val: number) => gameBox.angle = val,
-				getCamPos: () => gameBox.pos,
-				setCamPos: (val: Vec2) => gameBox.pos = val,
-				getCamScale: () => gameBox.scale,
-				setCamScale: (val: Vec2) => gameBox.scale = val,
-				shakeCam: (val?: number) => k.shake(val),
-				getRGB: () => rgbColor,
-				setRGB: (val) => rgbColor = val,
-
-				onButtonPress: (btn, action) => {
-					let ev: KEventController = null;
-					if (btn == "click") ev = gameBox.onMousePress("left", action);
-					else ev = gameBox.onKeyPress(dirToKeys(btn), action);
-					inputEvents.push(ev);
-					return ev;
-				},
-				isButtonPressed: (btn) => k.isKeyPressed(dirToKeys(btn)),
-				onButtonRelease: (btn, action) => {
-					let ev: KEventController = null;
-					if (btn == "click") ev = gameBox.onMouseRelease("left", action);
-					else ev = gameBox.onKeyRelease(dirToKeys(btn), action);
-					inputEvents.push(ev);
-					return ev;
-				},
-				isButtonReleased: (btn) => k.isKeyReleased(dirToKeys(btn)),
-				onButtonDown: (btn, action) => {
-					let ev: KEventController = null;
-					if (btn == "click") ev = gameBox.onMouseDown("left", action);
-					else ev = gameBox.onKeyDown(dirToKeys(btn), action);
-					inputEvents.push(ev);
-					return ev;
-				},
-				isButtonDown: (btn) => {
-					if (btn == "click") return k.isMouseDown("left");
-					else return k.isKeyDown(dirToKeys(btn));
-				},
-				onMouseMove(action) {
-					const ev = k.onMouseMove(action);
-					inputEvents.push(ev);
-					return ev;
-				},
-				onMouseRelease(action) {
-					const ev = k.onMouseRelease(action);
-					inputEvents.push(ev);
-					return ev;
-				},
-				onTimeout: (action) => onTimeoutEvent.add(action),
-				win() {
-					wareCtx.score++;
-					clockRunning = false;
-					wonLastGame = true;
-					if (bomb) bomb.turnOff();
-				},
-				lose() {
-					wareCtx.lives--;
-					clockRunning = false;
-					wonLastGame = false;
-				},
-				finish() {
-					if (wonLastGame == null) {
-						throw new Error("Finished minigame without setting the win condition!! Please call ctx.win() or ctx.lose() before calling ctx.finish()");
-					}
-					onTimeoutEvent.clear();
-					clearSounds();
-					clearTimers();
-					clearInput();
-					GAMEBOXUPDATE.cancel();
-					k.wait(0.2, () => minigameScene.destroy());
-					wareCtx.nextGame();
-					canPlaySounds = false;
-					if (bomb) bomb.destroy();
-				},
-				sprite: (spr: CustomSprite<string> | SpriteData | Asset<SpriteData>, opts?: SpriteCompOpt) => {
-					const hasAt = (t: any) => typeof t == "string" && t.startsWith("@");
-					const getSpriteThing = (t: any) => hasAt(t) ? t : `${getGameID(g)}-${t}`;
-					const spriteComp = k.sprite(getSpriteThing(spr), opts);
-
-					return {
-						...spriteComp,
-						set sprite(val: string) {
-							spriteComp.sprite = getSpriteThing(val);
-						},
-
-						get sprite() {
-							if (spriteComp.sprite.startsWith(getGameID(g))) return spriteComp.sprite.replace(`${getGameID(g)}-`, "");
-							else return spriteComp.sprite;
-						},
-					};
-				},
-				cursor: {
-					set color(param: Color) {
-						cursor.color = param;
-					},
-				},
-				difficulty: wareCtx.difficulty,
-				lives: wareCtx.lives,
-				speed: wareCtx.speed,
-			};
-			const minigameCtx = { ...gameCtx, ...gameAPI } as unknown as MinigameCtx;
-			const gDuration = typeof g.duration == "number" ? g.duration : g.duration(minigameCtx);
+			currentMinigameCtx = getGameContext(g) as MinigameCtx;
+			const gDuration = typeof g.duration == "number" ? g.duration : g.duration(currentMinigameCtx);
 			wareCtx.time = gDuration / wareCtx.speed;
 			rgbColor = "r" in g.rgb ? g.rgb : k.rgb(g.rgb[0], g.rgb[1], g.rgb[2]);
-			const minigameScene = gameBox.add(g.start(minigameCtx));
+			const minigameScene = gameBox.add(g.start(currentMinigameCtx));
+			clockRunning = true;
+			addedBomb = false;
 
 			onTimeoutEvent.add(() => {
 				wareCtx.inputEnabled = false;
 			});
 
-			const GAMEBOXUPDATE = k.onUpdate(() => {
+			gameboxUpdate?.cancel();
+			gameboxUpdate = k.onUpdate(() => {
 				if (restartMinigame) {
-					gameAPI.win();
-					gameAPI.finish();
+					currentMinigameCtx?.win();
+					currentMinigameCtx?.finish();
 				}
 
 				if (!wareCtx.gameRunning) return;
@@ -522,29 +543,35 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 						queuedSounds.forEach((sound) => sound.paused = false);
 					}
 
-					wareCtx.time -= k.dt();
+					if (wareCtx.time >= 0) wareCtx.time -= k.dt();
+					wareCtx.time = k.clamp(wareCtx.time, 0, 999);
+					currentMinigameCtx.timeLeft = wareCtx.time;
 					if (wareCtx.time <= 0 && clockRunning) {
 						clockRunning = false;
-						onTimeoutEvent.trigger();
 					}
 
-					if (wareCtx.time <= gDuration / 2 && !addedBomb) {
+					// if there's 3 beats left, add the bomb
+					if (wareCtx.time / wareCtx.speed <= conductor.beatInterval * 3 && !addedBomb) {
 						addedBomb = true;
-						bomb = addBomb(wareCtx);
+						currentBomb = k.addBomb();
+						const beatEv = conductor.onBeat(() => {
+							if (currentBomb.hasExploded || !clockRunning) beatEv.cancel();
+							if (currentBomb.hasExploded) {
+								onTimeoutEvent.trigger();
+								currentBomb.tick(); // missing tick for the bomb to explode
+							}
+							if (clockRunning) currentBomb.tick();
+						});
 					}
 				}
 			});
 
 			return minigameScene;
 		},
-		curGame() {
-			return games[wareCtx.gameIdx];
-		},
 		nextGame() {
-			wareCtx.gamesPlayed++;
-			if (wareCtx.gamesPlayed < 10) wareCtx.difficulty = 1;
-			else if (wareCtx.gamesPlayed >= 10 && wareCtx.gamesPlayed < 20) wareCtx.difficulty = 2;
-			else if (wareCtx.gamesPlayed >= 20) wareCtx.difficulty = 3;
+			if (wareCtx.score < 10) wareCtx.difficulty = 1;
+			else if (wareCtx.score >= 10 && wareCtx.score < 20) wareCtx.difficulty = 2;
+			else if (wareCtx.score >= 20) wareCtx.difficulty = 3;
 			wareCtx.gameRunning = false;
 
 			if (overrideDifficulty) wareCtx.difficulty = overrideDifficulty;
@@ -554,20 +581,20 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				if (minigameHistory.length == 0 || games.length == 1) return true;
 				else if (restartMinigame && !skipMinigame) return game == wareCtx.curGame();
 				else {
-					const previousPreviousID = minigameHistory[wareCtx.gamesPlayed - 3];
+					const previousPreviousID = minigameHistory[wareCtx.score - 3];
 					const previousPreviousGame = games.find((game) => getGameID(game) == previousPreviousID);
 					if (previousPreviousGame) return game != wareCtx.curGame() && game != previousPreviousGame;
 					else return game != wareCtx.curGame();
 				}
 			});
 
-			const nextGame = opts.inOrder ? availableGames[wareCtx.gamesPlayed % availableGames.length] : k.choose(availableGames);
+			const nextGame = opts.inOrder ? availableGames[wareCtx.score % availableGames.length] : k.choose(availableGames);
 
 			function prep() {
 				wareCtx.gameIdx = games.indexOf(nextGame);
 				clearSounds(); // hit minigame has an issue with causes queuedSounds to stay
 				wareCtx.runGame(nextGame);
-				minigameHistory[wareCtx.gamesPlayed - 1] = getGameID(nextGame);
+				minigameHistory[wareCtx.score - 1] = getGameID(nextGame);
 
 				restartMinigame = false;
 				skipMinigame = false;
@@ -575,7 +602,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				const gameinput = getGameInput(nextGame);
 				cursor.visible = !gameHidesCursor(nextGame);
 
-				let prompt: ReturnType<typeof addPrompt> = null;
+				let prompt: ReturnType<typeof k.addPrompt> = null;
 
 				const prepTrans = prepTransition(wareCtx);
 				const inputprompt = k.add([
@@ -588,10 +615,10 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				k.tween(k.vec2(0), k.vec2(1), 0.15 / wareCtx.speed, (p) => inputprompt.scale = p, k.easings.easeOutElastic);
 				prepTrans.onHalf(() => {
 					k.tween(inputprompt.scale, k.vec2(0), 0.15 / wareCtx.speed, (p) => inputprompt.scale = p, k.easings.easeOutQuint).onEnd(() => inputprompt.destroy());
-					if (typeof nextGame.prompt == "string") prompt = addPrompt(coolPrompt(nextGame.prompt));
+					if (typeof nextGame.prompt == "string") prompt = k.addPrompt(coolPrompt(nextGame.prompt));
 					else {
-						prompt = addPrompt("");
-						nextGame.prompt(k as unknown as MinigameCtx, prompt);
+						prompt = k.addPrompt("");
+						nextGame.prompt(currentMinigameCtx as unknown as MinigameCtx, prompt);
 					}
 				});
 
@@ -615,11 +642,11 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 
 				transition.onEnd(() => {
 					if (!wonLastGame && wareCtx.lives == 0) {
-						k.go("gameover", wareCtx.gamesPlayed);
+						k.go("gameover", wareCtx.score);
 						return;
 					}
 
-					const timeToSpeedUP = forceSpeed || wareCtx.gamesPlayed % 5 == 0;
+					const timeToSpeedUP = forceSpeed || wareCtx.score % 5 == 0;
 					if (timeToSpeedUP) {
 						if (forceSpeed == true) forceSpeed = false;
 						wareCtx.timesSpeed++;
@@ -634,14 +661,10 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			}
 			else prep();
 		},
-		speedUp() {
-			this.speed += this.speed * 0.07;
-		},
 	};
 
 	k.watch(wareCtx, "score", "Score");
 	k.watch(wareCtx, "lives", "Lives");
-	k.watch(wareCtx, "gamesPlayed", "Games played");
 	k.watch(wareCtx, "difficulty", "Difficulty");
 	k.watch(wareCtx, "speed", "Speed");
 	k.watch(wareCtx, "inputEnabled", "Input enabled");

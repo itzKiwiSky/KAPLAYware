@@ -2,13 +2,13 @@ import { Comp, GameObj, KAPLAYCtx } from "kaplay";
 import k from "../engine";
 
 // Keep track of the current draggin item
-export let curDraggin: GameObj<DragCommp> = null;
+export let curDraggin: GameObj<DragComp> = null;
 
 export function setCurDragging(value: any) {
 	curDraggin = value;
 }
 
-export interface DragCommp extends Comp {
+export interface DragComp extends Comp {
 	dragging: boolean;
 	pick(): void;
 	onDrag(action: () => void): void;
@@ -17,7 +17,7 @@ export interface DragCommp extends Comp {
 }
 
 // A custom component for handling drag & drop behavior
-function drag(): DragCommp {
+function drag(): DragComp {
 	// The displacement between object pos and mouse pos
 	let offset = k.vec2(0);
 

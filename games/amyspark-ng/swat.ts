@@ -18,6 +18,7 @@ const swatGame: Minigame = {
 	start(ctx) {
 		const game = ctx.make();
 		const randPos = () => ctx.vec2(ctx.rand(0, ctx.width()), ctx.rand(0, ctx.height()));
+		let flies = ctx.difficulty;
 
 		const hand = game.add([
 			ctx.sprite("hand"),
@@ -43,19 +44,14 @@ const swatGame: Minigame = {
 			]);
 			ctx.tween(ctx.vec2(1.5), ctx.vec2(1), 0.15 / ctx.speed, (p) => shock.scale = p);
 
-			// alternative to collision checking, done this way because i couldn't only check collision in the click frame
 			shock.onCollide("fly", (fly) => {
-				fly.tag("dead");
+				flies--;
+				if (flies == 0 && !ctx.hasWon) ctx.win();
 				ctx.play("bzz", { volume: 3, speed: 3 });
 				ctx.tween(ctx.vec2(2), ctx.vec2(1), 0.15 / ctx.speed, (p) => fly.scale = p, ctx.easings.easeOutQuint);
 				ctx.tween(ctx.RED, ctx.WHITE, 0.15 / ctx.speed, (p) => fly.color = p, ctx.easings.easeOutQuint);
 				ctx.tween(fly.angle, 90, 0.15 / ctx.speed, (p) => fly.angle = p, ctx.easings.easeOutQuint);
-				ctx.tween(fly.pos.y, ctx.height() + 10, 0.5 / ctx.speed, (p) => fly.pos.y = p, ctx.easings.easeOutQuint).onEnd(() => {
-					if (game.get("dead").length == ctx.difficulty) {
-						ctx.win();
-						ctx.wait(0.5, () => ctx.finish());
-					}
-				});
+				ctx.tween(fly.pos.y, ctx.height() + 10, 0.5 / ctx.speed, (p) => fly.pos.y = p, ctx.easings.easeOutQuint).onEnd(() => ctx.finish());
 			});
 
 			ctx.wait(0.5 / ctx.speed, () => shock.destroy());
@@ -95,13 +91,13 @@ const swatGame: Minigame = {
 		});
 
 		ctx.onTimeout(() => {
-			if (game.get("fly").length > 0) {
+			if (flies > 0) {
 				ctx.lose();
-				ctx.wait(0.5, () => ctx.finish());
+				ctx.wait(0.5 / ctx.speed, () => ctx.finish());
 			}
 		});
 
-		for (let i = 0; i < ctx.difficulty; i++) addFly();
+		for (let i = 0; i < flies; i++) addFly();
 
 		return game;
 	},

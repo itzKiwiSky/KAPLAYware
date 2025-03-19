@@ -1,13 +1,70 @@
 import { assets, crew } from "@kaplayjs/crew";
-import { KAPLAYCtx } from "kaplay";
-import { Conductor } from "./conductor";
+import { GameObj, KAPLAYCtx } from "kaplay";
 import k from "./engine";
-import { addPrompt, makeFriend, makeHearts, makeScoreText } from "./objects";
 import { KaplayWareCtx } from "./types";
 
 let sunAngle = 0;
 let cloudX = 40;
 let cloudY = 40;
+
+export function makeHearts(parent: GameObj | KAPLAYCtx, amount: number) {
+	const hearts: ReturnType<typeof makeHeart>[] = [];
+	for (let i = 0; i < amount; i++) {
+		const heart = parent.add(makeHeart());
+		heart.scale = k.vec2(2);
+		const HEART_WIDTH = heart.width * heart.scale.x * 1.1;
+		const INITIAL_POS = k.vec2(k.center().x - HEART_WIDTH * 1.5, 0);
+		heart.pos = INITIAL_POS.add(k.vec2(HEART_WIDTH * i, heart.height * 2));
+		hearts.push(heart);
+	}
+
+	return hearts;
+}
+
+export function makeHeart() {
+	const heart = k.make([
+		k.sprite("@heart"),
+		k.pos(),
+		k.anchor("center"),
+		k.scale(1),
+		k.rotate(),
+		k.opacity(),
+		k.z(100),
+		"heart",
+		{
+			kill() {
+			},
+		},
+	]);
+
+	heart.kill = () => {
+		heart.fadeOut(0.5).onEnd(() => heart.destroy());
+	};
+
+	return heart;
+}
+
+export function makeScoreText(score: number) {
+	return k.make([
+		k.text(`${score.toString()}`, { align: "left" }),
+		k.color(k.WHITE),
+		k.anchor("center"),
+		k.scale(4),
+		k.rotate(0),
+		k.pos(k.center().x, k.center().y - 150),
+		k.timer(),
+	]);
+}
+
+export function makeFriend(name: string) {
+	return k.make([
+		k.sprite("@" + name),
+		k.scale(2),
+		k.pos(),
+		k.anchor("bot"),
+		k.rotate(0),
+	]);
+}
 
 function makeCloud() {
 	const cloud = k.make([
@@ -47,7 +104,6 @@ export function prepTransition(ware: KaplayWareCtx) {
 	const SKY_COLOR = k.rgb(141, 183, 255);
 	const sound = k.play("@prepJingle", { speed: ware.speed });
 	const DURATION = sound.duration() / ware.speed;
-	const conductor = new Conductor(k, sound, 140 * ware.speed);
 	const transition = k.add([k.timer(), k.scale(), k.pos()]);
 
 	if (sunAngle == null) sunAngle = 0;
@@ -105,26 +161,15 @@ export function prepTransition(ware: KaplayWareCtx) {
 		k.pos(k.vec2(k.width() / 2, 0)),
 	]);
 
-	const scoreText = topBg.add(makeScoreText(ware.gamesPlayed - 1));
+	const scoreText = topBg.add(makeScoreText(ware.score - 1));
 	const hearts = makeHearts(botBg, ware.lives);
 
 	let scoreTextAngle = 0;
-	conductor.onBeat((beat) => {
-		scoreTextAngle = beat % 2 == 0 ? -20 : 20;
-
-		const BEAN_SCALE = 2.5;
-		transition.tween(BEAN_SCALE * 0.5, BEAN_SCALE, conductor.beatInterval, (p) => bean.scale.y = p, k.easings.easeOutQuint);
-		transition.tween(BEAN_SCALE * 1.5, BEAN_SCALE, conductor.beatInterval, (p) => bean.scale.x = p, k.easings.easeOutQuint);
-		hearts.forEach((heart) => {
-			transition.tween(1, 2, conductor.beatInterval, (p) => heart.scale.y = p, k.easings.easeOutQuint);
-			transition.tween(2.5, 2, conductor.beatInterval, (p) => heart.scale.x = p, k.easings.easeOutQuint);
-		});
-	});
 
 	scoreText.onUpdate(() => scoreText.angle = k.lerp(scoreText.angle, scoreTextAngle, 0.25));
 	transition.wait(DURATION / 4, () => {
 		const TIME_LEFT = DURATION - DURATION / 4;
-		scoreText.text = ware.gamesPlayed.toString();
+		scoreText.text = ware.score.toString();
 		transition.tween(k.vec2(4), k.vec2(6), TIME_LEFT / 4, (p) => scoreText.scale = p, k.easings.easeOutQuint).onEnd(() => {
 			transition.wait(TIME_LEFT / 4, () => {
 				transition.tween(k.vec2(6), k.vec2(4), TIME_LEFT / 4, (p) => scoreText.scale = p, k.easings.easeOutQuint);
@@ -141,7 +186,6 @@ export function prepTransition(ware: KaplayWareCtx) {
 
 	onEnd(() => {
 		transition.removeAll();
-		conductor.destroy();
 	});
 
 	return {
@@ -154,7 +198,6 @@ export function winTransition(ware: KaplayWareCtx) {
 	const SKY_COLOR = k.rgb(141, 183, 255);
 	const sound = k.play("@winJingle", { speed: ware.speed });
 	const DURATION = sound.duration() / ware.speed;
-	const conductor = new Conductor(k, sound, 140 * ware.speed);
 	const transition = k.add([k.timer(), k.scale(), k.pos()]);
 
 	function onHalf(action: () => void) {
@@ -226,22 +269,22 @@ export function winTransition(ware: KaplayWareCtx) {
 		k.rotate(0),
 	]);
 
-	const scoreText = topBg.add(makeScoreText(ware.gamesPlayed - 1));
+	const scoreText = topBg.add(makeScoreText(ware.score - 1));
 	const hearts = makeHearts(botBg, ware.lives);
 
 	let heartToBop = -1;
 	let scoreTextAngle = 0;
-	conductor.onBeat((beat) => {
-		scoreTextAngle = beat % 2 == 0 ? -20 : 20;
-		heartToBop = (heartToBop + 1) % ware.lives;
+	// conductor.onBeat((beat) => {
+	// 	scoreTextAngle = beat % 2 == 0 ? -20 : 20;
+	// 	heartToBop = (heartToBop + 1) % ware.lives;
 
-		const BEAN_SCALE = 2.5;
-		transition.tween(BEAN_SCALE * 0.5, BEAN_SCALE, conductor.beatInterval, (p) => bean.scale.y = p, k.easings.easeOutQuint);
-		transition.tween(BEAN_SCALE * 1.5, BEAN_SCALE, conductor.beatInterval, (p) => bean.scale.x = p, k.easings.easeOutQuint);
-		if (hearts[heartToBop]) {
-			transition.tween(k.vec2(3), k.vec2(2), conductor.beatInterval, (p) => hearts[heartToBop].scale = p, k.easings.easeOutQuint);
-		}
-	});
+	// 	const BEAN_SCALE = 2.5;
+	// 	transition.tween(BEAN_SCALE * 0.5, BEAN_SCALE, conductor.beatInterval, (p) => bean.scale.y = p, k.easings.easeOutQuint);
+	// 	transition.tween(BEAN_SCALE * 1.5, BEAN_SCALE, conductor.beatInterval, (p) => bean.scale.x = p, k.easings.easeOutQuint);
+	// 	if (hearts[heartToBop]) {
+	// 		transition.tween(k.vec2(3), k.vec2(2), conductor.beatInterval, (p) => hearts[heartToBop].scale = p, k.easings.easeOutQuint);
+	// 	}
+	// });
 
 	topBg.pos.y = -topBg.height;
 	botBg.pos.y = k.height() + botBg.height;
@@ -272,7 +315,7 @@ export function winTransition(ware: KaplayWareCtx) {
 
 	onEnd(() => {
 		transition.removeAll();
-		conductor.destroy();
+		// conductor.destroy();
 	});
 
 	return {
@@ -287,7 +330,6 @@ export function loseTransition(ware: KaplayWareCtx) {
 
 	const sound = k.play("@loseJingle", { speed: ware.speed });
 	const DURATION = sound.duration() / ware.speed;
-	const conductor = new Conductor(k, sound, 140 * ware.speed);
 
 	const transition = k.add([k.timer(), k.scale(), k.pos()]);
 
@@ -381,7 +423,7 @@ export function loseTransition(ware: KaplayWareCtx) {
 			const wait = transition.wait(DURATION, () => {
 				wait.cancel();
 				transition.removeAll();
-				conductor.destroy();
+				// conductor.destroy();
 				action();
 			});
 			return wait;
@@ -392,7 +434,6 @@ export function loseTransition(ware: KaplayWareCtx) {
 export function speedupTransition(ware: KaplayWareCtx) {
 	const sound = k.play("@speedJingle", { speed: ware.speed });
 	const DURATION = sound.duration() / ware.speed;
-	const conductor = new Conductor(k, sound, 140 * ware.speed);
 	const transition = k.add([k.timer(), k.scale(), k.pos()]);
 
 	function onEnd(action: () => void) {
@@ -465,22 +506,22 @@ export function speedupTransition(ware: KaplayWareCtx) {
 		k.pos(k.center().x, k.height() - 40),
 	]);
 
-	const scoreText = transition.add(makeScoreText(ware.gamesPlayed - 1));
+	const scoreText = transition.add(makeScoreText(ware.score - 1));
 	const hearts = makeHearts(bg, ware.lives);
 	hearts.forEach((heart) => heart.pos.x -= 50);
 
-	const prompt = addPrompt("SPEED UP", 0.25 / ware.speed);
-	conductor.onBeat((beat) => {
-		const theAngle = beat % 2 == 0 ? -20 : 20;
-		const BEAN_SCALE = 2.5;
-		transition.tween(BEAN_SCALE * 0.5, BEAN_SCALE, conductor.beatInterval, (p) => bean.scale.y = p, k.easings.easeOutQuint);
-		transition.tween(BEAN_SCALE * 1.5, BEAN_SCALE, conductor.beatInterval, (p) => bean.scale.x = p, k.easings.easeOutQuint);
-		hearts.forEach((heart) => {
-			transition.tween(1, 2, conductor.beatInterval, (p) => heart.scale.y = p, k.easings.easeOutQuint);
-			transition.tween(2.5, 2, conductor.beatInterval, (p) => heart.scale.x = p, k.easings.easeOutQuint);
-		});
-		transition.tween(2, 1, 0.15, (p) => prompt.scale.y = p, k.easings.easeOutQuint);
-	});
+	const prompt = k.addPrompt("SPEED UP", 0.25 / ware.speed);
+	// conductor.onBeat((beat) => {
+	// 	const theAngle = beat % 2 == 0 ? -20 : 20;
+	// 	const BEAN_SCALE = 2.5;
+	// 	transition.tween(BEAN_SCALE * 0.5, BEAN_SCALE, conductor.beatInterval, (p) => bean.scale.y = p, k.easings.easeOutQuint);
+	// 	transition.tween(BEAN_SCALE * 1.5, BEAN_SCALE, conductor.beatInterval, (p) => bean.scale.x = p, k.easings.easeOutQuint);
+	// 	hearts.forEach((heart) => {
+	// 		transition.tween(1, 2, conductor.beatInterval, (p) => heart.scale.y = p, k.easings.easeOutQuint);
+	// 		transition.tween(2.5, 2, conductor.beatInterval, (p) => heart.scale.x = p, k.easings.easeOutQuint);
+	// 	});
+	// 	transition.tween(2, 1, 0.15, (p) => prompt.scale.y = p, k.easings.easeOutQuint);
+	// });
 
 	let friendsAmount = 3;
 	let friendsChosen: string[] = [];
@@ -506,7 +547,7 @@ export function speedupTransition(ware: KaplayWareCtx) {
 	onEnd(() => {
 		transition.removeAll();
 		transition.destroy();
-		conductor.destroy();
+		// conductor.destroy();
 		prompt.fadeOut(0.05).onEnd(() => prompt.destroy());
 	});
 
