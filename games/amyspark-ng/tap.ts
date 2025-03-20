@@ -7,7 +7,7 @@ const tapGame: Minigame = {
 	author: "amyspark-ng",
 	rgb: [0, 0, 0],
 	input: { cursor: { hide: true } },
-	duration: (ctx) => ctx.difficulty == 3 ? 9 : 8,
+	duration: 8,
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {
 		ctx.loadSprite("screenframe", "sprites/tap/screenframe.png");

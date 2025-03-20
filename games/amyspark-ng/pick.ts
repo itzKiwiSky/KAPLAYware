@@ -15,7 +15,6 @@ const pickGame: Minigame = {
 		ctx.loadSprite("nosebot", "sprites/pick/nosebot.png", { sliceY: 1, sliceX: 3 });
 	},
 	start(ctx) {
-		ctx.difficulty = 3;
 		const game = ctx.make();
 
 		const hand = game.add([

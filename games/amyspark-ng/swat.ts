@@ -46,12 +46,15 @@ const swatGame: Minigame = {
 
 			shock.onCollide("fly", (fly) => {
 				flies--;
-				if (flies == 0 && !ctx.hasWon) ctx.win();
+				if (flies <= 0 && !ctx.hasWon()) ctx.win();
+				fly.tag("dead");
 				ctx.play("bzz", { volume: 3, speed: 3 });
 				ctx.tween(ctx.vec2(2), ctx.vec2(1), 0.15 / ctx.speed, (p) => fly.scale = p, ctx.easings.easeOutQuint);
 				ctx.tween(ctx.RED, ctx.WHITE, 0.15 / ctx.speed, (p) => fly.color = p, ctx.easings.easeOutQuint);
 				ctx.tween(fly.angle, 90, 0.15 / ctx.speed, (p) => fly.angle = p, ctx.easings.easeOutQuint);
-				ctx.tween(fly.pos.y, ctx.height() + 10, 0.5 / ctx.speed, (p) => fly.pos.y = p, ctx.easings.easeOutQuint).onEnd(() => ctx.finish());
+				ctx.tween(fly.pos.y, ctx.height() + 10, 0.5 / ctx.speed, (p) => fly.pos.y = p, ctx.easings.easeOutQuint).onEnd(() => {
+					if (ctx.hasWon()) ctx.finish();
+				});
 			});
 
 			ctx.wait(0.5 / ctx.speed, () => shock.destroy());
@@ -75,6 +78,7 @@ const swatGame: Minigame = {
 			fly.onUpdate(() => {
 				// fly loop
 				bzzSfx.paused = fly.is("dead");
+				if (fly.is("dead")) return;
 				flyTime -= ctx.dt();
 				if (flyTime <= 0) {
 					flyTime = ctx.rand(0.5 / ctx.speed, 0.9 / ctx.speed);

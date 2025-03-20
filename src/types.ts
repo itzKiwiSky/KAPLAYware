@@ -66,6 +66,7 @@ export type MinigameAPI = {
 	 * Run this when your minigame has 100% finished all win/lose animations etc
 	 */
 	finish: () => void;
+	hasWon(): boolean;
 	cursor: { color: Color; };
 	/**
 	 * The current difficulty of the game
@@ -82,7 +83,6 @@ export type MinigameAPI = {
 	/** The time left for the minigame to finish */
 	timeLeft: number;
 	/** Wheter ctx.win() has been called */
-	hasWon: boolean;
 };
 
 /** The context for the allowed functions in a minigame */
@@ -163,7 +163,7 @@ export type Minigame = {
 	 * }
 	 * ```
 	 */
-	load?: (k: LoadCtx) => void;
+	load?: (ctx: LoadCtx) => void;
 	/**
 	 * Main entry of the game code. Should return a game object made by `k.make()` that contains the whole game.
 	 *

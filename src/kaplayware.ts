@@ -435,6 +435,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 					},
 				};
 			},
+			hasWon: () => wonLastGame == true,
 			cursor: {
 				set color(param: Color) {
 					cursor.color = param;
@@ -444,9 +445,6 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			lives: wareCtx.lives,
 			speed: wareCtx.speed,
 			timeLeft: wareCtx.time,
-			get hasWon() {
-				return wonLastGame != undefined && wonLastGame == true;
-			},
 		};
 
 		return {
