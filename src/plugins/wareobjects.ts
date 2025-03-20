@@ -153,7 +153,7 @@ function addBomb() {
 
 type Sampler<T> = T | (() => T);
 
-type ConfettiOpt = {
+export type ConfettiOpt = {
 	gravity?: number;
 	airDrag?: number;
 	spread?: number;
@@ -167,7 +167,7 @@ type ConfettiOpt = {
 	obj?: () => { draw: () => void; };
 };
 
-function makeConfetti() {
+function makeConfetti(opt?: ConfettiOpt) {
 	const DEF_COUNT = 80;
 	const DEF_GRAVITY = 800;
 	const DEF_AIR_DRAG = 0.9;
@@ -179,7 +179,7 @@ function makeConfetti() {
 	const DEF_SATURATION = 0.7;
 	const DEF_LIGHTNESS = 0.6;
 
-	const opt: ConfettiOpt = {};
+	opt = opt ?? {};
 
 	const confetti = k.make();
 	// @ts-ignore

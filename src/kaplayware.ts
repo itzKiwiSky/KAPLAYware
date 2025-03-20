@@ -162,7 +162,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 	let gameboxUpdate: KEventController = null;
 	let timerEvents: KEventController[] = [];
 	let inputEvents: KEventController[] = [];
-	let canPlaySounds = true;
+	let canPlaySounds = true; // TODO: FIX THIS!! the click minigame can play music before the game actually starts (bad)
 	let queuedSounds: AudioPlay[] = [];
 	let sounds: AudioPlay[] = [];
 	let rgbColor: Color = k.WHITE;
@@ -436,10 +436,8 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				};
 			},
 			hasWon: () => wonLastGame == true,
-			cursor: {
-				set color(param: Color) {
-					cursor.color = param;
-				},
+			addConfetti(opts) {
+				return gameBox.add(k.makeConfetti(opts));
 			},
 			difficulty: wareCtx.difficulty,
 			lives: wareCtx.lives,

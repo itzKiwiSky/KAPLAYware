@@ -1,6 +1,7 @@
 import { Asset, AudioPlay, AudioPlayOpt, Color, GameObj, KAPLAYCtx, KEvent, KEventController, SpriteComp, SpriteCompOpt, SpriteData, TimerComp, Vec2 } from "kaplay";
 import k from "./engine";
 import { CustomSprite, gameAPIs, loadAPIs } from "./kaplayware";
+import { ConfettiOpt } from "./plugins/wareobjects";
 
 /** A button */
 export type Button =
@@ -35,6 +36,9 @@ export type MinigameAPI = {
 	onMouseMove(action: (pos: Vec2, delta: Vec2) => void): KEventController;
 	onMouseRelease(action: () => void): KEventController;
 
+	/** Adds a buncha confetti!!! */
+	addConfetti(opts?: ConfettiOpt): void;
+
 	setCamScale(val: Vec2): Vec2;
 	getCamScale(): Vec2;
 	setCamAngle(val: number): number;
@@ -42,47 +46,63 @@ export type MinigameAPI = {
 	setCamPos(val: Vec2): Vec2;
 	getCamPos(): Vec2;
 	shakeCam(val?: number): void;
-
 	/** Gets the current RGB of the background of your minigame */
 	getRGB(): Color;
 	/** Sets the RGB to the background of your minigame */
 	setRGB(val: Color): void;
-
-	/** Custom sprite thing for kaplayware that holds default assets */
+	/** ### Custom sprite component for kaplayware that holds default assets
+	 *
+	 * Attach and render a sprite to a Game Object.
+	 *
+	 * @param spr - The sprite to render.
+	 * @param opt - Options for the sprite component. See {@link SpriteCompOpt `SpriteCompOpt`}.
+	 *
+	 * @example
+	 * ```js
+	 * // minimal setup
+	 * add([
+	 *     sprite("bean"),
+	 * ])
+	 *
+	 * // with options
+	 * const bean = add([
+	 *     sprite("bean", {
+	 *         // start with animation "idle"
+	 *         anim: "idle",
+	 *     }),
+	 * ])
+	 *
+	 * // play / stop an anim
+	 * bean.play("jump")
+	 * bean.stop()
+	 *
+	 * // manually setting a frame
+	 * bean.frame = 3
+	 * ```
+	 *
+	 * @returns The sprite comp.
+	 * @since v2000.0
+	 * @group Components
+	 */
 	sprite(spr: CustomSprite<string> | SpriteData | Asset<SpriteData>, opt?: SpriteCompOpt): SpriteComp;
-	/**
-	 * Register an event that runs once when timer runs out.
-	 */
+	/** Register an event that runs once when timer runs out. */
 	onTimeout: (action: () => void) => KEventController;
-	/**
-	 * Run this when player succeeded in completing the game.
-	 */
+	/** Run this when player succeeded in completing the game. */
 	win: () => void;
-	/**
-	 * Run this when player failed.
-	 */
+	/** Run this when player failed. */
 	lose: () => void;
-	/**
-	 * Run this when your minigame has 100% finished all win/lose animations etc
-	 */
+	/** Run this when your minigame has 100% finished all win/lose animations etc */
 	finish: () => void;
+	/** Wheter ctx.win() has been called */
 	hasWon(): boolean;
-	cursor: { color: Color; };
-	/**
-	 * The current difficulty of the game
-	 */
+	/** The current difficulty of the game */
 	difficulty: 1 | 2 | 3;
-	/**
-	 * The speed multiplier
-	 */
+	/** The speed multiplier */
 	speed: number;
-	/**
-	 * The lives the player has left
-	 */
+	/** The lives the player has left */
 	lives: number;
 	/** The time left for the minigame to finish */
 	timeLeft: number;
-	/** Wheter ctx.win() has been called */
 };
 
 /** The context for the allowed functions in a minigame */
@@ -153,6 +173,8 @@ export type Minigame = {
 	 * Assets URL prefix.
 	 */
 	urlPrefix?: string;
+	/** Wheter your game plays its own music or if it should play a random jingle from our selection of jingles */
+	playsOwnMusic?: boolean;
 	/**
 	 * The function that loads the game's custom assets
 	 *
