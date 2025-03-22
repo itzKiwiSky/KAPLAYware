@@ -2,7 +2,7 @@ import { assets } from "@kaplayjs/crew";
 import { Asset, AudioPlay, AudioPlayOpt, Color, DrawSpriteOpt, GameObj, KAPLAYCtx, KAPLAYOpt, KEventController, Key, SoundData, SpriteCompOpt, SpriteData, Vec2 } from "kaplay";
 import k from "./engine";
 import cursor from "./plugins/cursor";
-import { loseTransition, makeTransition, prepTransition, speedupTransition, winTransition } from "./transitions";
+import { makeTransition } from "./transitions";
 import { Button, KaplayWareCtx, KAPLAYwareOpts, LoadCtx, Minigame, MinigameAPI, MinigameCtx } from "./types";
 import { coolPrompt, gameHidesCursor, gameUsesMouse, getByID, getGameID, getGameInput } from "./utils";
 
@@ -691,7 +691,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			}
 
 			if (wonLastGame != null) {
-				let transition = null;
+				let transition: ReturnType<typeof makeTransition> = null;
 				if (wonLastGame) transition = makeTransition(WareScene, wareCtx, "win");
 				else transition = makeTransition(WareScene, wareCtx, "lose");
 				wonLastGame = null;
@@ -709,10 +709,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 						if (forceSpeed == true) forceSpeed = false;
 						wareCtx.timesSpeed++;
 						wareCtx.speedUp();
-						speedupTransition(wareCtx).onEnd(() => {
-							k.tween(k.getCamPos(), k.center(), 0.5 / wareCtx.speed, (p) => k.setCamPos(p), k.easings.easeOutQuint);
-							prep();
-						});
+						makeTransition(WareScene, wareCtx, "speed").onEnd(() => prep());
 					}
 					else prep();
 				});

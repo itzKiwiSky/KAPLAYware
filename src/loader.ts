@@ -23,6 +23,14 @@ k.loadSprite("screen", "sprites/transition/screen.png", { sliceX: 3, sliceY: 1 }
 k.loadSprite("calendar", "sprites/transition/calendar.png");
 k.loadSprite("page", "sprites/transition/page.png");
 k.loadSprite("chillguy", "sprites/transition/chillguy.png", { sliceX: 3, sliceY: 1 });
+k.loadSprite("chillcat", "sprites/transition/chillcat.png", { sliceX: 3, sliceY: 1 });
+k.loadSprite("chillbutterfly", "sprites/transition/chillbutterfly.png", { sliceX: 3, sliceY: 1 });
+k.loadSprite("table", "sprites/transition/table.png");
+k.loadSprite("grass", "sprites/transition/grass.png");
+k.loadSprite("coffee", "sprites/transition/coffee.png", { sliceX: 7, sliceY: 1, anims: { "hot": { from: 0, to: 6 } } });
+k.loadSprite("flowerpot", "sprites/transition/flowerpot.png");
+k.loadSprite("flower", "sprites/transition/flowers.png", { sliceX: 3, sliceY: 1 });
+k.loadSprite("heart", "sprites/transition/heart.png");
 
 k.loadSprite("@bomb", "sprites/bomb.png");
 k.loadSprite("@bomb_cord_start", "sprites/bomb_cord_start.png");
