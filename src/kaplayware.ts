@@ -2,7 +2,7 @@ import { assets } from "@kaplayjs/crew";
 import { Asset, AudioPlay, AudioPlayOpt, Color, DrawSpriteOpt, GameObj, KAPLAYCtx, KAPLAYOpt, KEventController, Key, SoundData, SpriteCompOpt, SpriteData, Vec2 } from "kaplay";
 import k from "./engine";
 import cursor from "./plugins/cursor";
-import { loseTransition, prepTransition, speedupTransition, winTransition } from "./transitions";
+import { loseTransition, makeTransition, prepTransition, speedupTransition, winTransition } from "./transitions";
 import { Button, KaplayWareCtx, KAPLAYwareOpts, LoadCtx, Minigame, MinigameAPI, MinigameCtx } from "./types";
 import { coolPrompt, gameHidesCursor, gameUsesMouse, getByID, getGameID, getGameInput } from "./utils";
 
@@ -180,6 +180,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 	let restartMinigame = false;
 	let overrideDifficulty = null as 1 | 2 | 3;
 
+	/** Main object, if you want to pause everything, pause this */
 	const WareScene = k.add([]);
 
 	const camera = WareScene.add([
@@ -661,32 +662,34 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 
 				let prompt: ReturnType<typeof k.addPrompt> = null;
 
-				const prepTrans = prepTransition(wareCtx);
-				const inputprompt = k.add([
-					k.sprite("inputprompt_" + gameinput),
-					k.anchor("center"),
-					k.pos(k.center()),
-					k.scale(),
-				]);
+				makeTransition(WareScene, wareCtx, "prep", false);
 
-				k.tween(k.vec2(0), k.vec2(1), 0.15 / wareCtx.speed, (p) => inputprompt.scale = p, k.easings.easeOutElastic);
-				prepTrans.onHalf(() => {
-					k.tween(inputprompt.scale, k.vec2(0), 0.15 / wareCtx.speed, (p) => inputprompt.scale = p, k.easings.easeOutQuint).onEnd(() => inputprompt.destroy());
-					if (typeof nextGame.prompt == "string") prompt = k.addPrompt(coolPrompt(nextGame.prompt));
-					else {
-						prompt = k.addPrompt("");
-						nextGame.prompt(currentMinigameCtx as unknown as MinigameCtx, prompt);
-					}
-				});
+				// const prepTrans = prepTransition(wareCtx);
+				// const inputprompt = k.add([
+				// 	k.sprite("inputprompt_" + gameinput),
+				// 	k.anchor("center"),
+				// 	k.pos(k.center()),
+				// 	k.scale(),
+				// ]);
 
-				prepTrans.onEnd(() => {
-					k.wait(0.15 / wareCtx.speed, () => {
-						cursor.visible = !gameHidesCursor(nextGame);
-						prompt.fadeOut(0.15 / wareCtx.speed).onEnd(() => prompt.destroy());
-					});
-					wareCtx.inputEnabled = true;
-					wareCtx.gameRunning = true;
-				});
+				// k.tween(k.vec2(0), k.vec2(1), 0.15 / wareCtx.speed, (p) => inputprompt.scale = p, k.easings.easeOutElastic);
+				// prepTrans.onHalf(() => {
+				// 	k.tween(inputprompt.scale, k.vec2(0), 0.15 / wareCtx.speed, (p) => inputprompt.scale = p, k.easings.easeOutQuint).onEnd(() => inputprompt.destroy());
+				// 	if (typeof nextGame.prompt == "string") prompt = k.addPrompt(coolPrompt(nextGame.prompt));
+				// 	else {
+				// 		prompt = k.addPrompt("");
+				// 		nextGame.prompt(currentMinigameCtx as unknown as MinigameCtx, prompt);
+				// 	}
+				// });
+
+				// prepTrans.onEnd(() => {
+				// 	k.wait(0.15 / wareCtx.speed, () => {
+				// 		cursor.visible = !gameHidesCursor(nextGame);
+				// 		prompt.fadeOut(0.15 / wareCtx.speed).onEnd(() => prompt.destroy());
+				// 	});
+				// 	wareCtx.inputEnabled = true;
+				// 	wareCtx.gameRunning = true;
+				// });
 			}
 
 			if (wonLastGame != null) {

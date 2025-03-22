@@ -7,6 +7,56 @@ let sunAngle = 0;
 let cloudX = 40;
 let cloudY = 40;
 
+export function makeTransition(parent: GameObj, ware: KaplayWareCtx, state: "win" | "lose" | "prep", doSpeedUp: boolean) {
+	const conductor = k.conductor(140 * ware.speed);
+
+	const trans = parent.add([k.scale(), k.pos(k.center()), k.anchor("center")]);
+	const objs = trans.add([k.pos(-k.width() / 2, -k.height() / 2)]);
+	// objs.add([k.rect(k.width(), 200), k.color("#1f102a"), k.pos(0, -200)]);
+	objs.add([k.sprite("bg")]);
+
+	const ZOOM_SCALE = k.vec2(5.9);
+	const ZOOM_Y = 827;
+
+	const computer = objs.add([
+		k.sprite("computer"),
+		k.pos(236, 130),
+	]);
+
+	const chillguy = objs.add([
+		k.sprite("chillguy"),
+		k.scale(),
+		k.pos(214, 599),
+		k.anchor("bot"),
+	]);
+
+	objs.onUpdate(() => {
+		// let oldScale = trans.scale;
+		// let oldPos = trans.pos;
+
+		// if (k.isKeyPressedRepeat("z")) trans.scale = trans.scale.add(0.1);
+		// else if (k.isKeyPressedRepeat("x")) trans.scale = trans.scale.sub(0.1);
+
+		// if (k.isKeyPressedRepeat("w")) trans.pos.y -= 1;
+		// else if (k.isKeyPressedRepeat("a")) trans.pos.x -= 1;
+		// else if (k.isKeyPressedRepeat("s")) trans.pos.y += 1;
+		// else if (k.isKeyPressedRepeat("d")) trans.pos.x += 1;
+
+		// if (oldScale != trans.scale || oldPos != trans.pos) {
+		// 	k.debug.log("POS: " + trans.pos + " | SCALE: " + trans.scale);
+		// }
+	});
+
+	if (state == "prep") {
+		k.tween(trans.pos.y, 827, 1, (p) => trans.pos.y = p);
+		k.tween(trans.scale, k.vec2(5.9), 1, (p) => trans.scale = p);
+	}
+	else if (state == "lose" || state == "win") {
+		k.tween(ZOOM_Y, k.center().y, 1, (p) => trans.pos.y = p);
+		k.tween(ZOOM_SCALE, k.vec2(1), 1, (p) => trans.scale = p);
+	}
+}
+
 export function makeHearts(parent: GameObj | KAPLAYCtx, amount: number) {
 	const hearts: ReturnType<typeof makeHeart>[] = [];
 	for (let i = 0; i < amount; i++) {
