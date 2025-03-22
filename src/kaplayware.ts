@@ -660,48 +660,46 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				const gameinput = getGameInput(nextGame);
 				cursor.visible = !gameHidesCursor(nextGame);
 
+				let inputPrompt: ReturnType<typeof k.addInputPrompt> = null;
 				let prompt: ReturnType<typeof k.addPrompt> = null;
 
-				makeTransition(WareScene, wareCtx, "prep", false);
+				const prepTrans = makeTransition(WareScene, wareCtx, "prep");
 
-				// const prepTrans = prepTransition(wareCtx);
-				// const inputprompt = k.add([
-				// 	k.sprite("inputprompt_" + gameinput),
-				// 	k.anchor("center"),
-				// 	k.pos(k.center()),
-				// 	k.scale(),
-				// ]);
+				prepTrans.onInputPromptTime(() => {
+					inputPrompt = k.addInputPrompt(gameinput);
+					k.tween(k.vec2(0), k.vec2(1), 0.15 / wareCtx.speed, (p) => inputPrompt.scale = p, k.easings.easeOutElastic);
+				});
 
-				// k.tween(k.vec2(0), k.vec2(1), 0.15 / wareCtx.speed, (p) => inputprompt.scale = p, k.easings.easeOutElastic);
-				// prepTrans.onHalf(() => {
-				// 	k.tween(inputprompt.scale, k.vec2(0), 0.15 / wareCtx.speed, (p) => inputprompt.scale = p, k.easings.easeOutQuint).onEnd(() => inputprompt.destroy());
-				// 	if (typeof nextGame.prompt == "string") prompt = k.addPrompt(coolPrompt(nextGame.prompt));
-				// 	else {
-				// 		prompt = k.addPrompt("");
-				// 		nextGame.prompt(currentMinigameCtx as unknown as MinigameCtx, prompt);
-				// 	}
-				// });
+				prepTrans.onPromptTime(() => {
+					k.tween(inputPrompt.scale, k.vec2(0), 0.15 / wareCtx.speed, (p) => inputPrompt.scale = p, k.easings.easeOutQuint).onEnd(() => inputPrompt.destroy());
+					if (typeof nextGame.prompt == "string") prompt = k.addPrompt(coolPrompt(nextGame.prompt));
+					else {
+						prompt = k.addPrompt("");
+						nextGame.prompt(currentMinigameCtx as unknown as MinigameCtx, prompt);
+					}
 
-				// prepTrans.onEnd(() => {
-				// 	k.wait(0.15 / wareCtx.speed, () => {
-				// 		cursor.visible = !gameHidesCursor(nextGame);
-				// 		prompt.fadeOut(0.15 / wareCtx.speed).onEnd(() => prompt.destroy());
-				// 	});
-				// 	wareCtx.inputEnabled = true;
-				// 	wareCtx.gameRunning = true;
-				// });
+					k.wait(0.15 / wareCtx.speed, () => {
+						cursor.visible = !gameHidesCursor(nextGame);
+						prompt.fadeOut(0.15 / wareCtx.speed).onEnd(() => prompt.destroy());
+					});
+				});
+
+				prepTrans.onEnd(() => {
+					wareCtx.gameRunning = true;
+					wareCtx.inputEnabled = true;
+				});
 			}
 
 			if (wonLastGame != null) {
-				let transition: ReturnType<typeof prepTransition> = null;
-				if (wonLastGame) transition = winTransition(wareCtx);
-				else transition = loseTransition(wareCtx);
+				let transition = null;
+				if (wonLastGame) transition = makeTransition(WareScene, wareCtx, "win");
+				else transition = makeTransition(WareScene, wareCtx, "lose");
 				wonLastGame = null;
 
 				if (gameUsesMouse(nextGame)) cursor.visible = true;
 
 				transition.onEnd(() => {
-					if (!wonLastGame && wareCtx.lives == 0) {
+					if (wonLastGame == false && wareCtx.lives == 0) {
 						k.go("gameover", wareCtx.score);
 						return;
 					}
