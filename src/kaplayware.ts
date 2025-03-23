@@ -144,6 +144,8 @@ export const gameAPIs = [
 	"onCollideUpdate",
 	"conductor",
 	"addPrompt",
+	"toWorld",
+	"toScreen",
 ] as const;
 
 export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts = {}): KaplayWareCtx {
@@ -178,7 +180,9 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 	let restartMinigame = false;
 	let overrideDifficulty = null as 1 | 2 | 3;
 
-	const camera = k.add([
+	const WareScene = k.add([]);
+
+	const camera = WareScene.add([
 		k.pos(k.center()),
 		k.anchor("center"),
 		k.scale(),
@@ -349,6 +353,26 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 					return k.shader(`${getGameID(g)}-${name}`, uniform);
 				};
 			}
+			// TODO: Make fixed component work with the minigame camera api
+			else if (api == "fixed") {
+				gameCtx[api] = () => {
+					let fixed = true;
+					return {
+						id: "fixed",
+						set fixed(val: boolean) {
+							fixed = val;
+							if (fixed) this.parent = WareScene;
+							else this.parent = camera;
+						},
+						get fixed() {
+							return fixed;
+						},
+						add() {
+							this.parent = WareScene;
+						},
+					};
+				};
+			}
 		}
 		function dirToKeys(button: Button): Key[] {
 			if (button == "left") return ["left", "a"];
@@ -374,6 +398,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 					k.opacity(1),
 					k.fixed(),
 					k.z(999), // HACK: make sure is at front of everyone :skull: //
+					"flash",
 				]);
 				const f = r.fadeOut(timeOut);
 				f.onEnd(() => k.destroy(r));
@@ -440,7 +465,16 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				clearInput();
 				onTimeoutEvent.clear();
 				gameboxUpdate?.cancel();
-				k.wait(0.2, () => currentMinigameScene?.destroy());
+				k.wait(0.2, () => {
+					currentMinigameScene?.destroy();
+					WareScene.get("fixed").forEach((obj) => obj.destroy());
+					// reset camera
+					this.setCamPos(k.center());
+					this.setCamAngle(0);
+					this.setCamScale(k.vec2(1));
+					camera.get("flash").forEach((f) => f.destroy());
+					camera.shake = 0;
+				});
 				wareCtx.nextGame();
 				canPlaySounds = false;
 				if (currentBomb) currentBomb.destroy();
