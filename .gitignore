@@ -8,3 +8,4 @@ aseprites
 .vscode
 ship.bat
 web-build.zip
+package-lock.json
