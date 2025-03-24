@@ -1,6 +1,6 @@
 import { Color, KAPLAYCtx, Vec2 } from "kaplay";
 import k from "../engine";
-import { getGameInput } from "../utils";
+import { getGameInput } from "../game/utils";
 
 function addPrompt(prompt: string) {
 	const promptObj = k.add([
@@ -38,7 +38,7 @@ function addPrompt(prompt: string) {
 					magnitude = k.lerp(magnitude, k.randi(2, 8), 0.1);
 					angle = k.lerp(angle, angle + 1, 0.1) % 360;
 					promptObj.textTransform = (idx, ch) => ({
-						pos: k.vec2(magnitude * Math.cos(angle * idx + 1), magnitude * Math.sin(angle * idx + 1)),
+						pos: k.vec2(magnitude * Math.cos(angle * ((idx % 2) + 1) + 1), magnitude * Math.sin(angle * ((idx % 2) + 1) + 1)),
 					});
 				}
 				else {

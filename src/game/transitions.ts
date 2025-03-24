@@ -1,6 +1,6 @@
 import { assets, crew } from "@kaplayjs/crew";
 import { GameObj, KAPLAYCtx } from "kaplay";
-import k from "./engine";
+import k from "../engine";
 import { KaplayWareCtx } from "./types";
 
 export function makeTransition(parent: GameObj, ware: KaplayWareCtx, state: "win" | "lose" | "prep" | "speed") {
@@ -120,7 +120,7 @@ export function makeTransition(parent: GameObj, ware: KaplayWareCtx, state: "win
 		k.z(1),
 	]);
 	page.pos.x += page.width / 2 - 15;
-	page.add([k.text((ware.score - 1).toString(), { font: "happy" }), k.pos(0, 25), k.anchor("top"), k.z(1), k.color("#abdd64")]);
+	page.add([k.text((ware.score - 1).toString(), { font: "happy" }), k.pos(0, 25), k.anchor("top"), k.z(1), k.color(k.Color.fromHex("#abdd64"))]);
 
 	function finishTrans() {
 		trans.destroy();
@@ -194,7 +194,7 @@ export function makeTransition(parent: GameObj, ware: KaplayWareCtx, state: "win
 			k.anchor(page.anchor),
 			k.z(page.z - 1),
 		]);
-		pagebelow.add([k.text(ware.score.toString(), { font: "happy" }), k.pos(0, 25), k.anchor("top"), k.z(page.z - 1), k.color("#abdd64")]);
+		pagebelow.add([k.text(ware.score.toString(), { font: "happy" }), k.pos(0, 25), k.anchor("top"), k.z(page.z - 1), k.color(k.Color.fromHex("#abdd64"))]);
 
 		conductor.onBeat((beat) => {
 			if (beat == 1) {
@@ -232,7 +232,6 @@ export function makeTransition(parent: GameObj, ware: KaplayWareCtx, state: "win
 
 			objs.get("heart")[objs.get("heart").length - 1].kill();
 			k.wait(sound.duration() / ware.speed, () => {
-				finishTrans();
 				endEvent.trigger();
 			});
 		}
@@ -243,7 +242,6 @@ export function makeTransition(parent: GameObj, ware: KaplayWareCtx, state: "win
 			chillcat.frame = 1;
 			chillbutterfly.frame = 1;
 			k.wait(sound.duration() / ware.speed, () => {
-				finishTrans();
 				endEvent.trigger();
 			});
 		}
@@ -263,12 +261,15 @@ export function makeTransition(parent: GameObj, ware: KaplayWareCtx, state: "win
 		});
 
 		k.wait(sound.duration() / ware.speed, () => {
-			finishTrans();
 			endEvent.trigger();
 		});
 	}
 
 	return {
+		destroy() {
+			finishTrans();
+		},
+
 		onEnd(action: () => void) {
 			return endEvent.add(action);
 		},

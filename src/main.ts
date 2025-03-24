@@ -6,7 +6,7 @@ import "../src/scenes/focus";
 import "../src/scenes/game";
 import "../src/scenes/gameover";
 import "../src/scenes/select";
-import { KAPLAYwareOpts } from "./types";
+import { KAPLAYwareOpts } from "./game/types";
 
 k.setVolume(0.5);
 k.setCursor("none");

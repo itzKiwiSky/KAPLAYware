@@ -1,7 +1,8 @@
 import { assets } from "@kaplayjs/crew";
 import { Asset, AudioPlay, AudioPlayOpt, Color, DrawSpriteOpt, GameObj, KAPLAYCtx, KAPLAYOpt, KEventController, Key, SoundData, SpriteCompOpt, SpriteData, Vec2 } from "kaplay";
-import k from "./engine";
-import cursor from "./plugins/cursor";
+import k from "../engine";
+import cursor from "../plugins/cursor";
+import { gameAPIs } from "./api";
 import { makeTransition } from "./transitions";
 import { Button, KaplayWareCtx, KAPLAYwareOpts, LoadCtx, Minigame, MinigameAPI, MinigameCtx } from "./types";
 import { coolPrompt, gameHidesCursor, gameUsesMouse, getByID, getGameID, getGameInput } from "./utils";
@@ -9,146 +10,6 @@ import { coolPrompt, gameHidesCursor, gameUsesMouse, getByID, getGameID, getGame
 type Friend = keyof typeof assets | `${keyof typeof assets}-o`;
 type AtFriend = `@${Friend}`;
 export type CustomSprite<T extends string> = T extends AtFriend | string & {} ? AtFriend | string & {} : string;
-
-export const loadAPIs = [
-	"loadRoot",
-	"loadSprite",
-	"loadSpriteAtlas",
-	"loadAseprite",
-	"loadPedit",
-	"loadBean",
-	"loadJSON",
-	"loadSound",
-	"loadFont",
-	"loadBitmapFont",
-	"loadShader",
-	"loadShaderURL",
-	"load",
-	"loadProgress",
-] as const;
-
-export const gameAPIs = [
-	"make",
-	"pos",
-	"scale",
-	"rotate",
-	"color",
-	"opacity",
-	"text",
-	"rect",
-	"circle",
-	"uvquad",
-	"area",
-	"anchor",
-	"z",
-	"outline",
-	"body",
-	"doubleJump",
-	"move",
-	"offscreen",
-	"follow",
-	"shader",
-	"timer",
-	"fixed",
-	"stay",
-	"health",
-	"lifespan",
-	"state",
-	"fadeIn",
-	"play",
-	"rand",
-	"randi",
-	"dt",
-	"time",
-	"vec2",
-	"rgb",
-	"hsl2rgb",
-	"choose",
-	"chooseMultiple",
-	"shuffle",
-	"chance",
-	"easings",
-	"map",
-	"mapc",
-	"wave",
-	"lerp",
-	"deg2rad",
-	"rad2deg",
-	"clamp",
-	"width",
-	"height",
-	"mousePos",
-	"mouseDeltaPos",
-	"camPos",
-	"camScale",
-	"camRot",
-	"center",
-	"isFocused",
-	"isTouchscreen",
-	"drawSprite",
-	"drawText",
-	"formatText",
-	"drawRect",
-	"drawLine",
-	"drawLines",
-	"drawTriangle",
-	"drawCircle",
-	"drawEllipse",
-	"drawUVQuad",
-	"drawPolygon",
-	"drawFormattedText",
-	"drawMasked",
-	"drawSubtracted",
-	"drawCurve",
-	"pushTransform",
-	"popTransform",
-	"pushTranslate",
-	"pushScale",
-	"pushRotate",
-	"pushMatrix",
-	"LEFT",
-	"RIGHT",
-	"UP",
-	"DOWN",
-	"addKaboom",
-	"debug",
-	"Line",
-	"Rect",
-	"Circle",
-	"Polygon",
-	"Vec2",
-	"Color",
-	"Mat4",
-	"Quad",
-	"RNG",
-	"burp",
-	"onClick",
-	"loop",
-	"wait",
-	"tween",
-	"addLevel",
-	"BLACK",
-	"RED",
-	"GREEN",
-	"BLUE",
-	"YELLOW",
-	"WHITE",
-	"setGravity",
-	"drag",
-	"isMouseMoved",
-	"isMouseReleased",
-	"animate",
-	"particles",
-	"getSprite",
-	"onCollide",
-	"onCollideEnd",
-	"onCollideUpdate",
-	"conductor",
-	"addPrompt",
-	"evaluateQuadratic",
-	"toWorld",
-	"toScreen",
-] as const;
 
 export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts = {}): KaplayWareCtx {
 	const DEFAULT_DURATION = 4;
@@ -185,7 +46,8 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 	/** Main object, if you want to pause everything, pause this */
 	const WareScene = k.add([]);
 
-	const camera = WareScene.add([
+	const shakeCamera = WareScene.add([k.pos()]);
+	const camera = shakeCamera.add([
 		k.pos(k.center()),
 		k.anchor("center"),
 		k.scale(),
@@ -199,7 +61,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 	camera.onUpdate(() => {
 		camera.shake = k.lerp(camera.shake, 0, 5 * k.dt());
 		let posShake = k.Vec2.fromAngle(k.rand(0, 360)).scale(camera.shake);
-		// TODO: Make shakes work
+		shakeCamera.pos = k.vec2().add(posShake);
 	});
 
 	/** The container for minigames, if you want to pause the minigame you should pause this */
@@ -360,18 +222,17 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			else if (api == "fixed") {
 				gameCtx[api] = () => {
 					let fixed = true;
+
 					return {
 						id: "fixed",
 						set fixed(val: boolean) {
 							fixed = val;
-							if (fixed) this.parent = WareScene;
-							else this.parent = camera;
 						},
 						get fixed() {
 							return fixed;
 						},
-						add() {
-							this.parent = WareScene;
+						update() {
+							this.pos = this.toScreen(this.pos);
 						},
 					};
 				};
@@ -655,6 +516,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				clearSounds(); // hit minigame has an issue with causes queuedSounds to stay
 				wareCtx.runGame(nextGame);
 				minigameHistory[wareCtx.score - 1] = getGameID(nextGame);
+				wonLastGame = null;
 
 				restartMinigame = false;
 				skipMinigame = false;
@@ -687,6 +549,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				});
 
 				prepTrans.onEnd(() => {
+					prepTrans.destroy();
 					wareCtx.gameRunning = true;
 					wareCtx.inputEnabled = true;
 				});
@@ -696,22 +559,28 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				let transition: ReturnType<typeof makeTransition> = null;
 				if (wonLastGame) transition = makeTransition(WareScene, wareCtx, "win");
 				else transition = makeTransition(WareScene, wareCtx, "lose");
-				wonLastGame = null;
-
 				if (gameUsesMouse(nextGame)) cursor.visible = true;
 
 				transition.onEnd(() => {
 					if (wonLastGame == false && wareCtx.lives == 0) {
-						k.go("gameover", wareCtx.score);
+						k.play("@gameOverJingle").onEnd(() => {
+							k.go("gameover", wareCtx.score);
+						});
+						k.addPrompt("GAME OVER");
 						return;
 					}
+					else transition.destroy();
 
 					const timeToSpeedUP = forceSpeed || wareCtx.score % 5 == 0;
 					if (timeToSpeedUP) {
 						if (forceSpeed == true) forceSpeed = false;
 						wareCtx.timesSpeed++;
 						wareCtx.speedUp();
-						makeTransition(WareScene, wareCtx, "speed").onEnd(() => prep());
+						const speedTrans = makeTransition(WareScene, wareCtx, "speed");
+						speedTrans.onEnd(() => {
+							speedTrans.destroy();
+							prep();
+						});
 					}
 					else prep();
 				});
@@ -730,7 +599,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 		game.urlPrefix = game.urlPrefix ?? "";
 		game.duration = game.duration ?? DEFAULT_DURATION;
 		game.rgb = game.rgb ?? [0, 0, 0];
-		game.input = game.input ?? { cursor: undefined, keys: true };
+		game.input = game.input ?? { keys: { use: true } };
 		if ("r" in game.rgb) game.rgb = [game.rgb.r, game.rgb.g, game.rgb.b];
 	}
 
@@ -738,6 +607,8 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 		k.drawRect({
 			width: k.width(),
 			height: k.height(),
+			anchor: "center",
+			pos: k.center().add(shakeCamera.pos),
 			color: rgbColor,
 		});
 	});

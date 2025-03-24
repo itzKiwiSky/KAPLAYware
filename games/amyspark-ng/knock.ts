@@ -1,6 +1,6 @@
 import { assets } from "@kaplayjs/crew";
+import { Minigame } from "../../src/game/types";
 import { mulfokColors } from "../../src/plugins/colors";
-import { Minigame } from "../../src/types";
 
 const knockGame: Minigame = {
 	prompt: "knock",
@@ -78,10 +78,6 @@ const knockGame: Minigame = {
 			}
 		}
 
-		door.onUpdate(() => {
-			ctx.debug.log(door.isHovering());
-		});
-
 		door.onClick(() => {
 			if (!door.isHovering()) return;
 
@@ -111,13 +107,15 @@ const knockGame: Minigame = {
 
 					ctx.wait(0.5 / ctx.speed, () => {
 						ctx.burp({ speed: ctx.speed * 0.8 });
+						ctx.debug.log("HEY");
 						const heytextbox = addTextbox("HEY!", true);
-						heytextbox.use(ctx.fixed());
+						heytextbox.use(ctx.fixed()); // TODO: this will work when fixed works
 						heytextbox.pos = ctx.center().sub(200, 0);
 					});
 
 					game.onUpdate(() => {
-						camY = ctx.wave(ctx.center().y - 20, ctx.center().y, ctx.time() * 8 * ctx.speed);
+						const wavedY = ctx.wave(ctx.center().y - 20, ctx.center().y, ctx.time() * 8 * ctx.speed);
+						camY = ctx.lerp(camY, wavedY, 0.5);
 						ctx.setCamPos(ctx.vec2(camX, camY));
 					});
 

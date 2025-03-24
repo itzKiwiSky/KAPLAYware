@@ -1,6 +1,6 @@
+import { Minigame } from "../../src/game/types";
 import mulfokColors from "../../src/plugins/colors";
 import { curDraggin } from "../../src/plugins/drag";
-import { Minigame } from "../../src/types";
 
 const uploadGame: Minigame = {
 	prompt: "upload",

@@ -1,10 +1,10 @@
 import { assets } from "@kaplayjs/crew";
 import { SpriteAtlasData } from "kaplay";
 import k from "./engine";
-import games from "./games";
-import { loadAPIs } from "./kaplayware";
-import { LoadCtx } from "./types";
-import { getGameID } from "./utils";
+import { loadAPIs } from "./game/api";
+import games from "./game/games";
+import { LoadCtx } from "./game/types";
+import { getGameID } from "./game/utils";
 
 k.loadBitmapFont("happy", "fonts/happy.png", 31, 39);
 k.loadBitmapFont("happy-o", "fonts/happy-o.png", 31, 39);
@@ -13,6 +13,7 @@ k.loadSound("@prepJingle", "sounds/prepJingle.ogg");
 k.loadSound("@winJingle", "sounds/winJingle.ogg");
 k.loadSound("@loseJingle", "sounds/loseJingle.ogg");
 k.loadSound("@speedJingle", "sounds/speedJingle.ogg");
+k.loadSound("@gameOverJingle", "sounds/gameOverJingle.ogg");
 k.loadSound("@tick", "sounds/bombtick.mp3");
 k.loadSound("@explosion", "sounds/explosion.mp3");
 
