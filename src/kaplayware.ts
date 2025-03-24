@@ -196,14 +196,21 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 		},
 	]);
 
-	camera.onUpdate(() => {
-		camera.shake = k.lerp(camera.shake, 0, 5 * k.dt());
-		let posShake = k.Vec2.fromAngle(k.rand(0, 360)).scale(camera.shake);
-		// TODO: Make shakes work
-	});
-
 	/** The container for minigames, if you want to pause the minigame you should pause this */
 	const gameBox = camera.add([k.pos(-k.width() / 2, -k.height() / 2)]);
+	const cameraPos = camera.pos;
+
+	camera.onUpdate(() => {
+		camera.shake = k.lerp(camera.shake, 0, 5 * k.dt());
+		//let posShake = k.Vec2.fromAngle(k.rand(0, 360)).scale(camera.shake);
+		// TODO: Make shakes work //
+		
+		// HACK: Fixed shake for now, pls do better version... //
+		camera.pos = k.vec2(
+			cameraPos.x + k.rand(-camera.shake, camera.shake), 
+			cameraPos.y + k.rand(-camera.shake, camera.shake)
+		);
+	});
 
 	function clearInput() {
 		for (let i = inputEvents.length - 1; i >= 0; i--) {
