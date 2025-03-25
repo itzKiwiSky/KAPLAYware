@@ -254,12 +254,13 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			getCamScale: () => camera.scale,
 			setCamScale: (val: Vec2) => camera.scale = val,
 			shakeCam: (val: number = 12) => camera.shake += val,
-			flashCam: (flashColor: Color = k.WHITE, timeOut: number = 1) => {
-				const r = camera.add([
-					k.pos(-k.width() / 2, -k.height() / 2),
-					k.rect(k.width(), k.height()),
+			flashCam: (flashColor: Color = k.WHITE, timeOut: number = 1, opacity: number) => {
+				const r = shakeCamera.add([
+					k.pos(k.center()),
+					k.rect(k.width() * 2, k.height() * 2),
 					k.color(flashColor),
-					k.opacity(1),
+					k.anchor("center"),
+					k.opacity(opacity),
 					k.fixed(),
 					k.z(999), // HACK: make sure is at front of everyone :skull: //
 					"flash",
@@ -278,15 +279,6 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				inputEvents.push(ev);
 				return ev;
 			},
-			isButtonPressed: (btn) => k.isKeyPressed(dirToKeys(btn)),
-			onButtonRelease: (btn, action) => {
-				let ev: KEventController = null;
-				if (btn == "click") ev = gameBox.onMouseRelease("left", action);
-				else ev = gameBox.onKeyRelease(dirToKeys(btn), action);
-				inputEvents.push(ev);
-				return ev;
-			},
-			isButtonReleased: (btn) => k.isKeyReleased(dirToKeys(btn)),
 			onButtonDown: (btn, action) => {
 				let ev: KEventController = null;
 				if (btn == "click") ev = gameBox.onMouseDown("left", action);
@@ -294,8 +286,23 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				inputEvents.push(ev);
 				return ev;
 			},
+			onButtonRelease: (btn, action) => {
+				let ev: KEventController = null;
+				if (btn == "click") ev = gameBox.onMouseRelease("left", action);
+				else ev = gameBox.onKeyRelease(dirToKeys(btn), action);
+				inputEvents.push(ev);
+				return ev;
+			},
+			isButtonPressed: (btn) => {
+				if (btn == "click") return k.isMousePressed("left");
+				else return k.isKeyPressed(dirToKeys(btn));
+			},
 			isButtonDown: (btn) => {
 				if (btn == "click") return k.isMouseDown("left");
+				else return k.isKeyDown(dirToKeys(btn));
+			},
+			isButtonReleased: (btn) => {
+				if (btn == "click") return k.isMouseReleased("left");
 				else return k.isKeyDown(dirToKeys(btn));
 			},
 			onMouseMove(action) {

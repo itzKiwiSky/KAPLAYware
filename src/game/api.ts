@@ -124,7 +124,6 @@ export const gameAPIs = [
 	"setGravity",
 	"drag",
 	"isMouseMoved",
-	"isMouseReleased",
 	"animate",
 	"particles",
 	"getSprite",
@@ -136,4 +135,5 @@ export const gameAPIs = [
 	"evaluateQuadratic",
 	"toWorld",
 	"toScreen",
+	"posSetter",
 ] as const;

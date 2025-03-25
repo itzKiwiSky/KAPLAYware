@@ -106,7 +106,7 @@ const newGame: Minigame = {
 					plugSocketState[plugIndex] = "connected";
 				}
 
-				if (ctx.isMouseReleased("left") && plugSocketState[plugIndex] == "wiring") {
+				if (ctx.isButtonReleased("click") && plugSocketState[plugIndex] == "wiring") {
 					if (!socketObj.isHovering()) plugSocketState[plugIndex] = "disconnected";
 				}
 			});

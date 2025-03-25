@@ -54,7 +54,7 @@ export type MinigameAPI = {
 	 * @param flashColor The color the flash will be
 	 * @param time How long the flash will be on screen
 	 */
-	flashCam(flashColor?: Color, time?: number): KEventController;
+	flashCam(flashColor?: Color, time?: number, opacity?: number): KEventController;
 	/** Gets the current RGB of the background of your minigame */
 	getRGB(): Color;
 	/** Sets the RGB to the background of your minigame */

@@ -55,7 +55,7 @@ const uploadGame: Minigame = {
 				]);
 				ghostFile.pick();
 
-				ctx.onMouseRelease(() => ghostFile.trigger("dragEnd"));
+				ctx.onMouseRelease(() => ghostFile.drop());
 				ghostFile.onDragEnd(() => {
 					if (!ghostFile.dragging || hasUploaded) return;
 
