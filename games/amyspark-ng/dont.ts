@@ -9,7 +9,7 @@ const dontGame: Minigame = {
 	duration: 3,
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {
-		ctx.loadSprite("button", "sprites/button.png", {
+		ctx.loadSprite("button", "sprites/dont/button.png", {
 			sliceX: 2,
 			sliceY: 1,
 			anims: {

@@ -614,8 +614,8 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 
 	gameBox.onDraw(() => {
 		k.drawRect({
-			width: k.width(),
-			height: k.height(),
+			width: k.width() * 2,
+			height: k.height() * 2,
 			anchor: "center",
 			pos: k.center().add(shakeCamera.pos),
 			color: rgbColor,

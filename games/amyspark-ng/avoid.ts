@@ -11,8 +11,8 @@ const avoidGame: Minigame = {
 	load(ctx) {
 		ctx.loadSound("squash", "sounds/squash.mp3");
 		ctx.loadSound("stomp", "sounds/stomp.wav");
-		ctx.loadSprite("foot", "sprites/leg.png");
-		ctx.loadSprite("mark", "sprites/theMark.png", {
+		ctx.loadSprite("foot", "sprites/dont/leg.png");
+		ctx.loadSprite("mark", "sprites/dont/theMark.png", {
 			sliceX: 11,
 			anims: {
 				"idle": {
