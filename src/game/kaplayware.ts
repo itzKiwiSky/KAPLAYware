@@ -91,6 +91,7 @@ export function createWareApp() {
 
 export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts = {}) {
 	const DEFAULT_DURATION = 4;
+	const SPEED_LIMIT = 1.64;
 
 	opts = opts ?? {};
 	opts.debug ?? false;
@@ -467,6 +468,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 
 		speedUp() {
 			this.speed += this.speed * 0.07;
+			this.speed = k.clamp(this.speed, 0, SPEED_LIMIT);
 		},
 
 		runGame(minigame: Minigame) {
@@ -476,7 +478,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			wareApp.currentContext = createGameContext(minigame) as MinigameCtx;
 			const gDuration = typeof minigame.duration == "number" ? minigame.duration : minigame.duration(wareApp.currentContext);
 			const durationEnabled = gDuration != undefined;
-			wareCtx.time = durationEnabled ? gDuration / wareCtx.speed : 1;
+			wareCtx.time = durationEnabled ? (gDuration / wareCtx.speed) : 1;
 			wareApp.currentContext.timeLeft = wareCtx.time;
 			wareApp.currentColor = "r" in minigame.rgb ? minigame.rgb : k.Color.fromArray(minigame.rgb);
 			wareApp.currentScene?.destroy();
@@ -489,36 +491,12 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			wareCtx.curGame = minigame;
 			minigame.start(wareApp.currentContext);
 
-			let hasStartedRunning = false;
-			const totalBeats = wareCtx.time / wareApp.conductor.beatInterval;
-
-			// wareApp.currentBomb = addBomb();
-			// wareApp.conductor.onBeat(() => {
-			// 	wareApp.currentBomb.tick();
-			// });
-
 			const gameBoxUpdate = gameBox.onUpdate(() => {
 				if (!wareApp.gameRunning) return;
 
-				if (!hasStartedRunning) {
-					hasStartedRunning = true;
-					if (!wareApp.canPlaySounds) {
-						wareApp.canPlaySounds = true;
-						wareApp.queuedSounds.forEach((sound) => sound.paused = false);
-					}
-
-					const bombConductor = k.conductor(140 * wareCtx.speed);
-					bombConductor.onBeat((beat, beatTime) => {
-						if (beatTime >= totalBeats) {
-							bombConductor.destroy();
-							wareApp.onTimeOutEvents.trigger();
-						}
-
-						if (beat >= totalBeats - 4) {
-							if (!wareApp.currentBomb) wareApp.currentBomb = addBomb();
-							wareApp.currentBomb.tick();
-						}
-					});
+				if (!wareApp.canPlaySounds) {
+					wareApp.canPlaySounds = true;
+					wareApp.queuedSounds.forEach((sound) => sound.paused = false);
 				}
 
 				if (!wareApp.timeRunning) return;
@@ -529,42 +507,15 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				wareApp.currentContext.timeLeft = wareCtx.time;
 				if (wareCtx.time <= 0 && wareApp.timeRunning) {
 					wareApp.timeRunning = false;
+					wareApp.onTimeOutEvents.trigger();
+					wareApp.currentBomb.tick(); // fial tick to explode
 				}
 
-				// const beatsLeft = wareCtx.time / wareApp.conductor.beatInterval;
-				// if (beatsLeft <= 4 && !wareApp.currentBomb) {
-				// wareApp.currentBomb = addBomb();
-				// const onBeat = wareApp.conductor.onBeat((beat) => {
-				// 	wareApp.currentBomb.tick();
-				// 	if (wareApp.currentBomb.hasExploded) {
-				// 		wareApp.currentBomb.tick(); // missing tick to explode
-				// 		onBeat.cancel();
-				// 		k.debug.log("ok time to go");
-				// 	}
-				// });
-				// }
-
-				// TODO: Figure out why the clock is broken (sometimes time will go negative without calling timeOut)
-				// if (wareCtx.time >= 0) wareCtx.time -= k.dt();
-				// wareCtx.time = k.clamp(wareCtx.time, 0, 20);
-				// wareApp.currentContext.timeLeft = wareCtx.time;
-				// if (wareCtx.time <= 0 && wareApp.timeRunning) {
-				// 	wareApp.timeRunning = false;
-				// }
-
-				// // if there's 3 beats left, add the bomb
-				// if (wareCtx.time / wareCtx.speed <= wareApp.conductor.beatInterval * 3 && !wareApp.currentBomb) {
-				// 	wareApp.currentBomb = addBomb();
-				// 	wareApp.currentBomb.bomb.parent = wareApp.WareScene;
-				// 	const beatEv = wareApp.conductor.onBeat(() => {
-				// 		wareApp.currentBomb.tick();
-				// 		if (wareApp.currentBomb.hasExploded) {
-				// 			beatEv.cancel();
-				// 			wareApp.currentBomb.tick(); // missing tick for the bomb to explode
-				// 			wareApp.onTimeOutEvents.trigger();
-				// 		}
-				// 	});
-				// }
+				/** When there's 4 beats left */
+				if (wareCtx.time <= wareApp.conductor.beatInterval * 4 && !wareApp.currentBomb) {
+					wareApp.currentBomb = addBomb();
+					wareApp.currentBomb.lit(wareApp.conductor.bpm);
+				}
 			});
 
 			wareApp.onTimeOutEvents.add(() => {
@@ -657,7 +608,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 					}
 					else transition.destroy();
 
-					const timeToSpeedUP = forceSpeed || wareCtx.score % 5 == 0;
+					const timeToSpeedUP = (forceSpeed || wareCtx.score % 5 == 0) && wareCtx.speed <= SPEED_LIMIT;
 					if (timeToSpeedUP) {
 						if (forceSpeed == true) forceSpeed = false;
 						wareCtx.timesSpeed++;

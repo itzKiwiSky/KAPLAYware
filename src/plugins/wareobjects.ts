@@ -2,6 +2,7 @@ import { Color, KAPLAYCtx, Vec2 } from "kaplay";
 import k from "../engine";
 import { getGameInput } from "../game/utils";
 import { createTransitionContext } from "../game/transitions";
+// TODO: Find a more comfortable way of exporting all of these functions
 
 function addPrompt(prompt: string) {
 	const promptObj = k.add([
@@ -70,6 +71,7 @@ export function addBomb() {
 
 	const bomb = k.add([k.timer()]);
 
+	// TODO: Fix this position
 	const cord = bomb.add([
 		k.sprite("@bomb_cord", { tiled: true }),
 		k.pos(69, 527),
@@ -138,28 +140,38 @@ export function addBomb() {
 		cord.width = k.lerp(cord.width, cordWidth, 0.75);
 	});
 
+	function tick() {
+		if (!bombSpr.exists()) return;
+		if (beatsLeft > 0) {
+			beatsLeft--;
+			const tweenMult = 2 - beatsLeft + 1; // goes from 1 to 3;
+			k.tween(k.vec2(1).add(0.33 * tweenMult), k.vec2(1).add((0.33 * tweenMult) / 2), 0.5 / 3, (p) => bombSpr.scale = p, k.easings.easeOutQuint);
+			k.play("@tick", { detune: 25 * 2 - beatsLeft });
+			if (beatsLeft == 2) bombSpr.color = k.YELLOW;
+			else if (beatsLeft == 1) bombSpr.color = k.RED.lerp(k.YELLOW, 0.5);
+			else if (beatsLeft == 0) bombSpr.color = k.RED;
+		}
+		else {
+			destroy();
+			const kaboom = k.addKaboom(bombSpr.pos);
+			k.play("@explosion");
+		}
+	}
+
 	return {
 		bomb,
+		/** Will start a conductor which will explode the bomb in 4 beats (tick tick tick BOOM!) */
+		tick,
+		lit(bpm = 140) {
+			const conductor = k.conductor(bpm);
+			conductor.onBeat((beat, beatTime) => {
+				tick();
+				if (beat == 3) conductor.destroy();
+			});
+		},
 		destroy,
 		turnOff: () => {
 			fuse.fadeOut(0.5 / 3).onEnd(() => fuse.destroy());
-		},
-		tick: () => {
-			if (!bombSpr.exists()) return;
-			if (beatsLeft > 0) {
-				beatsLeft--;
-				const tweenMult = 2 - beatsLeft + 1; // goes from 1 to 3;
-				k.tween(k.vec2(1).add(0.33 * tweenMult), k.vec2(1).add((0.33 * tweenMult) / 2), 0.5 / 3, (p) => bombSpr.scale = p, k.easings.easeOutQuint);
-				k.play("@tick", { detune: 25 * 2 - beatsLeft });
-				if (beatsLeft == 2) bombSpr.color = k.YELLOW;
-				else if (beatsLeft == 1) bombSpr.color = k.RED.lerp(k.YELLOW, 0.5);
-				else if (beatsLeft == 0) bombSpr.color = k.RED;
-			}
-			else {
-				destroy();
-				const kaboom = k.addKaboom(bombSpr.pos);
-				k.play("@explosion");
-			}
 		},
 		get hasExploded() {
 			return beatsLeft == 0;
