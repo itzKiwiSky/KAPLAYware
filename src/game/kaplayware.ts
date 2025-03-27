@@ -151,6 +151,9 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 					// @ts-ignore
 					const level = k.addLevel(...args);
 					level.onUpdate(() => level.paused = !wareCtx.gameRunning);
+					currentMinigameScene?.onDestroy(() => {
+						level.destroy();
+					});
 					return level;
 				};
 			}
