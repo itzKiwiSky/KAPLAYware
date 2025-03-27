@@ -96,7 +96,7 @@ const clickGame: Minigame = {
 		ctx.loadSound("music", "sounds/clicker.ogg");
 		ctx.loadSound("fullcombo", "sounds/clickeryfullcombo.ogg");
 		ctx.loadSound("explode", "sounds/explode.mp3");
-		ctx.loadSound("clickpress", "sounds/clickpress.ogg");
+		ctx.loadSound("clickpress", "sounds/clickPress.ogg");
 		// made by MF
 		ctx.loadShader(
 			"background",

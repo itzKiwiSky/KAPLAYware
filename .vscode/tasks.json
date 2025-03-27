@@ -4,7 +4,8 @@
 		{
 			"label": "SHIP to itch",
 			"type": "shell",
-			"command": "start scripts/ship.bat"
+			"command": "start scripts/ship.bat",
+			"problemMatcher": []
 		}
 	]
 }

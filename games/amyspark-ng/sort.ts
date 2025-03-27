@@ -6,9 +6,8 @@ import mulfokColors from "../../src/plugins/colors.ts";
 const sortGame: Minigame = {
 	prompt: "sort",
 	author: "amyspark-ng",
-	// duration: (ctx) => ctx.difficulty == 3 ? 7 : 6,
+	duration: (ctx) => ctx.difficulty == 3 ? 7 : 6,
 	rgb: [166, 133, 159],
-	duration: 9999,
 	input: { cursor: { hide: false } },
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {
