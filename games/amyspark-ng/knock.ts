@@ -124,7 +124,7 @@ const knockGame: Minigame = {
 			}
 		});
 
-		// TODO: This minigame is compltely broken for some godforsaken reason (time out running before it should, door dissapearing)
+		// TODO: This minigame is all busted, compltely broken for some godforsaken reason (time out running before it should, door dissapearing)
 		ctx.onTimeout(() => {
 			if (ctx.winState() == undefined) return;
 

@@ -4,9 +4,8 @@ import { Asset, AudioPlay, AudioPlayOpt, Color, DrawSpriteOpt, GameObj, KEventCo
 import cursor from "../plugins/cursor";
 import { coolPrompt, gameHidesCursor, gameUsesMouse, getGameID, getGameInput } from "./utils";
 import { gameAPIs } from "./api";
-import { makeTransition } from "./transitions";
+import { createPausableCtx, PausableCtx, runTransition } from "./transitions";
 import { Button, KAPLAYwareOpts, Minigame, MinigameAPI, MinigameCtx } from "./types";
-import { addBomb } from "../plugins/wareobjects";
 
 type Friend = keyof typeof assets | `${keyof typeof assets}-o`;
 type AtFriend = `@${Friend}`;
@@ -34,10 +33,13 @@ export function createWareApp() {
 		onTimeOutEvents: new k.KEvent(),
 		currentColor: k.rgb(),
 		currentScene: null as GameObj,
+		pausableCtx: null as PausableCtx,
+		pausableTimers: [] as TimerController[],
+		pausableSounds: [] as AudioPlay[],
 		currentContext: null as MinigameCtx,
 		// bomb
 		timeRunning: false, // will turn true when transition is over (not same as gameRunning)
-		currentBomb: null as ReturnType<typeof addBomb> | null,
+		currentBomb: null as ReturnType<typeof k.addBomb> | null,
 		conductor: k.conductor(140),
 		minigameHistory: [] as string[],
 		winState: undefined as boolean | undefined,
@@ -99,6 +101,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 	opts.onlyMouse ?? false;
 
 	const wareApp = createWareApp();
+	wareApp.pausableCtx = createPausableCtx(wareApp);
 
 	// debug variables
 	let skipMinigame = false;
@@ -125,7 +128,9 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 	});
 
 	/** The container for minigames, if you want to pause the minigame you should pause this */
-	const gameBox = camera.add([k.pos(-k.width() / 2, -k.height() / 2)]);
+	const gameBox = camera.add(
+		[k.pos(-k.width() / 2, -k.height() / 2), k.area(), k.rect(0, 0)],
+	); // k.area() temporal fix due to v4000 weirdness
 
 	function createGameContext(minigame: Minigame): MinigameCtx {
 		const gameCtx = {};
@@ -291,6 +296,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				};
 			}
 		}
+
 		function dirToKeys(button: Button): Key[] {
 			if (button == "left") return ["left", "a"];
 			else if (button == "down") return ["down", "s"];
@@ -391,6 +397,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				wareApp.gameRunning = false;
 				wareApp.canPlaySounds = false;
 				wareApp.currentBomb?.destroy();
+				gameBox.clearEvents();
 				// removes the scene
 				k.wait(0.2 / wareCtx.speed, () => {
 					wareApp.currentScene.destroy();
@@ -424,7 +431,9 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			},
 			winState: () => wareApp.winState,
 			addConfetti(opts) {
-				return wareApp.currentScene.add(k.makeConfetti(opts));
+				const confetti = k.addConfetti(opts);
+				confetti.parent = gameBox;
+				return confetti;
 			},
 			difficulty: wareCtx.difficulty,
 			lives: wareCtx.lives,
@@ -509,18 +518,19 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 					wareApp.timeRunning = false;
 					wareApp.onTimeOutEvents.trigger();
 					wareApp.currentBomb.tick(); // fial tick to explode
+					wareApp.currentBomb.destroy();
 				}
 
 				/** When there's 4 beats left */
 				if (wareCtx.time <= wareApp.conductor.beatInterval * 4 && !wareApp.currentBomb) {
-					wareApp.currentBomb = addBomb();
+					wareApp.currentBomb = k.addBomb(wareApp.pausableCtx);
+					wareApp.currentBomb.bomb.parent = gameBox;
 					wareApp.currentBomb.lit(wareApp.conductor.bpm);
 				}
 			});
 
 			wareApp.onTimeOutEvents.add(() => {
 				wareApp.inputEnabled = false;
-				gameBoxUpdate.cancel();
 			});
 		},
 		nextGame() {
@@ -559,17 +569,18 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				let inputPrompt: ReturnType<typeof k.addInputPrompt> = null;
 				let prompt: ReturnType<typeof k.addPrompt> = null;
 
-				const prepTrans = makeTransition(wareApp, "prep");
-				const transCtx = prepTrans.transitionCtx;
+				const prepTrans = runTransition(wareApp, "prep");
 
 				prepTrans.onInputPromptTime(() => {
 					inputPrompt = k.addInputPrompt(gameinput);
 					inputPrompt.parent = wareApp.WareScene;
-					transCtx.tween(k.vec2(0), k.vec2(1), 0.15 / wareCtx.speed, (p) => inputPrompt.scale = p, k.easings.easeOutElastic);
+					wareApp.pausableCtx.tween(k.vec2(0), k.vec2(1), 0.15 / wareCtx.speed, (p) => inputPrompt.scale = p, k.easings.easeOutElastic);
 				});
 
 				prepTrans.onPromptTime(() => {
-					transCtx.tween(inputPrompt.scale, k.vec2(0), 0.15 / wareCtx.speed, (p) => inputPrompt.scale = p, k.easings.easeOutQuint).onEnd(() => inputPrompt.destroy());
+					wareApp.pausableCtx.tween(inputPrompt.scale, k.vec2(0), 0.15 / wareCtx.speed, (p) => inputPrompt.scale = p, k.easings.easeOutQuint).onEnd(() =>
+						inputPrompt.destroy()
+					);
 					if (typeof nextGame.prompt == "string") prompt = k.addPrompt(coolPrompt(nextGame.prompt));
 					else {
 						prompt = k.addPrompt("");
@@ -577,7 +588,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 					}
 					prompt.parent = wareApp.WareScene;
 
-					transCtx.wait(0.15 / wareCtx.speed, () => {
+					wareApp.pausableCtx.wait(0.15 / wareCtx.speed, () => {
 						cursor.visible = !gameHidesCursor(nextGame);
 						prompt.fadeOut(0.15 / wareCtx.speed).onEnd(() => prompt.destroy());
 					});
@@ -591,16 +602,17 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				});
 			}
 
-			if (wareApp.winState != undefined) {
-				let transition: ReturnType<typeof makeTransition> = null;
-				if (wareApp.winState) transition = makeTransition(wareApp, "win");
-				else transition = makeTransition(wareApp, "lose");
-				const transCtx = transition.transitionCtx;
+			// this means the game is just starting (first minigame, run prep)
+			if (wareApp.winState == undefined) prep();
+			else {
+				let transition: ReturnType<typeof runTransition> = null;
+				if (wareApp.winState) transition = runTransition(wareApp, "win");
+				else transition = runTransition(wareApp, "lose");
 
 				if (gameUsesMouse(nextGame)) cursor.visible = true;
 				transition.onEnd(() => {
 					if (wareApp.winState == false && wareCtx.lives == 0) {
-						transCtx.play("@gameOverJingle").onEnd(() => {
+						wareApp.pausableCtx.play("@gameOverJingle").onEnd(() => {
 							k.go("gameover", wareCtx.score);
 						});
 						k.addPrompt("GAME OVER");
@@ -608,21 +620,20 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 					}
 					else transition.destroy();
 
-					const timeToSpeedUP = (forceSpeed || wareCtx.score % 5 == 0) && wareCtx.speed <= SPEED_LIMIT;
-					if (timeToSpeedUP) {
+					const runSpeedUp = (forceSpeed || wareCtx.score % 5 == 0) && wareCtx.speed <= SPEED_LIMIT;
+					if (!runSpeedUp) prep(); // if doesn't have to speed up simply prep()
+					else {
 						if (forceSpeed == true) forceSpeed = false;
 						wareCtx.timesSpeed++;
 						wareCtx.speedUp();
-						const speedTrans = makeTransition(wareApp, "speed");
+						const speedTrans = runTransition(wareApp, "speed");
 						speedTrans.onEnd(() => {
 							speedTrans.destroy();
 							prep();
 						});
 					}
-					else prep();
 				});
 			}
-			else prep();
 		},
 	};
 
@@ -649,11 +660,14 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 		cursor.canPoint = wareApp.gameRunning;
 		wareApp.conductor.bpm = 140 * wareCtx.speed;
 		wareApp.conductor.paused = wareApp.gamePaused;
+		if (wareApp.currentBomb) wareApp.currentBomb.paused = wareApp.gamePaused;
 
 		wareApp.inputEvents.forEach((ev) => ev.paused = !wareApp.inputEnabled || !wareApp.gameRunning);
 		wareApp.timerEvents.forEach((ev) => ev.paused = !wareApp.gameRunning || wareApp.gamePaused);
 		wareApp.updateEvents.forEach((ev) => ev.paused = !wareApp.gameRunning || wareApp.gamePaused);
 		wareApp.pausedSounds.forEach((sound) => sound.paused = true);
+		wareApp.pausableSounds.forEach((sound) => sound.paused = wareApp.gamePaused);
+		wareApp.pausableTimers.forEach((timer) => timer.paused = wareApp.gamePaused);
 
 		if (opts.debug) {
 			if (k.isKeyPressed("q")) {
