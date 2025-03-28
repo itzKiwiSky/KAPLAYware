@@ -11,15 +11,13 @@ const flipGame: Minigame = {
 	load(ctx) {
 	},
 	start(ctx) {
-		const game = ctx.make();
-
 		ctx.setGravity(1500);
 
 		let posAtFlip = ctx.vec2();
 		let deltaAtFlip = ctx.vec2();
 		let flipping = false;
 
-		const pan = game.add([
+		const pan = ctx.add([
 			ctx.rect(500, 70),
 			ctx.anchor("right"),
 			ctx.pos(),
@@ -28,7 +26,7 @@ const flipGame: Minigame = {
 			"pan",
 		]);
 
-		const cake = game.add([
+		const cake = ctx.add([
 			ctx.rect(400, 50),
 			ctx.anchor("center"),
 			ctx.pos(),
@@ -37,7 +35,7 @@ const flipGame: Minigame = {
 			ctx.area(),
 		]);
 
-		game.onUpdate(() => {
+		ctx.onUpdate(() => {
 			pan.pos = ctx.mousePos();
 
 			if (!flipping) {
@@ -61,8 +59,6 @@ const flipGame: Minigame = {
 				}
 			}
 		});
-
-		return game;
 	},
 };
 

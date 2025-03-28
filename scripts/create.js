@@ -25,14 +25,14 @@ const ${gamePrompt}Game: Minigame = {
 	urlPrefix: "${assets_dir}",
 	load(ctx) {},
 	start(ctx) {
-		const game = ctx.make();
+		;
 
-		const bean = game.add([
+		const bean = ctx.add([
 			ctx.sprite("@bean"),
 			ctx.pos(),
 		]);
 
-		return game;
+		;
 	},
 };
 

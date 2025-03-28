@@ -12,8 +12,6 @@ const colorGame: Minigame = {
 		ctx.loadSound("correct", "sounds/applause.ogg");
 	},
 	start(ctx) {
-		const game = ctx.make();
-
 		const possibleColors = {
 			"red": palette.RED,
 			"green": palette.BEAN_GREEN,
@@ -48,12 +46,13 @@ const colorGame: Minigame = {
 			const y = (250 - 50 * (ctx.difficulty - 1)) + 100 * i;
 			const h = 75;
 
-			const option = game.add([
+			const option = ctx.add([
 				ctx.pos(ctx.width() / 2, y),
 				ctx.anchor("center"),
 				ctx.rect(ctx.width() / 3, h, {
 					radius: 10,
 				}),
+				// @ts-ignore
 				ctx.color(possibleColors[color]),
 				ctx.area(),
 				ctx.opacity(),
@@ -82,7 +81,7 @@ const colorGame: Minigame = {
 			});
 		}
 
-		game.add([
+		ctx.add([
 			ctx.text(`Choose the "${correctColor}" color:`, {
 				size: 30,
 			}),
@@ -96,7 +95,7 @@ const colorGame: Minigame = {
 
 		function end(victory = true) {
 			done = true;
-			for (const wrong of game.get("wrong")) {
+			for (const wrong of ctx.get("wrong")) {
 				wrong.color = palette.WHITE;
 				wrong.opacity = 0.5;
 				if (hasLabels) {
@@ -115,8 +114,6 @@ const colorGame: Minigame = {
 			}
 			ctx.wait(1 / ctx.speed, () => ctx.finish());
 		}
-
-		return game;
 	},
 };
 

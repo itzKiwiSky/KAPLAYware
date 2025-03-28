@@ -32,12 +32,11 @@ const spreadGame: Minigame = {
 		ctx.loadSound("crunch", "sounds/crunch.mp3");
 	},
 	start(ctx) {
-		const game = ctx.make();
 		let overChecker = false;
 		let canSpread = true;
 		let hasFinished = false;
 
-		const draw = game.add([ctx.z(1)]);
+		const draw = ctx.add([ctx.z(1)]);
 
 		const outline: Outline = {
 			width: 60,
@@ -59,7 +58,7 @@ const spreadGame: Minigame = {
 			ctx.anchor(anchor),
 		]);
 
-		const bread = game.add([
+		const bread = ctx.add([
 			ctx.sprite("bread"),
 			ctx.pos(ctx.center()),
 			ctx.anchor("center"),
@@ -67,7 +66,7 @@ const spreadGame: Minigame = {
 		]);
 
 		// const jam square is around 145x150
-		const jamArea = game.add([
+		const jamArea = ctx.add([
 			ctx.rect(145, 150, { fill: false }),
 			ctx.area(),
 			ctx.pos(bread.pos),
@@ -99,7 +98,7 @@ const spreadGame: Minigame = {
 			ctx.drawMasked(drawMask, drawContent);
 		});
 
-		game.onUpdate(() => {
+		ctx.onUpdate(() => {
 			jamKnife.pos = ctx.lerp(jamKnife.pos, ctx.mousePos(), 0.75);
 			knife.pos = jamKnife.pos;
 			if (ctx.isMouseMoved() && jamArea.isHovering() && canSpread) {
@@ -156,8 +155,6 @@ const spreadGame: Minigame = {
 		ctx.onTimeout(() => {
 			overChecker = true;
 		});
-
-		return game;
 	},
 };
 

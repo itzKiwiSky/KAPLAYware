@@ -16,13 +16,12 @@ const uploadGame: Minigame = {
 		ctx.loadSprite("banned", "banned.png");
 	},
 	start(ctx) {
-		const game = ctx.make();
 		let hasUploaded = false;
 
 		function addFile(spr: string) {
 			const randFilePos = () => ctx.vec2(ctx.rand(20, 50), ctx.rand(10, ctx.height() - 30));
 
-			const file = game.add([
+			const file = ctx.add([
 				ctx.sprite(`@${spr}`),
 				ctx.pos(randFilePos()),
 				ctx.scale(),
@@ -39,7 +38,7 @@ const uploadGame: Minigame = {
 			file.onClick(() => {
 				if (hasUploaded) return;
 
-				const ghostFile = game.add([
+				const ghostFile = ctx.add([
 					ctx.sprite(file.sprite),
 					ctx.opacity(0.5),
 					ctx.drag(),
@@ -84,11 +83,11 @@ const uploadGame: Minigame = {
 			return file;
 		}
 
-		const desktop = game.add([
+		const desktop = ctx.add([
 			ctx.sprite("window"),
 		]);
 
-		const dropArea = game.add([
+		const dropArea = ctx.add([
 			ctx.rect(415, 482),
 			ctx.area(),
 			ctx.color(ctx.BLACK),
@@ -97,7 +96,7 @@ const uploadGame: Minigame = {
 			"ignorepoint",
 		]);
 
-		game.onUpdate(() => {
+		ctx.onUpdate(() => {
 			if (dropArea.isHovering() && !hasUploaded && curDraggin != null) dropArea.opacity = ctx.lerp(dropArea.opacity, 0.5, 0.5);
 			else dropArea.opacity = ctx.lerp(dropArea.opacity, 0, 0.5);
 		});
@@ -114,8 +113,6 @@ const uploadGame: Minigame = {
 				});
 			}
 		});
-
-		return game;
 	},
 };
 

@@ -23,8 +23,7 @@ const dodgeGame: Minigame = {
 		ctx.loadSound("wifi", "sounds/explosion.wav");
 	},
 	start(ctx) {
-		const game = ctx.make();
-		const secondgame = game.add([]);
+		// const secondgame = ctx.add([]);
 		ctx.setGravity(2500);
 
 		let timeout = false;
@@ -52,7 +51,7 @@ const dodgeGame: Minigame = {
 		function runCloudLoop() {
 			if (isDead || timeout) return;
 			ctx.wait(ctx.rand(0.35, 1) / ctx.speed, () => {
-				const cloud = secondgame.add([
+				const cloud = ctx.add([
 					ctx.sprite("cloud"),
 					ctx.pos(ctx.width() + 300, ctx.center().y - ctx.rand(50, 200)),
 					ctx.color(),
@@ -74,7 +73,7 @@ const dodgeGame: Minigame = {
 
 		function addCactus() {
 			if (isDead || !cactusEnabled || timeout) return;
-			const cactus = secondgame.add([
+			const cactus = ctx.add([
 				ctx.pos(ctx.width() + 10, GROUND_Y + ctx.rand(20, 25)),
 				ctx.sprite("cactus"),
 				ctx.anchor("bot"),
@@ -98,7 +97,7 @@ const dodgeGame: Minigame = {
 				GROUND_Y - 150,
 			]);
 
-			const ptero = secondgame.add([
+			const ptero = ctx.add([
 				ctx.pos(ctx.width() + 100, y),
 				ctx.sprite("ptero"),
 				ctx.color(),
@@ -118,7 +117,7 @@ const dodgeGame: Minigame = {
 		function runSandLoop() {
 			if (isDead || timeout) return;
 			ctx.wait(ctx.rand(0.5, 2) / ctx.speed, () => {
-				const sand = secondgame.add([
+				const sand = ctx.add([
 					ctx.sprite("sand"),
 					ctx.pos(ctx.width() + 300, GROUND_Y + ctx.rand(30, 40)),
 					ctx.color(),
@@ -137,7 +136,7 @@ const dodgeGame: Minigame = {
 		}
 
 		function addGround() {
-			const ground = secondgame.add([
+			const ground = ctx.add([
 				ctx.sprite("ground", { tiled: true }),
 				ctx.color(PRIMARY_COLOR),
 				ctx.pos(0, GROUND_Y),
@@ -168,7 +167,7 @@ const dodgeGame: Minigame = {
 			});
 		}
 
-		const dino = secondgame.add([
+		const dino = ctx.add([
 			ctx.sprite("dino"),
 			ctx.color(PRIMARY_COLOR),
 			ctx.anchor("bot"),
@@ -178,7 +177,7 @@ const dodgeGame: Minigame = {
 			ctx.z(3),
 		]);
 
-		secondgame.onUpdate(() => {
+		ctx.onUpdate(() => {
 			PRIMARY_COLOR = DARK_COLOR.lerp(ctx.WHITE, alpha);
 			SECONDARY_COLOR = DARK_COLOR.lerp(ctx.WHITE, 1 - alpha);
 			ctx.setRGB(SECONDARY_COLOR);
@@ -196,7 +195,7 @@ const dodgeGame: Minigame = {
 			else if (dino.isGrounded()) dino.frame = frame;
 			dino.area.scale.y = ctx.isButtonDown("down") ? 0.25 : 1;
 
-			secondgame.get("moving").forEach((obj) => {
+			ctx.get("moving").forEach((obj) => {
 				if (obj.pos.x <= -100) obj.destroy();
 			});
 
@@ -229,12 +228,12 @@ const dodgeGame: Minigame = {
 			isDead = true;
 			ctx.lose();
 
-			game.add([
+			ctx.add([
 				ctx.sprite("gameover"),
 				ctx.color(PRIMARY_COLOR),
 			]);
 
-			const comet = game.add([
+			const comet = ctx.add([
 				ctx.sprite("comet"),
 				ctx.color(PRIMARY_COLOR),
 				ctx.pos(ctx.width() + 50, -50),
@@ -244,7 +243,7 @@ const dodgeGame: Minigame = {
 
 			ctx.tween(comet.pos, dino.pos, 0.25 / ctx.speed, (p) => comet.pos = p).onEnd(() => {
 				ctx.play("explosion", { detune: ctx.rand(-50, 50) });
-				const kaboom = game.add([
+				const kaboom = ctx.add([
 					ctx.sprite("kaboom"),
 					ctx.pos(dino.pos),
 					ctx.color(PRIMARY_COLOR),
@@ -271,11 +270,11 @@ const dodgeGame: Minigame = {
 
 		ctx.onTimeout(() => {
 			timeout = true;
-			secondgame.get("*").forEach((obj) => obj.destroy());
+			ctx.get("*").forEach((obj) => obj.destroy());
 
 			ctx.win();
 			ctx.play("wifi", { detune: ctx.rand(-50, 50) });
-			game.add([
+			ctx.add([
 				ctx.sprite("wifi"),
 				ctx.color(PRIMARY_COLOR),
 			]);
@@ -288,15 +287,14 @@ const dodgeGame: Minigame = {
 		if (ctx.difficulty == 3) changeColor();
 		if (ctx.difficulty == 2 || ctx.difficulty == 3) pteroAllowed = true;
 
-		game.onUpdate(() => {
-			secondgame.paused = timeout || isDead;
+		ctx.onUpdate(() => {
+			// TODO: Figure out what the hell this meant (probably all objects were added to it and paused when lost)
+			// secondgame.paused = timeout || isDead;
 		});
 
 		addGround();
 		runSandLoop();
 		runCloudLoop();
-
-		return game;
 	},
 };
 

@@ -14,7 +14,7 @@ export type CustomSprite<T extends string> = T extends AtFriend | string & {} ? 
 export function createWareApp() {
 	return {
 		/** Main object, if you want to pause every object, pause this */
-		WareScene: k.add([]),
+		WareScene: k.add([k.area(), k.rect(0, 0)]),
 		wareCtx: null as ReturnType<typeof kaplayware>,
 		/** Wheter the current minigame should be running (will be false when the transition hasn't finished) */
 		gameRunning: false,
@@ -43,14 +43,25 @@ export function createWareApp() {
 		conductor: k.conductor(140),
 		minigameHistory: [] as string[],
 		winState: undefined as boolean | undefined,
-		addEvent(ev: KEventController) {
-			this.events.push(ev);
+		addDrawEvent(ev: KEventController) {
+			this.updateEvents.push(ev);
 			return ev;
 		},
-		clearEvents() {
-			for (let i = this.events.length - 1; i >= 0; i--) {
-				this.events[i].cancel();
-				this.events.pop();
+
+		addUpdateEvent(ev: KEventController) {
+			this.updateEvents.push(ev);
+			return ev;
+		},
+		clearUpdateEvents() {
+			for (let i = this.updateEvents.length - 1; i >= 0; i--) {
+				this.updateEvents[i].cancel();
+				this.updateEvents.pop();
+			}
+		},
+		clearDrawEvents() {
+			for (let i = this.drawEvents.length - 1; i >= 0; i--) {
+				this.drawEvents[i].cancel();
+				this.drawEvents.pop();
 			}
 		},
 		addInput(ev: KEventController) {
@@ -109,13 +120,15 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 	let restartMinigame = false;
 	let overrideDifficulty = null as 1 | 2 | 3;
 
-	const shakeCamera = wareApp.WareScene.add([k.pos()]);
+	const shakeCamera = wareApp.WareScene.add([k.pos(), k.rect(0, 0), k.area()]);
 	const camera = shakeCamera.add([
 		k.pos(k.center()),
 		k.anchor("center"),
 		k.scale(),
 		k.rotate(),
 		k.opacity(0),
+		k.rect(0, 0),
+		k.area(),
 		{
 			shake: 0,
 		},
@@ -144,16 +157,12 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			}
 			else if (api == "onUpdate") {
 				gameCtx[api] = (...args: any[]) => {
-					const ev = k.onUpdate(...args as [any]);
-					wareApp.updateEvents.push(ev);
-					return ev;
+					return wareApp.addUpdateEvent(k.onUpdate(...args as unknown as [any]));
 				};
 			}
 			else if (api == "onDraw") {
 				gameCtx[api] = (...args: any[]) => {
-					const ev = wareApp.currentScene.onDraw(...args as [any]);
-					wareApp.drawEvents.push(ev);
-					return ev;
+					return wareApp.addDrawEvent(wareApp.currentScene.onDraw(...args as [any]));
 				};
 			}
 			else if (api == "get") {
@@ -165,9 +174,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			if (api == "onClick") {
 				gameCtx[api] = (...args: any[]) => {
 					// @ts-ignore
-					const ev = k.onClick(...args);
-					wareApp.inputEvents.push(ev);
-					return ev;
+					return wareApp.addInput(k.onClick(...args));
 				};
 			}
 			else if (api == "area") {
@@ -185,24 +192,18 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			}
 			else if (api == "wait") {
 				gameCtx[api] = (...args: any[]) => {
-					const ev = k.wait(args[0], args[1]);
-					wareApp.addTimer(ev);
-					return ev;
+					return wareApp.addTimer(k.wait(args[0], args[1]));
 				};
 			}
 			else if (api == "loop") {
 				gameCtx[api] = (...args: any[]) => {
-					const ev = k.loop(args[0], args[1]);
-					wareApp.addTimer(ev);
-					return ev;
+					return wareApp.addTimer(k.loop(args[0], args[1]));
 				};
 			}
 			else if (api == "tween") {
 				gameCtx[api] = (...args: any[]) => {
 					// @ts-ignore
-					const ev = k.tween(...args);
-					wareApp.addTimer(ev);
-					return ev;
+					return wareApp.addTimer(k.tween(...args));
 				};
 			}
 			else if (api == "addLevel") {
@@ -393,13 +394,15 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				wareApp.clearSounds();
 				wareApp.clearTimers();
 				wareApp.clearInput();
+				wareApp.clearUpdateEvents();
 				wareApp.onTimeOutEvents.clear();
 				wareApp.gameRunning = false;
 				wareApp.canPlaySounds = false;
 				wareApp.currentBomb?.destroy();
-				gameBox.clearEvents();
+				gameBox.clearEvents(); // this clears the time running update, not the onUpdate events of the minigame
 				// removes the scene
 				k.wait(0.2 / wareCtx.speed, () => {
+					wareApp.clearDrawEvents(); // clears them after you can't see them anymore
 					wareApp.currentScene.destroy();
 					// removes fixed objects too (they aren't attached to the gamebox)
 					wareApp.WareScene.get("fixed").forEach((obj) => obj.destroy());
@@ -491,7 +494,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			wareApp.currentContext.timeLeft = wareCtx.time;
 			wareApp.currentColor = "r" in minigame.rgb ? minigame.rgb : k.Color.fromArray(minigame.rgb);
 			wareApp.currentScene?.destroy();
-			wareApp.currentScene = gameBox.add([]);
+			wareApp.currentScene = gameBox.add([k.rect(0, 0), k.area()]);
 			wareApp.gameRunning = false;
 			wareApp.timeRunning = false;
 			wareApp.canPlaySounds = false;

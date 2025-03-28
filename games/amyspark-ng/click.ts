@@ -14,11 +14,11 @@ function getHexagonShape(ctx: MinigameCtx) {
 	return new ctx.Polygon(pts);
 }
 
-function addBackground(ctx: MinigameCtx, game: GameObj<unknown>) {
+function addBackground(ctx: MinigameCtx) {
 	const col1D = ctx.Color.fromHex("#291834");
 	const col2D = ctx.Color.fromHex("#36213f");
 
-	const bg = game.add([
+	const bg = ctx.add([
 		ctx.rect(ctx.width(), ctx.height()),
 		ctx.pos(ctx.center()),
 		ctx.anchor("center"),
@@ -28,6 +28,7 @@ function addBackground(ctx: MinigameCtx, game: GameObj<unknown>) {
 		},
 	]);
 
+	// TODO: Fix background looking all weird
 	bg.use(ctx.shader("background", () => ({
 		"u_time": ctx.time() / 10,
 		"u_color1": col1D,
@@ -41,10 +42,10 @@ function addBackground(ctx: MinigameCtx, game: GameObj<unknown>) {
 	return bg;
 }
 
-function addComboText(ctx: MinigameCtx, game: GameObj) {
+function addComboText(ctx: MinigameCtx) {
 	let blendFactor = 0;
 	let words = ["MAX COMBO", "MAX COMBO!!", "YOO-HOO!!!", "YEEEOUCH!!", "FINISH IT"];
-	let maxComboText = game.add([
+	let maxComboText = ctx.add([
 		ctx.text(`[combo]${ctx.choose(words)}[/combo]`, {
 			size: 55,
 			align: "center",
@@ -127,17 +128,16 @@ const clickGame: Minigame = {
 		);
 	},
 	start(ctx) {
-		const game = ctx.make();
 		const SCORE_TO_WIN = ctx.difficulty == 1 ? ctx.randi(4, 6) : ctx.difficulty == 2 ? ctx.randi(8, 10) : ctx.difficulty == 3 ? ctx.randi(18, 20) : ctx.rand(18, 20);
 		let score = 0;
 		let spinspeed = ctx.speed;
 		let clicksInSecond = 0;
 		let secondTimer = 0;
 
-		addBackground(ctx, game);
+		addBackground(ctx);
 		ctx.play("music", { speed: ctx.speed });
 
-		const scoreText = game.add([
+		const scoreText = ctx.add([
 			ctx.text(`0/${SCORE_TO_WIN}`),
 			ctx.pos(ctx.center().x, 60),
 			ctx.anchor("center"),
@@ -152,7 +152,7 @@ const clickGame: Minigame = {
 			ctx.anchor("center"),
 		]);
 
-		const hexagon = game.add([
+		const hexagon = ctx.add([
 			ctx.sprite("hexagon"),
 			ctx.anchor("center"),
 			ctx.color(),
@@ -182,7 +182,7 @@ const clickGame: Minigame = {
 			ctx.tween(ctx.vec2(2.25), ctx.vec2(2), 0.75 / ctx.speed, (p) => scoreText.scale = p, ctx.easings.easeOutQuint);
 			ctx.play("clickpress", { detune: ctx.rand(-100, 100) });
 			scoreText.text = `${score.toString()}/${SCORE_TO_WIN}`;
-			const plusScoreText = game.add([
+			const plusScoreText = ctx.add([
 				ctx.text("+1"),
 				ctx.anchor("center"),
 				ctx.opacity(),
@@ -203,7 +203,7 @@ const clickGame: Minigame = {
 			if (score >= SCORE_TO_WIN) {
 				ctx.play("fullcombo", { detune: ctx.rand(-50, 50) });
 				ctx.win();
-				addComboText(ctx, game);
+				addComboText(ctx);
 				ctx.addConfetti({ pos: ctx.mousePos() });
 				ctx.tween(-25, 0, 1 / ctx.speed, (p) => ctx.setCamAngle(p), ctx.easings.easeOutQuint);
 			}
@@ -220,8 +220,6 @@ const clickGame: Minigame = {
 				ctx.finish();
 			});
 		});
-
-		return game;
 	},
 };
 

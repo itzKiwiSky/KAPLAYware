@@ -22,15 +22,13 @@ const swatGame: Minigame = {
 		ctx.loadSound("breakvase", "sounds/breakvase.ogg");
 	},
 	start(ctx) {
-		const game = ctx.make();
-
-		const table = game.add([
+		const table = ctx.add([
 			ctx.sprite("table"),
 			ctx.pos(200, 606),
 			ctx.anchor("bot"),
 		]);
 
-		const flowervase = game.add([
+		const flowervase = ctx.add([
 			ctx.sprite("flowervase"),
 			ctx.pos(208, 436),
 			ctx.anchor("bot"),
@@ -44,7 +42,7 @@ const swatGame: Minigame = {
 			},
 		]);
 
-		const picture = game.add([
+		const picture = ctx.add([
 			ctx.sprite("picture"),
 			ctx.pos(652, 300),
 			ctx.anchor("top"),
@@ -65,7 +63,7 @@ const swatGame: Minigame = {
 			},
 		]);
 
-		const lightbulb = game.add([
+		const lightbulb = ctx.add([
 			ctx.sprite("lightbulb"),
 			ctx.pos(431, -5),
 			ctx.anchor("top"),
@@ -82,7 +80,7 @@ const swatGame: Minigame = {
 					});
 
 					ctx.play("breakglass", { detune: ctx.rand(-150, 150) });
-					const dark = game.add([
+					const dark = ctx.add([
 						ctx.rect(ctx.width() * 2, ctx.height() * 2),
 						ctx.anchor("center"),
 						ctx.pos(),
@@ -95,7 +93,7 @@ const swatGame: Minigame = {
 			},
 		]);
 
-		const manopla = game.add([
+		const manopla = ctx.add([
 			ctx.sprite("manopla"),
 			ctx.pos(),
 			ctx.anchor("top"),
@@ -110,11 +108,11 @@ const swatGame: Minigame = {
 		let flies = ctx.difficulty;
 
 		ctx.onButtonPress("click", () => {
-			if (game.get("shock").length > 0) return;
+			if (ctx.get("shock").length > 0) return;
 
 			ctx.play("slap", { detune: ctx.rand(-50, 50), volume: 0.5 });
 			ctx.tween(ctx.vec2(0.25), ctx.vec2(0.75), 0.15 / ctx.speed, (p) => manopla.scale = p);
-			const shock = game.add([
+			const shock = ctx.add([
 				ctx.sprite("shock"),
 				ctx.pos(ctx.mousePos().sub(0, 25)),
 				ctx.anchor("center"),
@@ -132,14 +130,14 @@ const swatGame: Minigame = {
 
 			shock.onCollide("fly", (fly) => {
 				flies--;
-				if (flies <= 0 && !ctx.hasWon()) ctx.win();
+				if (flies <= 0 && !ctx.winState()) ctx.win();
 				fly.tag("dead");
 				ctx.play("bzz", { volume: 3, speed: 3 });
 				ctx.tween(ctx.vec2(2), ctx.vec2(1), 0.15 / ctx.speed, (p) => fly.scale = p, ctx.easings.easeOutQuint);
 				ctx.tween(ctx.RED, ctx.WHITE, 0.15 / ctx.speed, (p) => fly.color = p, ctx.easings.easeOutQuint);
 				ctx.tween(fly.angle, 90, 0.15 / ctx.speed, (p) => fly.angle = p, ctx.easings.easeOutQuint);
 				ctx.tween(fly.pos.y, ctx.height() + 10, 1 / ctx.speed, (p) => fly.pos.y = p, ctx.easings.easeOutQuint).onEnd(() => {
-					if (ctx.hasWon()) ctx.finish();
+					if (ctx.winState() == true) ctx.finish();
 				});
 			});
 
@@ -152,7 +150,7 @@ const swatGame: Minigame = {
 			let intendedPos = getRandFlyPos();
 			let magnitude = 1;
 
-			const fly = game.add([
+			const fly = ctx.add([
 				ctx.sprite("fly"),
 				ctx.anchor("center"),
 				ctx.pos(intendedPos),
@@ -182,7 +180,7 @@ const swatGame: Minigame = {
 			});
 		}
 
-		game.onUpdate(() => {
+		ctx.onUpdate(() => {
 			manopla.pos = ctx.lerp(manopla.pos, ctx.mousePos().sub(0, 80), 0.5 * ctx.speed);
 		});
 
@@ -194,8 +192,6 @@ const swatGame: Minigame = {
 		});
 
 		for (let i = 0; i < flies; i++) addFly();
-
-		return game;
 	},
 };
 

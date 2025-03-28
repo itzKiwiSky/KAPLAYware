@@ -41,8 +41,8 @@ const transformGame: Minigame = {
 		}
 
 		let currIdx = 0;
-		const game = ctx.make();
-		game.add([
+
+		ctx.add([
 			ctx.anchor("center"),
 			ctx.pos(ctx.center()),
 			ctx.sprite("bg"),
@@ -50,7 +50,7 @@ const transformGame: Minigame = {
 		]);
 
 		// checking box for the transform
-		const check = game.add([
+		const check = ctx.add([
 			ctx.rect(180, 100, { fill: false }),
 			ctx.pos(ctx.width() * 0.75, ctx.height() * 0.22),
 			ctx.anchor("center"),
@@ -58,7 +58,7 @@ const transformGame: Minigame = {
 			// ctx.outline(2, ctx.RED),
 		]);
 
-		const punch = game.add([
+		const punch = ctx.add([
 			ctx.sprite("punchbag"),
 			ctx.anchor("top"),
 			ctx.scale(),
@@ -96,7 +96,7 @@ const transformGame: Minigame = {
 		}
 
 		function createCommand(dir: DIRECTION) {
-			const _obj = game.add([
+			const _obj = ctx.add([
 				ctx.offscreen({ hide: true }),
 				ctx.sprite("strong"),
 				ctx.area(),
@@ -131,7 +131,7 @@ const transformGame: Minigame = {
 		function createGameOverScreen(isWin: boolean = true) {
 			if (!isWin) {
 				ctx.play("bwomp");
-				game.add([
+				ctx.add([
 					ctx.sprite("@bobo"),
 					ctx.anchor("center"),
 					ctx.pos(ctx.width() * 0.3, ctx.height() * 0.65),
@@ -146,7 +146,7 @@ const transformGame: Minigame = {
 			}
 
 			ctx.wait(0.5 / ctx.speed, () => {
-				const chad1 = game.add([
+				const chad1 = ctx.add([
 					ctx.sprite("chad"),
 					ctx.anchor("botleft"),
 					ctx.pos(-800, ctx.height()),
@@ -154,7 +154,7 @@ const transformGame: Minigame = {
 					ctx.animate(),
 				]);
 
-				const dialog1 = game.add([
+				const dialog1 = ctx.add([
 					ctx.text(
 						ctx.choose(["oh hi !", "new babe..", "miss u luv~"]),
 					),
@@ -214,7 +214,7 @@ const transformGame: Minigame = {
 			}
 		}
 
-		const bean = game.add([
+		const bean = ctx.add([
 			ctx.sprite("@bean"),
 			ctx.anchor("bot"),
 			ctx.pos(ctx.width() * 0.3, ctx.height() * 0.65),
@@ -261,7 +261,8 @@ const transformGame: Minigame = {
 			}
 		});
 
-		game.onUpdate(() => {
+		// TODO: This onUpdate is not cleared, the minigame apparently is not either????
+		ctx.onUpdate(() => {
 			// checking input if it is within the box
 			if (ctx.isButtonPressed("up") && isInputValid(DIRECTION.UP)) onInputValid();
 			else if (ctx.isButtonPressed("down") && isInputValid(DIRECTION.DOWN)) onInputValid();
@@ -269,8 +270,6 @@ const transformGame: Minigame = {
 			else if (ctx.isButtonPressed("right") && isInputValid(DIRECTION.RIGHT)) onInputValid();
 			else if (left_com.pos.x >= check.pos.x + check.width * 0.5 && canPress) onInputInvalid();
 		});
-
-		return game;
 	},
 };
 

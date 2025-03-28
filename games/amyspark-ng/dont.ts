@@ -20,10 +20,9 @@ const dontGame: Minigame = {
 		ctx.loadSound("explode", "sounds/explode.mp3");
 	},
 	start(ctx) {
-		const game = ctx.make();
 		let hasWon = true;
 
-		const button = game.add([
+		const button = ctx.add([
 			ctx.sprite("button", { anim: "dont" }),
 			ctx.anchor("center"),
 			ctx.pos(ctx.center()),
@@ -41,7 +40,7 @@ const dontGame: Minigame = {
 
 				let explosions = 0;
 				let time = 0.1;
-				game.onUpdate(() => {
+				ctx.onUpdate(() => {
 					time -= ctx.dt();
 					if (time <= 0) {
 						if (explosions >= 35) return;
@@ -61,7 +60,6 @@ const dontGame: Minigame = {
 		});
 
 		ctx.onButtonPress("action", Did);
-		return game;
 	},
 };
 

@@ -16,8 +16,6 @@ const newGame: Minigame = {
 		ctx.loadSound("plug", "/sounds/switch.mp3");
 	},
 	start(ctx) {
-		const game = ctx.make();
-
 		const allColors = [
 			ctx.Color.fromHex("#cc425e"),
 			ctx.Color.fromHex("#6bc96c"),
@@ -38,7 +36,7 @@ const newGame: Minigame = {
 		gameColors.forEach((color, plugIndex, arr) => {
 			plugSocketState[plugIndex] = "disconnected";
 
-			const socketObj = game.add([
+			const socketObj = ctx.add([
 				ctx.sprite("box"),
 				ctx.color(color),
 				ctx.pos(ctx.center().x, ctx.center().y - 200),
@@ -48,13 +46,15 @@ const newGame: Minigame = {
 				"ignorepoint",
 			]);
 
-			const sourceObj = game.add([
+			const sourceObj = ctx.add([
 				ctx.sprite("box"),
 				ctx.color(color),
 				ctx.pos(ctx.center().x, ctx.center().y + 200),
+				ctx.area(),
 				"plugbox",
 			]);
 
+			// TODO: The fix to this working is adding areas to the parent, when the hover collision issues are fixed, remove it
 			const plugObj = sourceObj.add([
 				ctx.sprite("plug"),
 				ctx.area(),
@@ -111,7 +111,7 @@ const newGame: Minigame = {
 				}
 			});
 
-			game.onDraw(() => {
+			ctx.onDraw(() => {
 				ctx.drawLine({
 					p1: ctx.vec2(sourceObj.pos.x + sourceObj.width / 2, sourceObj.pos.y),
 					p2: sourceObj.toWorld(plugObj.pos),
@@ -122,7 +122,7 @@ const newGame: Minigame = {
 		});
 
 		let hasWon = false;
-		game.onUpdate(() => {
+		ctx.onUpdate(() => {
 			if (winCondition() && !hasWon) {
 				hasWon = true;
 				ctx.win();
@@ -130,7 +130,7 @@ const newGame: Minigame = {
 			}
 		});
 
-		game.onDraw(() => {
+		ctx.onDraw(() => {
 			// draw the connected ones
 			gameColors.forEach((color, index) => {
 				if (plugSocketState[index] == "disconnected") return;
@@ -145,8 +145,6 @@ const newGame: Minigame = {
 				});
 			}
 		});
-
-		return game;
 	},
 };
 

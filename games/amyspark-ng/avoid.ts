@@ -41,7 +41,6 @@ const avoidGame: Minigame = {
 		});
 	},
 	start(ctx) {
-		const game = ctx.make();
 		let SPEED = 300 * ctx.speed;
 		const movement = ctx.vec2(0);
 		const icy = 0.25 * ctx.speed;
@@ -51,7 +50,7 @@ const avoidGame: Minigame = {
 
 		ctx.setGravity(1300);
 
-		const ground = game.add([
+		const ground = ctx.add([
 			ctx.rect(ctx.width(), 50),
 			ctx.outline(5, ctx.BLACK),
 			ctx.area(),
@@ -59,7 +58,7 @@ const avoidGame: Minigame = {
 			ctx.body({ isStatic: true, gravityScale: 0 }),
 		]);
 
-		const mark = game.add([
+		const mark = ctx.add([
 			ctx.sprite("mark", { anim: "idle" }),
 			ctx.pos(ctx.center().x, ctx.center().y + 120),
 			ctx.anchor("bot"),
@@ -68,7 +67,7 @@ const avoidGame: Minigame = {
 			ctx.scale(),
 		]);
 
-		const foot = game.add([
+		const foot = ctx.add([
 			ctx.sprite("foot"),
 			ctx.anchor("bot"),
 			ctx.area({ scale: ctx.vec2(0.5, 0.9), offset: ctx.vec2(0, -50) }),
@@ -76,7 +75,7 @@ const avoidGame: Minigame = {
 			"foot",
 		]);
 
-		game.onUpdate(() => {
+		ctx.onUpdate(() => {
 			if (markDead) return;
 			mark.flipX = ctx.isButtonDown("left");
 			mark.area.scale = ctx.isButtonDown("down") ? ctx.vec2(0.5, 0.25) : ctx.vec2(0.5);
@@ -133,8 +132,6 @@ const avoidGame: Minigame = {
 				ctx.finish();
 			});
 		});
-
-		return game;
 	},
 };
 
