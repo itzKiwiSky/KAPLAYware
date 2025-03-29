@@ -6,7 +6,7 @@ const tapGame: Minigame = {
 	prompt: "tap",
 	author: "amyspark-ng",
 	rgb: [0, 0, 0],
-	input: { cursor: { hide: true } },
+	input: "mouse (hidden)",
 	duration: 8,
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {

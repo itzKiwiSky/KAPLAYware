@@ -5,7 +5,7 @@ const strikeGame: Minigame = {
 	prompt: "strike",
 	author: "amyspark-ng",
 	rgb: k.WHITE,
-	input: { cursor: { hide: true } },
+	input: "mouse (hidden)",
 	duration: 5,
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {

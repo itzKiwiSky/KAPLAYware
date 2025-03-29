@@ -6,7 +6,7 @@ import mulfokColors from "../../src/plugins/colors.ts";
 const newGame: Minigame = {
 	prompt: "connect",
 	author: "amyspark-ng",
-	input: { cursor: { hide: false } },
+	input: "mouse",
 	rgb: mulfokColors.DARK_PURPLE,
 	duration: (ctx) => ctx.difficulty == 3 ? 7 : 5,
 	urlPrefix: "games/amyspark-ng/assets",

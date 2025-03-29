@@ -4,7 +4,7 @@ import { mulfokColors } from "../../src/plugins/colors";
 
 const knockGame: Minigame = {
 	prompt: "knock",
-	input: { cursor: { hide: false } },
+	input: "mouse",
 	author: "amyspark-ng",
 	rgb: [74, 48, 82],
 	duration: (ctx) => ctx.difficulty == 3 ? 4.5 : 4,

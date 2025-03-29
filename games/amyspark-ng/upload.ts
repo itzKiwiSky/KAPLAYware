@@ -7,7 +7,7 @@ const uploadGame: Minigame = {
 	author: "amyspark-ng",
 	rgb: mulfokColors.DARK_BEANT_BLUE,
 	duration: 4,
-	input: { cursor: { hide: false } },
+	input: "mouse",
 	urlPrefix: "games/amyspark-ng/assets/sprites/upload/",
 	load(ctx) {
 		ctx.loadSprite("window", "window.png");

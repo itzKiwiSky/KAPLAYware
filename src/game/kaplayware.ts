@@ -2,7 +2,7 @@ import k from "../engine";
 import { assets } from "@kaplayjs/crew";
 import { Asset, AudioPlay, AudioPlayOpt, Color, DrawSpriteOpt, GameObj, KEventController, Key, SpriteCompOpt, SpriteData, TimerController, Uniform, Vec2 } from "kaplay";
 import cursor from "../plugins/cursor";
-import { coolPrompt, gameHidesCursor, gameUsesMouse, getGameID, getGameInput } from "./utils";
+import { coolPrompt, gameHidesMouse, gameUsesMouse, getGameID, getGameInput } from "./utils";
 import { gameAPIs } from "./api";
 import { createPausableCtx, PausableCtx, runTransition, TransitionState } from "./transitions";
 import { Button, KAPLAYwareOpts, Minigame, MinigameAPI, MinigameCtx } from "./types";
@@ -556,7 +556,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			wareApp.gameRunning = false;
 
 			if (overrideDifficulty) wareCtx.difficulty = overrideDifficulty;
-			if (opts.onlyMouse) games = games.filter((game) => gameUsesMouse(game) && !game.input.keys);
+			if (opts.onlyMouse) games = games.filter((game) => getGameInput(game) == "mouse");
 
 			const shouldSpeedUp = () => {
 				return (forceSpeed || wareCtx.score % 5 == 0) && wareCtx.speed <= SPEED_LIMIT;
@@ -588,8 +588,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			restartMinigame = false;
 			skipMinigame = false;
 
-			const gameinput = getGameInput(choosenGame);
-			cursor.visible = !gameHidesCursor(choosenGame);
+			cursor.visible = !gameHidesMouse(choosenGame);
 
 			// ### transition coolness ##
 			// sends prep, if shouldSpeedUp is false and winState is undefinied, then it will only run prep
@@ -598,7 +597,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			let prompt: ReturnType<typeof k.addPrompt> = null;
 
 			transition.onInputPromptTime(() => {
-				inputPrompt = k.addInputPrompt(gameinput);
+				inputPrompt = k.addInputPrompt(getGameInput(choosenGame));
 				inputPrompt.parent = wareApp.WareScene;
 				wareApp.pausableCtx.tween(k.vec2(0), k.vec2(1), 0.15 / wareCtx.speed, (p) => inputPrompt.scale = p, k.easings.easeOutElastic);
 			});
@@ -615,7 +614,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				prompt.parent = wareApp.WareScene;
 
 				wareApp.pausableCtx.wait(0.15 / wareCtx.speed, () => {
-					cursor.visible = !gameHidesCursor(choosenGame);
+					cursor.visible = gameHidesMouse(choosenGame);
 					prompt.fadeOut(0.15 / wareCtx.speed).onEnd(() => prompt.destroy());
 				});
 			});
@@ -663,7 +662,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 		game.urlPrefix = game.urlPrefix ?? "";
 		game.duration = game.duration ?? DEFAULT_DURATION;
 		game.rgb = game.rgb ?? [0, 0, 0];
-		game.input = game.input ?? { keys: { use: true } };
+		game.input = game.input ?? "keys";
 		if ("r" in game.rgb) game.rgb = [game.rgb.r, game.rgb.g, game.rgb.b];
 	}
 

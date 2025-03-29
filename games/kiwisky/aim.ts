@@ -6,7 +6,7 @@ const aimGame: Minigame = {
 	author: "kiwisky",
 	rgb: [141, 183, 255],
 	urlPrefix: "games/kiwisky/assets/",
-	input: { cursor: { hide: true } },
+	input: "mouse (hidden)",
 	duration: 6,
 	load(ctx) {
 		// ctx.loadSprite("balloon", "/aim/balloon.png");

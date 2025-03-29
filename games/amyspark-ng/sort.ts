@@ -8,7 +8,7 @@ const sortGame: Minigame = {
 	author: "amyspark-ng",
 	duration: (ctx) => ctx.difficulty == 3 ? 7 : 6,
 	rgb: [166, 133, 159],
-	input: { cursor: { hide: false } },
+	input: "mouse",
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {
 		ctx.loadSprite("bg", "sprites/sort/background.png");

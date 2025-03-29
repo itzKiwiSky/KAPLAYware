@@ -87,7 +87,7 @@ const clickGame: Minigame = {
 	prompt: "click",
 	author: "amyspark-ng", // of course
 	rgb: [41, 24, 52],
-	input: { cursor: { hide: false } },
+	input: "mouse",
 	playsOwnMusic: true,
 	urlPrefix: "games/amyspark-ng/assets/",
 	duration: (ctx) => ctx.difficulty == 3 ? 6 : 4,

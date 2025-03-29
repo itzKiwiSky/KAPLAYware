@@ -177,7 +177,7 @@ export type Minigame = {
 	 * cursor: false // the game will not use cursor in any way
 	 * ```
 	 */
-	input?: KeyInput | CursorInput;
+	input?: "keys" | "mouse" | "mouse (hidden)";
 	/** How long the minigames goes for (choose a reasonable number)
 	 *
 	 * You can also use a callback, to change it based on difficulty

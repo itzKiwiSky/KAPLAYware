@@ -6,7 +6,7 @@ const spreadGame: Minigame = {
 	prompt: "spread",
 	author: "amyspark-ng",
 	rgb: mulfokColors.PINK,
-	input: { cursor: { hide: true } },
+	input: "mouse (hidden)",
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {
 		ctx.loadSpriteAtlas("sprites/spread/bread.png", {

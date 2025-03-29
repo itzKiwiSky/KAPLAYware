@@ -5,7 +5,7 @@ const mineGame: Minigame = {
 	prompt: "mine",
 	author: "amyspark-ng",
 	rgb: mulfokColors.VOID_VIOLET,
-	input: { cursor: { hide: true } },
+	input: "mouse (hidden)",
 	duration: 5,
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {

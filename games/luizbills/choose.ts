@@ -6,7 +6,7 @@ const colorGame: Minigame = {
 	author: "luizbills",
 	rgb: [0, 0, 0],
 	urlPrefix: "games/luizbills/assets/",
-	input: { cursor: { hide: false } },
+	input: "mouse",
 	duration: 4,
 	load(ctx) {
 		ctx.loadSound("correct", "sounds/applause.ogg");

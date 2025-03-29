@@ -50,7 +50,7 @@ If you're going to make a game that uses the mouse, you need to specify it on yo
 ```ts
 const newGame: Minigame = {
     // ...
-    input: { cursor: { hide: true } },
+    input: "mouse (hidden)",
     start(ctx) {
         // ...
     }

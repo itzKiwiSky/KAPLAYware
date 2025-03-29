@@ -6,7 +6,7 @@ const swatGame: Minigame = {
 	author: "amyspark-ng",
 	rgb: mulfokColors.LIGHT_BROWN,
 	duration: (ctx) => ctx.difficulty == 3 ? 5 : 4,
-	input: { cursor: { hide: true } },
+	input: "mouse (hidden)",
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {
 		ctx.loadSprite("manopla", "sprites/swat/manopla.png");
