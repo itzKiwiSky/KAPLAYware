@@ -241,6 +241,7 @@ export type Minigame = {
 };
 
 export type KAPLAYwareOpts = {
+	games?: Minigame[];
 	debug?: boolean;
 	onlyMouse?: boolean;
 	inOrder?: boolean;

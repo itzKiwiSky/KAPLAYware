@@ -108,6 +108,7 @@ k.add([k.sprite("bean")])
 In the previous example, every kaplay function is stored in its context, the minigame's run in a similar way, where you'll have a slightly limited context that also includes extra properties! like
 - ```difficulty: 1 | 2 | 3``` = The current difficulty of the run
 - ```speed: number``` = The current speed of the run, use this to speed up your games appropiately!
+
 **PROTIP:** If you want something in your minigame to be shorter, based on the speed, you can do this:
 ```ts
 loop(1 / ctx.speed, () => addZombie())

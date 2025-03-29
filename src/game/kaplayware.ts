@@ -6,6 +6,7 @@ import { coolPrompt, gameHidesMouse, gameUsesMouse, getGameID, getGameInput } fr
 import { gameAPIs } from "./api";
 import { createPausableCtx, PausableCtx, runTransition, TransitionState } from "./transitions";
 import { Button, KAPLAYwareOpts, Minigame, MinigameAPI, MinigameCtx } from "./types";
+import games from "./games";
 
 type Friend = keyof typeof assets | `${keyof typeof assets}-o`;
 type AtFriend = `@${Friend}`;
@@ -102,14 +103,15 @@ export function createWareApp() {
 	};
 }
 
-export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts = {}) {
+export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 	const DEFAULT_DURATION = 4;
 	const SPEED_LIMIT = 1.64;
 
 	opts = opts ?? {};
-	opts.debug ?? false;
-	opts.inOrder ?? false;
-	opts.onlyMouse ?? false;
+	opts.games = opts.games ?? games;
+	opts.debug = opts.debug ?? false;
+	opts.inOrder = opts.inOrder ?? false;
+	opts.onlyMouse = opts.onlyMouse ?? false;
 
 	const wareApp = createWareApp();
 	wareApp.pausableCtx = createPausableCtx(wareApp);
@@ -556,7 +558,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			wareApp.gameRunning = false;
 
 			if (overrideDifficulty) wareCtx.difficulty = overrideDifficulty;
-			if (opts.onlyMouse) games = games.filter((game) => getGameInput(game) == "mouse");
+			if (opts.onlyMouse) opts.games = opts.games.filter((game) => getGameInput(game) == "mouse");
 
 			const shouldSpeedUp = () => {
 				return (forceSpeed || wareCtx.score % 5 == 0) && wareCtx.speed <= SPEED_LIMIT;
@@ -565,12 +567,12 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			const copyOfWinState = wareApp.winState; // when isGameOver() is called winState will be undefined because it was resetted, when the order of this is reversed, it will be fixed
 			const isGameOver = () => copyOfWinState == false && wareCtx.lives == 0;
 
-			const availableGames = games.filter((game) => {
-				if (wareApp.minigameHistory.length == 0 || games.length == 1) return true;
+			const availableGames = opts.games.filter((game) => {
+				if (wareApp.minigameHistory.length == 0 || opts.games.length == 1) return true;
 				else if (restartMinigame && !skipMinigame) return game == wareCtx.curGame;
 				else {
 					const previousPreviousID = wareApp.minigameHistory[wareCtx.score - 3];
-					const previousPreviousGame = games.find((game) => getGameID(game) == previousPreviousID);
+					const previousPreviousGame = opts.games.find((game) => getGameID(game) == previousPreviousID);
 					if (previousPreviousGame) return game != wareCtx.curGame && game != previousPreviousGame;
 					else return game != wareCtx.curGame;
 				}
@@ -658,7 +660,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 	k.watch(wareCtx, "speed", "Speed");
 	k.watch(wareApp, "inputEnabled", "Input enabled");
 
-	for (const game of games) {
+	for (const game of opts.games) {
 		game.urlPrefix = game.urlPrefix ?? "";
 		game.duration = game.duration ?? DEFAULT_DURATION;
 		game.rgb = game.rgb ?? [0, 0, 0];

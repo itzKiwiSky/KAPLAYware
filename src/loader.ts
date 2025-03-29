@@ -6,6 +6,11 @@ import games from "./game/games";
 import { LoadCtx } from "./game/types";
 import { getGameID } from "./game/utils";
 
+k.loadSprite("logo", "sprites/logo.png");
+k.loadSprite("buttons", "sprites/menu/buttons.png", { sliceX: 2, sliceY: 3 });
+k.loadSprite("cartridge", "sprites/menu/cartridge.png");
+k.loadSprite("check", "sprites/menu/cartridgecheck.png");
+
 k.loadBitmapFont("happy", "fonts/happy.png", 31, 39);
 k.loadBitmapFont("happy-o", "fonts/happy-o.png", 31, 39);
 

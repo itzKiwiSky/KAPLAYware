@@ -11,6 +11,7 @@ const cursor = k.add([
 	k.scale(2),
 	k.opacity(),
 	k.z(999),
+	k.fixed(),
 	k.color(),
 	k.stay(),
 	{
