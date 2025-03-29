@@ -498,7 +498,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			const durationEnabled = gDuration != undefined;
 			wareCtx.time = durationEnabled ? (gDuration / wareCtx.speed) : 1;
 			wareApp.currentContext.timeLeft = wareCtx.time;
-			wareApp.currentColor = "r" in minigame.rgb ? minigame.rgb : k.Color.fromArray(minigame.rgb);
+			wareApp.currentColor = typeof minigame.rgb == "function" ? minigame.rgb(wareApp.currentContext) : "r" in minigame.rgb ? minigame.rgb : k.Color.fromArray(minigame.rgb);
 			wareApp.currentScene?.destroy();
 			wareApp.currentScene = gameBox.add([k.rect(0, 0), k.area()]);
 			wareApp.gameRunning = false; // will be set to true onTransitionEnd (in nextGame())

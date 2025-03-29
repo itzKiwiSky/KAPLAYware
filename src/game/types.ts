@@ -13,9 +13,6 @@ export type Button =
 	| "down"
 	| "click";
 
-type CursorInput = { cursor: { hide: boolean; }; keys?: never; };
-type KeyInput = { keys: { use: boolean; }; cursor?: never; };
-
 /** The allowed load functions */
 export type LoadCtx = Pick<KAPLAYCtx, typeof loadAPIs[number]>;
 
@@ -154,7 +151,13 @@ export type Minigame = {
 	prompt: string | ((ctx: MinigameCtx, prompt: ReturnType<typeof k.addPrompt>) => void);
 	/** The author of the game */
 	author: string;
-	/** The RGB code for the game's background
+	/** The RGB (color) code for the game's background
+	 *
+	 * You can use a regular array of numbers like so:
+	 * @example
+	 * ```ts
+	 * rgb: [235, 38, 202]
+	 * ```
 	 *
 	 * You can also use a regular kaplay color, you can get some from the mulfok32 palette
 	 * @example
@@ -162,8 +165,14 @@ export type Minigame = {
 	 * import mulfokColors from "../../src/plugins/colors";
 	 * rgb: mulfokColors.VOID_PURPLE
 	 * ```
+	 *
+	 * And if you're feeling fancy, determine the color based on context parameters with a function, like this:
+	 * @example
+	 * ```ts
+	 * rgb: (ctx) => ctx.difficulty == 3 ? ctx.Color.fromArray(237, 24, 63) : ctx.Color.fromArray(235, 38, 202)
+	 * ```
 	 */
-	rgb?: [number, number, number] | Color;
+	rgb?: [number, number, number] | Color | ((ctx: MinigameCtx) => Color);
 	/** The input the minigame uses, if both are empty will assume keys
 	 *
 	 * @cursor You can configure your game's cursor this way
