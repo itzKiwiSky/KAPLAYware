@@ -56,6 +56,7 @@ const pickGame: Minigame = {
 			ctx.pos(ctx.center().x + 1, 188),
 			ctx.anchor("top"),
 			ctx.z(0),
+			ctx.area(), // FIXME: Remove when area() fix
 		]);
 
 		const nosetop = ctx.add([
@@ -74,9 +75,6 @@ const pickGame: Minigame = {
 		let pressedAction = false;
 		ctx.onUpdate(() => {
 			if (!moving) return;
-
-			// nosebot.pos.y = ctx.mousePos().y;
-			// ctx.debug.log(nosebot.pos.y);
 
 			const x = ctx.wave(hand.width, ctx.width() - hand.width, ctx.time() * ctx.speed);
 			hand.pos.x = ctx.lerp(hand.pos.x, x, 0.5);

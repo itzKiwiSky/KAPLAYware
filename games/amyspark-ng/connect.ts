@@ -54,7 +54,7 @@ const newGame: Minigame = {
 				"plugbox",
 			]);
 
-			// TODO: The fix to this working is adding areas to the parent, when the hover collision issues are fixed, remove it
+			// FIXME: When area collisions is fixed remove the aarea here i think
 			const plugObj = sourceObj.add([
 				ctx.sprite("plug"),
 				ctx.area(),

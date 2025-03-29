@@ -4,7 +4,7 @@ import { Asset, AudioPlay, AudioPlayOpt, Color, DrawSpriteOpt, GameObj, KEventCo
 import cursor from "../plugins/cursor";
 import { coolPrompt, gameHidesCursor, gameUsesMouse, getGameID, getGameInput } from "./utils";
 import { gameAPIs } from "./api";
-import { createPausableCtx, PausableCtx, runTransition } from "./transitions";
+import { createPausableCtx, PausableCtx, runTransition, TransitionState } from "./transitions";
 import { Button, KAPLAYwareOpts, Minigame, MinigameAPI, MinigameCtx } from "./types";
 
 type Friend = keyof typeof assets | `${keyof typeof assets}-o`;
@@ -483,6 +483,12 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			this.speed = k.clamp(this.speed, 0, SPEED_LIMIT);
 		},
 
+		/** 1. Clears every previous object
+		 * 2. Adds the minigame scene, and the new game objects
+		 * 3. Starts counting the time
+		 *
+		 * Also manages the bomb and the unpausing the queued sounds,
+		 */
 		runGame(minigame: Minigame) {
 			// OBJECT STUFF
 			gameBox.removeAll();
@@ -495,7 +501,7 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 			wareApp.currentColor = "r" in minigame.rgb ? minigame.rgb : k.Color.fromArray(minigame.rgb);
 			wareApp.currentScene?.destroy();
 			wareApp.currentScene = gameBox.add([k.rect(0, 0), k.area()]);
-			wareApp.gameRunning = false;
+			wareApp.gameRunning = false; // will be set to true onTransitionEnd (in nextGame())
 			wareApp.timeRunning = false;
 			wareApp.canPlaySounds = false;
 			wareApp.currentBomb?.destroy();
@@ -536,6 +542,13 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				wareApp.inputEnabled = false;
 			});
 		},
+		/**
+		 * 1. Manages the difficulty change and the speed up change
+		 * 2. Gets an available minigame based on the input
+		 * 3. Runs `runGame()`
+		 *
+		 * MOST IMPORTANTLY!! Manages the transitions and the prompt (and input prompt) adding
+		 */
 		nextGame() {
 			if (wareCtx.score < 10) wareCtx.difficulty = 1;
 			else if (wareCtx.score >= 10 && wareCtx.score < 20) wareCtx.difficulty = 2;
@@ -544,6 +557,13 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 
 			if (overrideDifficulty) wareCtx.difficulty = overrideDifficulty;
 			if (opts.onlyMouse) games = games.filter((game) => gameUsesMouse(game) && !game.input.keys);
+
+			const shouldSpeedUp = () => {
+				return (forceSpeed || wareCtx.score % 5 == 0) && wareCtx.speed <= SPEED_LIMIT;
+			};
+
+			const copyOfWinState = wareApp.winState; // when isGameOver() is called winState will be undefined because it was resetted, when the order of this is reversed, it will be fixed
+			const isGameOver = () => copyOfWinState == false && wareCtx.lives == 0;
 
 			const availableGames = games.filter((game) => {
 				if (wareApp.minigameHistory.length == 0 || games.length == 1) return true;
@@ -556,87 +576,77 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 				}
 			});
 
-			const nextGame = opts.inOrder ? availableGames[wareCtx.score % availableGames.length] : k.choose(availableGames);
+			const choosenGame = opts.inOrder ? availableGames[wareCtx.score % availableGames.length] : k.choose(availableGames);
 
-			function prep() {
-				wareCtx.runGame(nextGame);
-				wareApp.minigameHistory[wareCtx.score - 1] = getGameID(nextGame);
-				wareApp.winState = undefined;
+			let transitionStates: TransitionState[] = ["prep"];
+			if (wareApp.winState != undefined) transitionStates.splice(0, 0, wareApp.winState == true ? "win" : "lose");
+			if (shouldSpeedUp()) transitionStates.splice(1, 0, "speed");
+			if (isGameOver()) transitionStates = ["lose"];
 
-				restartMinigame = false;
-				skipMinigame = false;
+			wareApp.minigameHistory[wareCtx.score - 1] = getGameID(choosenGame);
+			wareApp.winState = undefined;
+			restartMinigame = false;
+			skipMinigame = false;
 
-				const gameinput = getGameInput(nextGame);
-				cursor.visible = !gameHidesCursor(nextGame);
+			const gameinput = getGameInput(choosenGame);
+			cursor.visible = !gameHidesCursor(choosenGame);
 
-				let inputPrompt: ReturnType<typeof k.addInputPrompt> = null;
-				let prompt: ReturnType<typeof k.addPrompt> = null;
+			// ### transition coolness ##
+			// sends prep, if shouldSpeedUp is false and winState is undefinied, then it will only run prep
+			const transition = runTransition(wareApp, transitionStates);
+			let inputPrompt: ReturnType<typeof k.addInputPrompt> = null;
+			let prompt: ReturnType<typeof k.addPrompt> = null;
 
-				const prepTrans = runTransition(wareApp, "prep");
+			transition.onInputPromptTime(() => {
+				inputPrompt = k.addInputPrompt(gameinput);
+				inputPrompt.parent = wareApp.WareScene;
+				wareApp.pausableCtx.tween(k.vec2(0), k.vec2(1), 0.15 / wareCtx.speed, (p) => inputPrompt.scale = p, k.easings.easeOutElastic);
+			});
 
-				prepTrans.onInputPromptTime(() => {
-					inputPrompt = k.addInputPrompt(gameinput);
-					inputPrompt.parent = wareApp.WareScene;
-					wareApp.pausableCtx.tween(k.vec2(0), k.vec2(1), 0.15 / wareCtx.speed, (p) => inputPrompt.scale = p, k.easings.easeOutElastic);
+			transition.onPromptTime(() => {
+				wareApp.pausableCtx.tween(inputPrompt.scale, k.vec2(0), 0.15 / wareCtx.speed, (p) => inputPrompt.scale = p, k.easings.easeOutQuint).onEnd(() =>
+					inputPrompt.destroy()
+				);
+				if (typeof choosenGame.prompt == "string") prompt = k.addPrompt(coolPrompt(choosenGame.prompt));
+				else {
+					prompt = k.addPrompt("");
+					choosenGame.prompt(wareApp.currentContext, prompt);
+				}
+				prompt.parent = wareApp.WareScene;
+
+				wareApp.pausableCtx.wait(0.15 / wareCtx.speed, () => {
+					cursor.visible = !gameHidesCursor(choosenGame);
+					prompt.fadeOut(0.15 / wareCtx.speed).onEnd(() => prompt.destroy());
 				});
+			});
 
-				prepTrans.onPromptTime(() => {
-					wareApp.pausableCtx.tween(inputPrompt.scale, k.vec2(0), 0.15 / wareCtx.speed, (p) => inputPrompt.scale = p, k.easings.easeOutQuint).onEnd(() =>
-						inputPrompt.destroy()
-					);
-					if (typeof nextGame.prompt == "string") prompt = k.addPrompt(coolPrompt(nextGame.prompt));
-					else {
-						prompt = k.addPrompt("");
-						nextGame.prompt(wareApp.currentContext, prompt);
-					}
-					prompt.parent = wareApp.WareScene;
+			transition.onStateStart((state) => {
+				if (state == "prep") {
+					wareCtx.runGame(choosenGame);
+				}
+				else if (state == "speed") {
+					if (forceSpeed == true) forceSpeed = false;
+					wareCtx.timesSpeed++;
+					wareCtx.speedUp();
+				}
+			});
 
-					wareApp.pausableCtx.wait(0.15 / wareCtx.speed, () => {
-						cursor.visible = !gameHidesCursor(nextGame);
-						prompt.fadeOut(0.15 / wareCtx.speed).onEnd(() => prompt.destroy());
+			transition.onStateEnd((state) => {
+				if (state == "lose") {
+					if (!isGameOver()) return;
+					wareApp.pausableCtx.play("@gameOverJingle").onEnd(() => {
+						k.go("gameover", wareCtx.score);
 					});
-				});
+					k.addPrompt("GAME OVER");
+				}
+			});
 
-				prepTrans.onEnd(() => {
-					prepTrans.destroy();
-					wareApp.gameRunning = true;
-					wareApp.timeRunning = true;
-					wareApp.inputEnabled = true;
-				});
-			}
-
-			// this means the game is just starting (first minigame, run prep)
-			if (wareApp.winState == undefined) prep();
-			else {
-				let transition: ReturnType<typeof runTransition> = null;
-				if (wareApp.winState) transition = runTransition(wareApp, "win");
-				else transition = runTransition(wareApp, "lose");
-
-				if (gameUsesMouse(nextGame)) cursor.visible = true;
-				transition.onEnd(() => {
-					if (wareApp.winState == false && wareCtx.lives == 0) {
-						wareApp.pausableCtx.play("@gameOverJingle").onEnd(() => {
-							k.go("gameover", wareCtx.score);
-						});
-						k.addPrompt("GAME OVER");
-						return;
-					}
-					else transition.destroy();
-
-					const runSpeedUp = (forceSpeed || wareCtx.score % 5 == 0) && wareCtx.speed <= SPEED_LIMIT;
-					if (!runSpeedUp) prep(); // if doesn't have to speed up simply prep()
-					else {
-						if (forceSpeed == true) forceSpeed = false;
-						wareCtx.timesSpeed++;
-						wareCtx.speedUp();
-						const speedTrans = runTransition(wareApp, "speed");
-						speedTrans.onEnd(() => {
-							speedTrans.destroy();
-							prep();
-						});
-					}
-				});
-			}
+			transition.onTransitionEnd(() => {
+				if (!isGameOver()) transition.destroy(); // don't remove it on game over, serves as background
+				wareApp.gameRunning = true;
+				wareApp.timeRunning = true;
+				wareApp.inputEnabled = true;
+			});
 		},
 	};
 
@@ -659,10 +669,10 @@ export default function kaplayware(games: Minigame[] = [], opts: KAPLAYwareOpts 
 
 	k.onUpdate(() => {
 		wareApp.WareScene.paused = wareApp.gamePaused;
-		wareApp.currentScene.paused = !wareApp.gameRunning;
 		cursor.canPoint = wareApp.gameRunning;
 		wareApp.conductor.bpm = 140 * wareCtx.speed;
 		wareApp.conductor.paused = wareApp.gamePaused;
+		if (wareApp.currentScene) wareApp.currentScene.paused = !wareApp.gameRunning;
 		if (wareApp.currentBomb) wareApp.currentBomb.paused = wareApp.gamePaused;
 
 		wareApp.inputEvents.forEach((ev) => ev.paused = !wareApp.inputEnabled || !wareApp.gameRunning);

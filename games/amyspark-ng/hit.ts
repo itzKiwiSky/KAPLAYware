@@ -47,7 +47,6 @@ const hitGame: Minigame = {
 				// you hit too soft
 				if (ctx.mouseDeltaPos().x > -80) return;
 
-				ctx.shakeCam(0.5);
 				if (canHit == true) {
 					hitsLeft--;
 					ctx.play("hit", { detune: ctx.rand(-50, 50) });

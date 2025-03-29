@@ -261,7 +261,6 @@ const transformGame: Minigame = {
 			}
 		});
 
-		// TODO: This onUpdate is not cleared, the minigame apparently is not either????
 		ctx.onUpdate(() => {
 			// checking input if it is within the box
 			if (ctx.isButtonPressed("up") && isInputValid(DIRECTION.UP)) onInputValid();
