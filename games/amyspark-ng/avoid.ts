@@ -1,11 +1,9 @@
-import { assets } from "@kaplayjs/crew";
 import { Minigame } from "../../src/game/types";
-import mulfokColors from "../../src/plugins/colors";
 
 const avoidGame: Minigame = {
 	prompt: "avoid",
 	author: "amyspark-ng",
-	rgb: mulfokColors.DARK_BLUE,
+	rgb: (ctx) => ctx.mulfok.DARK_BLUE,
 	duration: 6,
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {
@@ -83,7 +81,7 @@ const avoidGame: Minigame = {
 
 			if (footInGame) {
 				if (ctx.isInputButtonDown("down")) mark.play("crouch");
-				else if (ctx.isButtonPressed("left") || ctx.isButtonPressed("right") && !ctx.isInputButtonDown("down")) mark.play("walk");
+				else if (ctx.isInputButtonPressed("left") || ctx.isInputButtonPressed("right") && !ctx.isInputButtonDown("down")) mark.play("walk");
 				if (!ctx.isInputButtonDown("down") && !ctx.isInputButtonDown("left") && !ctx.isInputButtonDown("right")) mark.play("idle");
 
 				if (ctx.isInputButtonDown("left")) movement.x = ctx.lerp(movement.x, -SPEED, icy);

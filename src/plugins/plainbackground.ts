@@ -22,7 +22,7 @@ function camFade(time: number, color: Color = k.BLACK, easeFunc = k.easings.line
 }
 
 // TODO: ?
-export function plainBackgroundPlug() {
+export default function plainBackgroundPlug() {
 	return {
 		addPlainBackground,
 		camFade,

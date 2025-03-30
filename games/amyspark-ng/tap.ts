@@ -1,6 +1,5 @@
 import { Vec2 } from "kaplay";
 import { Minigame } from "../../src/game/types";
-import mulfokColors from "../../src/plugins/colors";
 
 const tapGame: Minigame = {
 	prompt: "tap",
@@ -20,7 +19,7 @@ const tapGame: Minigame = {
 	},
 	start(ctx) {
 		const screenframe = ctx.add([ctx.sprite("screenframe")]);
-		const screen = ctx.add([ctx.sprite("screen"), ctx.color(mulfokColors.VOID_PURPLE)]);
+		const screen = ctx.add([ctx.sprite("screen"), ctx.color(ctx.mulfok.VOID_PURPLE)]);
 		const hand = ctx.add([ctx.sprite("hand"), ctx.pos(), ctx.z(1)]);
 
 		const numbers = ctx.difficulty == 1
@@ -53,7 +52,7 @@ const tapGame: Minigame = {
 			lost = true;
 			ctx.play("sadmonkey", { detune: ctx.rand(-50, 50) });
 			ctx.get("number").forEach((n) => n.destroy());
-			ctx.tween(mulfokColors.DARK_RED, mulfokColors.VOID_PURPLE, 0.5 / ctx.speed, (p) => screen.color = p, ctx.easings.easeOutQuint);
+			ctx.tween(ctx.mulfok.DARK_RED, ctx.mulfok.VOID_PURPLE, 0.5 / ctx.speed, (p) => screen.color = p, ctx.easings.easeOutQuint);
 			ctx.play("buzzer", { detune: ctx.rand(-50, 50) });
 			ctx.lose();
 			ctx.wait(0.5 / ctx.speed, () => ctx.finish());
@@ -108,7 +107,7 @@ const tapGame: Minigame = {
 
 					if (numbersHit.length >= numbers.length) {
 						ctx.play("monkey", { detune: ctx.rand(50, 100) });
-						ctx.tween(mulfokColors.BEAN_GREEN, mulfokColors.VOID_PURPLE, 0.5 / ctx.speed, (p) => screen.color = p, ctx.easings.easeOutQuint);
+						ctx.tween(ctx.mulfok.BEAN_GREEN, ctx.mulfok.VOID_PURPLE, 0.5 / ctx.speed, (p) => screen.color = p, ctx.easings.easeOutQuint);
 						ctx.win();
 						ctx.wait(1 / ctx.speed, () => ctx.finish());
 						const banana = ctx.add([

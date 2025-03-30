@@ -1,11 +1,9 @@
-import { TimerController } from "kaplay";
 import { Minigame } from "../../src/game/types";
-import mulfokColors from "../../src/plugins/colors";
 
 const flipGame: Minigame = {
 	prompt: "flip",
 	author: "amyspark-ng",
-	rgb: mulfokColors.BURPMAN_BLUE,
+	rgb: (ctx) => ctx.mulfok.BURPMAN_BLUE,
 	duration: 999, // 6
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {
@@ -21,7 +19,7 @@ const flipGame: Minigame = {
 			ctx.rect(500, 70),
 			ctx.anchor("right"),
 			ctx.pos(),
-			ctx.color(mulfokColors.BLACK),
+			ctx.color(ctx.BLACK),
 			ctx.area(),
 			"pan",
 		]);
@@ -30,7 +28,7 @@ const flipGame: Minigame = {
 			ctx.rect(400, 50),
 			ctx.anchor("center"),
 			ctx.pos(),
-			ctx.color(mulfokColors.YELLOW),
+			ctx.color(ctx.mulfok.YELLOW),
 			ctx.rotate(),
 			ctx.area(),
 		]);

@@ -1,6 +1,5 @@
 import { GameObj, Vec2 } from "kaplay";
 import { Minigame, MinigameCtx } from "../../src/game/types.ts";
-import mulfokColors from "../../src/plugins/colors";
 
 function getHexagonShape(ctx: MinigameCtx) {
 	// some cool math
@@ -193,11 +192,11 @@ const clickGame: Minigame = {
 			plusScoreText.onUpdate(() => plusScoreText.move(0, ctx.rand(-80, -90) * ctx.speed));
 		});
 
-		ctx.onButtonRelease("click", () => {
+		ctx.onInputButtonRelease("click", () => {
 			ctx.play("clickpress", { detune: ctx.rand(-400, -200) });
 		});
 
-		if (ctx.difficulty == 3) hexagon.color = ctx.choose(Object.values(mulfokColors)).lerp(ctx.WHITE, 0.5);
+		if (ctx.difficulty == 3) hexagon.color = ctx.choose(Object.values(ctx.mulfok)).lerp(ctx.WHITE, 0.5);
 
 		ctx.onTimeout(() => {
 			if (score >= SCORE_TO_WIN) {

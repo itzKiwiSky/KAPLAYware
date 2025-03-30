@@ -1,11 +1,10 @@
 import { Outline, Vec2 } from "kaplay";
 import { Minigame } from "../../src/game/types";
-import mulfokColors from "../../src/plugins/colors";
 
 const spreadGame: Minigame = {
 	prompt: "spread",
 	author: "amyspark-ng",
-	rgb: mulfokColors.PINK,
+	rgb: (ctx) => ctx.mulfok.PINK,
 	input: "mouse (hidden)",
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {

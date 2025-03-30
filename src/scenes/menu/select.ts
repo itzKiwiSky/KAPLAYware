@@ -139,6 +139,6 @@ k.scene("select", () => {
 	});
 
 	k.onKeyPress("escape", () => {
-		k.go("main");
+		k.go("menu");
 	});
 });

@@ -1,11 +1,10 @@
 import { Minigame } from "../../src/game/types";
-import mulfokColors from "../../src/plugins/colors";
 
 const dodgeGame: Minigame = {
 	prompt: "dodge",
 	author: "amyspark-ng",
 	duration: (ctx) => ctx.difficulty == 1 || ctx.difficulty == 2 ? 6 : 8,
-	rgb: mulfokColors.WHITE,
+	rgb: [255, 255, 255],
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {
 		ctx.loadSprite("dino", "sprites/dodge/dino.png", { sliceX: 5, sliceY: 1 });

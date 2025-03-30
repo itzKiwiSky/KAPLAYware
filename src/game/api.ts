@@ -144,4 +144,5 @@ export const gameAPIs = [
 	"onDraw",
 	"onUpdate",
 	"get",
+	"mulfok",
 ] as const;

@@ -47,5 +47,5 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 	});
 });
 
-const goGame = (opts: KAPLAYwareOpts) => k.go("game", opts);
+const goGame = (opts?: KAPLAYwareOpts) => k.go("game", opts);
 export default goGame;

@@ -159,11 +159,10 @@ export type Minigame = {
 	 * rgb: [235, 38, 202]
 	 * ```
 	 *
-	 * You can also use a regular kaplay color, you can get some from the mulfok32 palette
+	 * You can also use a regular kaplay color, you can get some from the mulfok32 palette, which is exported in the context
 	 * @example
 	 * ```ts
-	 * import mulfokColors from "../../src/plugins/colors";
-	 * rgb: mulfokColors.VOID_PURPLE
+	 * rgb: (ctx) => ctx.mulfok.VOID_PURPLE
 	 * ```
 	 *
 	 * And if you're feeling fancy, determine the color based on context parameters with a function, like this:

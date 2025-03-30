@@ -1,13 +1,11 @@
-import { assets } from "@kaplayjs/crew";
-import kaplay, { Color, GameObj, Vec2 } from "kaplay";
+import { GameObj } from "kaplay";
 import { Minigame } from "../../src/game/types.ts";
-import mulfokColors from "../../src/plugins/colors.ts";
 
 const newGame: Minigame = {
 	prompt: "connect",
 	author: "amyspark-ng",
 	input: "mouse",
-	rgb: mulfokColors.DARK_PURPLE,
+	rgb: (ctx) => ctx.mulfok.DARK_PURPLE,
 	duration: (ctx) => ctx.difficulty == 3 ? 7 : 5,
 	urlPrefix: "games/amyspark-ng/assets",
 	load(ctx) {

@@ -663,7 +663,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 	for (const game of opts.games) {
 		game.urlPrefix = game.urlPrefix ?? "";
 		game.duration = game.duration ?? DEFAULT_DURATION;
-		game.rgb = game.rgb ?? [0, 0, 0];
+		game.rgb = game.rgb ?? [255, 255, 255];
 		game.input = game.input ?? "keys";
 		if ("r" in game.rgb) game.rgb = [game.rgb.r, game.rgb.g, game.rgb.b];
 	}

@@ -23,7 +23,6 @@ const ${gamePrompt}Game: Minigame = {
 	prompt: "${gamePrompt}",
 	input: "keys",
 	duration: 4,
-	rgb: [0, 0, 0],
 	urlPrefix: "${assets_dir}",
 	load(ctx) {},
 	start(ctx) {

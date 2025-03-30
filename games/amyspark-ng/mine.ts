@@ -1,10 +1,9 @@
 import { Minigame } from "../../src/game/types";
-import mulfokColors from "../../src/plugins/colors";
 
 const mineGame: Minigame = {
 	prompt: "mine",
 	author: "amyspark-ng",
-	rgb: mulfokColors.VOID_VIOLET,
+	rgb: (ctx) => ctx.mulfok.VOID_VIOLET,
 	input: "mouse (hidden)",
 	duration: 5,
 	urlPrefix: "games/amyspark-ng/assets/",

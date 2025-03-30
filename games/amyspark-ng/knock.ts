@@ -1,6 +1,4 @@
-import { assets } from "@kaplayjs/crew";
 import { Minigame } from "../../src/game/types";
-import { mulfokColors } from "../../src/plugins/colors";
 
 const knockGame: Minigame = {
 	prompt: "knock",
@@ -35,7 +33,7 @@ const knockGame: Minigame = {
 				ctx.text(string, { font: "happy", align: "center" }),
 				ctx.scale(),
 				ctx.anchor("center"),
-				ctx.color(mulfokColors.VOID_VIOLET),
+				ctx.color(ctx.mulfok.VOID_VIOLET),
 			]);
 
 			ctx.tween(ctx.vec2(0), ctx.vec2(1), 0.1 / ctx.speed, (p) => t.scale = p, ctx.easings.easeOutQuint);

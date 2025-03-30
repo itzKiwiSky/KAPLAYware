@@ -1,11 +1,10 @@
 import { Minigame } from "../../src/game/types";
-import mulfokColors from "../../src/plugins/colors";
 import { curDraggin } from "../../src/plugins/drag";
 
 const uploadGame: Minigame = {
 	prompt: "upload",
 	author: "amyspark-ng",
-	rgb: mulfokColors.DARK_BEANT_BLUE,
+	rgb: (ctx) => ctx.mulfok.DARK_BEANT_BLUE,
 	duration: 4,
 	input: "mouse",
 	urlPrefix: "games/amyspark-ng/assets/sprites/upload/",

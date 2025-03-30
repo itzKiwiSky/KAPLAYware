@@ -1,11 +1,9 @@
-import { assets } from "@kaplayjs/crew";
 import { Minigame } from "../../src/game/types";
-import mulfokColors from "../../src/plugins/colors";
 
 const dontGame: Minigame = {
 	prompt: "don't",
 	author: "amyspark-ng",
-	rgb: mulfokColors.DARK_BLUE,
+	rgb: (ctx) => ctx.mulfok.DARK_BLUE,
 	duration: 3,
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {

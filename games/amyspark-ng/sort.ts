@@ -1,6 +1,5 @@
 import { GameObj, Vec2 } from "kaplay";
 import { Minigame } from "../../src/game/types.ts";
-import mulfokColors from "../../src/plugins/colors.ts";
 
 // almost 300 lines of pure unadultered pain that took me a whole day to write
 const sortGame: Minigame = {
@@ -49,8 +48,8 @@ const sortGame: Minigame = {
 		const variant1Sprite = getVariants(ITEM_CATEGORY)[0];
 		const variant2Sprite = getVariants(ITEM_CATEGORY)[1];
 
-		const OffLight = mulfokColors.YELLOW.lerp(mulfokColors.VOID_PURPLE, 0.5);
-		const OnLight = mulfokColors.YELLOW;
+		const OffLight = ctx.mulfok.YELLOW.lerp(ctx.mulfok.VOID_PURPLE, 0.5);
+		const OnLight = ctx.mulfok.YELLOW;
 
 		let itemsLeftToSend = ctx.difficulty * 2;
 		let itemsLeftToSort = itemsLeftToSend;
@@ -91,13 +90,13 @@ const sortGame: Minigame = {
 				ctx.play("confetti", { detune: ctx.rand(-50, 50) });
 				littleguy.frame = 1;
 				daystext.frame = 1;
-				ctx.tween(light.color, mulfokColors.GREEN, 1 / ctx.speed, (p) => light.color = p, ctx.easings.easeOutQuint);
+				ctx.tween(light.color, ctx.mulfok.GREEN, 1 / ctx.speed, (p) => light.color = p, ctx.easings.easeOutQuint);
 			}
 			else {
 				lost = true;
 				littleguy.frame = 2;
 				daystext.frame = 2;
-				ctx.tween(light.color, mulfokColors.RED, 1 / ctx.speed, (p) => light.color = p, ctx.easings.easeOutQuint);
+				ctx.tween(light.color, ctx.mulfok.RED, 1 / ctx.speed, (p) => light.color = p, ctx.easings.easeOutQuint);
 				function playSound() {
 					ctx.shakeCam();
 					ctx.flashCam(ctx.RED, 0.15, 0.5);

@@ -1,5 +1,4 @@
 import { Minigame } from "../../src/game/types.ts";
-import { mulfokColors as palette } from "../../src/plugins/colors";
 
 const colorGame: Minigame = {
 	prompt: "choose",
@@ -13,11 +12,11 @@ const colorGame: Minigame = {
 	},
 	start(ctx) {
 		const possibleColors = {
-			"red": palette.RED,
-			"green": palette.BEAN_GREEN,
-			"blue": palette.DARK_BLUE,
-			"brown": palette.BROWN,
-			"pink": palette.PINK,
+			"red": ctx.mulfok.RED,
+			"green": ctx.mulfok.BEAN_GREEN,
+			"blue": ctx.mulfok.DARK_BLUE,
+			"brown": ctx.mulfok.BROWN,
+			"pink": ctx.mulfok.PINK,
 		};
 		const qty = Math.min(4, ctx.difficulty + 1);
 		const hasLabels = ctx.difficulty >= 2;
@@ -56,7 +55,7 @@ const colorGame: Minigame = {
 				ctx.color(possibleColors[color]),
 				ctx.area(),
 				ctx.opacity(),
-				ctx.outline(4, palette.WHITE),
+				ctx.outline(4, ctx.mulfok.WHITE),
 				{
 					colorName: color,
 				},
@@ -96,10 +95,10 @@ const colorGame: Minigame = {
 		function end(victory = true) {
 			done = true;
 			for (const wrong of ctx.get("wrong")) {
-				wrong.color = palette.WHITE;
+				wrong.color = ctx.mulfok.WHITE;
 				wrong.opacity = 0.5;
 				if (hasLabels) {
-					wrong.get("label")[0].color = palette.GRAY;
+					wrong.get("label")[0].color = ctx.mulfok.GRAY;
 				}
 			}
 			if (victory) {

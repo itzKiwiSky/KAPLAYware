@@ -1,10 +1,9 @@
 import { Minigame } from "../../src/game/types";
-import mulfokColors from "../../src/plugins/colors";
 
 const swatGame: Minigame = {
 	prompt: "swat",
 	author: "amyspark-ng",
-	rgb: mulfokColors.LIGHT_BROWN,
+	rgb: (ctx) => ctx.mulfok.LIGHT_BROWN,
 	duration: (ctx) => ctx.difficulty == 3 ? 5 : 4,
 	input: "mouse (hidden)",
 	urlPrefix: "games/amyspark-ng/assets/",
@@ -84,7 +83,7 @@ const swatGame: Minigame = {
 						ctx.rect(ctx.width() * 2, ctx.height() * 2),
 						ctx.anchor("center"),
 						ctx.pos(),
-						ctx.color(mulfokColors.VOID_VIOLET),
+						ctx.color(ctx.mulfok.VOID_VIOLET),
 						ctx.z(5),
 						ctx.opacity(0.5),
 					]);

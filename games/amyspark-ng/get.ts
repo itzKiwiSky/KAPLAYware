@@ -1,12 +1,11 @@
 import { assets } from "@kaplayjs/crew";
 import { Vec2 } from "kaplay";
 import { Minigame } from "../../src/game/types";
-import mulfokColors from "../../src/plugins/colors";
 
 const getGame: Minigame = {
 	prompt: "get",
 	author: "amyspark-ng",
-	rgb: mulfokColors.GREEN,
+	rgb: (ctx) => ctx.mulfok.GREEN,
 	duration: (ctx) => ctx.difficulty == 3 ? 3.5 : 4,
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {
@@ -131,7 +130,7 @@ const getGame: Minigame = {
 				ctx.drawCircle({
 					radius: 10,
 					scale: ctx.vec2(2, 1),
-					color: mulfokColors.VOID_VIOLET,
+					color: ctx.mulfok.VOID_VIOLET,
 					opacity: 0.4,
 					pos: apple.pos.add(10, 0),
 				});
@@ -141,7 +140,7 @@ const getGame: Minigame = {
 			ctx.drawCircle({
 				radius: 20,
 				scale: ctx.vec2(2, 1),
-				color: mulfokColors.VOID_VIOLET,
+				color: ctx.mulfok.VOID_VIOLET,
 				opacity: 0.4,
 				pos: bean.pos.add(25, -20),
 			});
