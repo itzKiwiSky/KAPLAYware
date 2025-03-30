@@ -165,7 +165,7 @@ const aimGame: Minigame = {
 			}
 		});
 
-		ctx.onButtonPress("click", () => {
+		ctx.onInputButtonPress("click", () => {
 			if (ctx.winState() == true) return;
 			for (const bln of ctx.get("balloon").reverse()) {
 				if (bln.isHovering()) {

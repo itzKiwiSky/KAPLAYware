@@ -5,7 +5,7 @@ import { gameAPIs, loadAPIs } from "./api";
 import { CustomSprite } from "./kaplayware";
 
 /** A button */
-export type Button =
+export type InputButton =
 	| "action"
 	| "left"
 	| "right"
@@ -21,18 +21,18 @@ export type MinigameAPI = {
 	/**
 	 * Register an event that runs once when a button is pressed.
 	 */
-	onButtonPress(btn: Button, action: () => void): KEventController;
+	onInputButtonPress(btn: InputButton, action: () => void): KEventController;
 	/**
 	 * Register an event that runs once when a button is released.
 	 */
-	onButtonRelease(btn: Button, action: () => void): KEventController;
+	onInputButtonRelease(btn: InputButton, action: () => void): KEventController;
 	/**
 	 * Register an event that runs every frame when a button is held down.
 	 */
-	onButtonDown(btn: Button, action: () => void): KEventController;
-	isButtonPressed(btn: Button): boolean;
-	isButtonDown(btn: Button): boolean;
-	isButtonReleased(btn: Button): boolean;
+	onInputButtonDown(btn: InputButton, action: () => void): KEventController;
+	isInputButtonPressed(btn: InputButton): boolean;
+	isInputButtonDown(btn: InputButton): boolean;
+	isInputButtonReleased(btn: InputButton): boolean;
 
 	onMouseMove(action: (pos: Vec2, delta: Vec2) => void): KEventController;
 	onMouseRelease(action: () => void): KEventController;

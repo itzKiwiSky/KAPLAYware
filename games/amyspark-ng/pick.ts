@@ -82,7 +82,7 @@ const pickGame: Minigame = {
 
 		let boogersLeft = ctx.difficulty < 3 ? 1 : 2;
 		let collidedWithMiddle = false;
-		ctx.onButtonPress("action", () => {
+		ctx.onInputButtonPress("action", () => {
 			if (pressedAction) return;
 			pressedAction = true;
 			moving = false;

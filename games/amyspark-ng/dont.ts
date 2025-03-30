@@ -59,7 +59,7 @@ const dontGame: Minigame = {
 			ctx.wait(0.5, () => ctx.finish());
 		});
 
-		ctx.onButtonPress("action", Did);
+		ctx.onInputButtonPress("action", Did);
 	},
 };
 

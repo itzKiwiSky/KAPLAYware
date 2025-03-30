@@ -107,7 +107,7 @@ const swatGame: Minigame = {
 		};
 		let flies = ctx.difficulty;
 
-		ctx.onButtonPress("click", () => {
+		ctx.onInputButtonPress("click", () => {
 			if (ctx.get("shock").length > 0) return;
 
 			ctx.play("slap", { detune: ctx.rand(-50, 50), volume: 0.5 });

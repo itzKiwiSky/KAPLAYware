@@ -77,17 +77,17 @@ const avoidGame: Minigame = {
 
 		ctx.onUpdate(() => {
 			if (markDead) return;
-			mark.flipX = ctx.isButtonDown("left");
-			mark.area.scale = ctx.isButtonDown("down") ? ctx.vec2(0.5, 0.25) : ctx.vec2(0.5);
-			SPEED = ctx.isButtonDown("down") ? 350 * ctx.speed : 300 * ctx.speed;
+			mark.flipX = ctx.isInputButtonDown("left");
+			mark.area.scale = ctx.isInputButtonDown("down") ? ctx.vec2(0.5, 0.25) : ctx.vec2(0.5);
+			SPEED = ctx.isInputButtonDown("down") ? 350 * ctx.speed : 300 * ctx.speed;
 
 			if (footInGame) {
-				if (ctx.isButtonDown("down")) mark.play("crouch");
-				else if (ctx.isButtonPressed("left") || ctx.isButtonPressed("right") && !ctx.isButtonDown("down")) mark.play("walk");
-				if (!ctx.isButtonDown("down") && !ctx.isButtonDown("left") && !ctx.isButtonDown("right")) mark.play("idle");
+				if (ctx.isInputButtonDown("down")) mark.play("crouch");
+				else if (ctx.isButtonPressed("left") || ctx.isButtonPressed("right") && !ctx.isInputButtonDown("down")) mark.play("walk");
+				if (!ctx.isInputButtonDown("down") && !ctx.isInputButtonDown("left") && !ctx.isInputButtonDown("right")) mark.play("idle");
 
-				if (ctx.isButtonDown("left")) movement.x = ctx.lerp(movement.x, -SPEED, icy);
-				else if (ctx.isButtonDown("right")) movement.x = ctx.lerp(movement.x, SPEED, icy);
+				if (ctx.isInputButtonDown("left")) movement.x = ctx.lerp(movement.x, -SPEED, icy);
+				else if (ctx.isInputButtonDown("right")) movement.x = ctx.lerp(movement.x, SPEED, icy);
 				else movement.x = ctx.lerp(movement.x, 0, icy);
 
 				mark.move(movement.x, 0);

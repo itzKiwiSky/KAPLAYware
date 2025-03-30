@@ -5,7 +5,7 @@ import cursor from "../plugins/cursor";
 import { coolPrompt, gameHidesMouse, gameUsesMouse, getGameID, getGameInput } from "./utils";
 import { gameAPIs } from "./api";
 import { createPausableCtx, PausableCtx, runTransition, TransitionState } from "./transitions";
-import { Button, KAPLAYwareOpts, Minigame, MinigameAPI, MinigameCtx } from "./types";
+import { InputButton, KAPLAYwareOpts, Minigame, MinigameAPI, MinigameCtx } from "./types";
 import games from "./games";
 
 type Friend = keyof typeof assets | `${keyof typeof assets}-o`;
@@ -300,7 +300,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 			}
 		}
 
-		function dirToKeys(button: Button): Key[] {
+		function dirToKeys(button: InputButton): Key[] {
 			if (button == "left") return ["left", "a"];
 			else if (button == "down") return ["down", "s"];
 			else if (button == "up") return ["up", "w"];
@@ -334,36 +334,36 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 			getRGB: () => wareApp.currentColor,
 			setRGB: (val) => wareApp.currentColor = val,
 
-			onButtonPress: (btn, action) => {
+			onInputButtonPress: (btn, action) => {
 				let ev: KEventController = null;
 				if (btn == "click") ev = gameBox.onMousePress("left", action);
 				else ev = gameBox.onKeyPress(dirToKeys(btn), action);
 				wareApp.addInput(ev);
 				return ev;
 			},
-			onButtonDown: (btn, action) => {
+			onInputButtonDown: (btn, action) => {
 				let ev: KEventController = null;
 				if (btn == "click") ev = gameBox.onMouseDown("left", action);
 				else ev = gameBox.onKeyDown(dirToKeys(btn), action);
 				wareApp.addInput(ev);
 				return ev;
 			},
-			onButtonRelease: (btn, action) => {
+			onInputButtonRelease: (btn, action) => {
 				let ev: KEventController = null;
 				if (btn == "click") ev = gameBox.onMouseRelease("left", action);
 				else ev = gameBox.onKeyRelease(dirToKeys(btn), action);
 				wareApp.addInput(ev);
 				return ev;
 			},
-			isButtonPressed: (btn) => {
+			isInputButtonPressed: (btn) => {
 				if (btn == "click") return k.isMousePressed("left");
 				else return k.isKeyPressed(dirToKeys(btn));
 			},
-			isButtonDown: (btn) => {
+			isInputButtonDown: (btn) => {
 				if (btn == "click") return k.isMouseDown("left");
 				else return k.isKeyDown(dirToKeys(btn));
 			},
-			isButtonReleased: (btn) => {
+			isInputButtonReleased: (btn) => {
 				if (btn == "click") return k.isMouseReleased("left");
 				else return k.isKeyDown(dirToKeys(btn));
 			},

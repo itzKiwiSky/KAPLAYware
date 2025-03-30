@@ -7,8 +7,7 @@ Welcome to the KAPLAYware contributing guide! We'll go over these points
 
 ### 1. [How do i add a game?](#how-do-i-add-a-game)
 ### 2. [What is a minigame context?](#what-is-a-minigame-context)
-### [3. How do i develop said game? (aka start(ctx))](#how-do-i-develop-said-game)
-### 3. What should i do when developing said game?
+### 3. [How do i develop said game? AKA start()](#how-do-i-develop-said-game)
 
 # How do i add a game??
 First, you must clone the repository and do all the git usual things
@@ -147,7 +146,7 @@ start(ctx) {
 
 There's a few functions you have to know in order to make your game work properly
 
-<!-- TODO: Now i talk here about win(), lose(), finish(), onTimeout(), onButtonPress, camAPI, confetti, getRGB, setRGB, etc -->
+<!-- TODO: Now i talk here about win(), lose(), finish(), onTimeout(), onInputButtonPress, camAPI, confetti, getRGB, setRGB, etc -->
 
 <!-- TODO: Then do a few small tips like "ignorepoint", no doing weird onMousePresses or weird kaplay's button api stuff -->
 <!-- - also talk about built-in sprites -->
@@ -215,7 +214,7 @@ You can also use `hidden: true` If you're going to make a game that uses a custo
 ```ts
 game.onMousePress("right", () => bean.jump()) // BAD!! Don't do this :(
 obj.onClick(() => bean.jump())
-ctx.onButtonPress("click", () => bean.jump()) // GOOD!! Do this :)
+ctx.onInputButtonPress("click", () => bean.jump()) // GOOD!! Do this :)
 ```
 - If you're making a mouse minigame and you have an object with an area and you'd like for the cursor to not point at this object, you can tag it with with "ignorepoint"
 ```ts

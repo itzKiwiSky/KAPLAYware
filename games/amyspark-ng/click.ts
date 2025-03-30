@@ -164,7 +164,7 @@ const clickGame: Minigame = {
 		]);
 
 		hexagon.onUpdate(() => {
-			const hexagonClicked = hexagon.isHovering() && ctx.isButtonDown("click");
+			const hexagonClicked = hexagon.isHovering() && ctx.isInputButtonDown("click");
 			hexagon.scale = ctx.lerp(hexagon.scale, hexagonClicked ? ctx.vec2(0.95) : ctx.vec2(1), 0.25);
 			hexagon.angle = ctx.lerp(hexagon.angle, hexagon.angle + 0.1 + (score / 8 * spinspeed), 0.5);
 			scoreText.angle = ctx.wave(-15, 15, ctx.time() * ctx.speed);
