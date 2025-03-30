@@ -8,12 +8,13 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 
 	let transitionOpacity = 0;
 	k.onUpdate(() => {
-		if (k.isKeyPressed("escape")) {
-			if (!ware.paused) ware.paused = true;
-			else k.go("select");
-		}
+		if (k.isKeyPressed("escape")) ware.paused = !ware.paused;
+		// if (k.isKeyPressed("escape")) {
+		// 	if (!ware.paused) ware.paused = true;
+		// 	else k.go("select");
+		// }
 
-		if (ware.paused && k.isKeyPressed("enter")) ware.paused = false;
+		// if (ware.paused && k.isKeyPressed("enter")) ware.paused = false;
 		transitionOpacity = k.lerp(transitionOpacity, ware.paused ? 1 : 0, 0.75);
 	});
 
@@ -29,15 +30,6 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 
 			k.drawText({
 				text: "PAUSED",
-				pos: k.center(),
-				anchor: "center",
-				align: "center",
-				opacity: transitionOpacity,
-			});
-
-			k.drawText({
-				text: "ENTER to resume/ESC to exit",
-				size: 30,
 				pos: k.center(),
 				anchor: "center",
 				align: "center",

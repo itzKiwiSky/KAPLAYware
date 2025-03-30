@@ -1,7 +1,8 @@
-import { Color, KAPLAYCtx, Vec2 } from "kaplay";
+import { Color, GameObj, KAPLAYCtx, Vec2 } from "kaplay";
 import k from "../engine";
 import { getGameInput } from "../game/utils";
 import { createPausableCtx, PausableCtx } from "../game/transitions";
+import { createWareApp } from "../game/kaplayware";
 
 function addPrompt(prompt: string) {
 	const promptObj = k.add([
@@ -55,7 +56,7 @@ function addPrompt(prompt: string) {
 
 function addInputPrompt(input: ReturnType<typeof getGameInput>) {
 	const inputPrompt = k.add([
-		k.sprite("inputprompt_" + input),
+		k.sprite("input-" + input),
 		k.anchor("center"),
 		k.pos(k.center()),
 		k.scale(),
@@ -65,35 +66,33 @@ function addInputPrompt(input: ReturnType<typeof getGameInput>) {
 	return inputPrompt;
 }
 
-function addBomb(pausableCtx: PausableCtx) {
+function addBomb(wareApp: ReturnType<typeof createWareApp>): WareBomb {
 	const BOMB_POS = k.vec2(40, k.height() - 40);
 
-	const bomb = k.add([]);
+	const bomb = wareApp.WareScene.add([]);
 	let conductor: ReturnType<typeof k.conductor> = null;
 
-	// TODO: Fix this position
 	const cord = bomb.add([
-		k.sprite("@bomb_cord", { tiled: true }),
-		k.pos(69, 527),
-		k.anchor("left"),
+		k.sprite("bomb-cord", { tiled: true }),
+		k.pos(69, 528),
 		k.fixed(),
 	]);
 
 	const cordstart = bomb.add([
-		k.sprite("@bomb_cord_start"),
+		k.sprite("bomb-cord-start"),
 		k.pos(29, 528),
 		k.fixed(),
 	]);
 
 	const cordtip = bomb.add([
-		k.sprite("@bomb_cord_tip"),
+		k.sprite("bomb-cord-tip"),
 		k.pos(29, 528),
 		k.fixed(),
 	]);
 
 	const fuse = bomb.add([
-		k.sprite("@bomb_fuse"),
-		k.pos(),
+		k.sprite("bomb-fuse"),
+		k.pos(cordtip.pos),
 		k.anchor("center"),
 		k.scale(),
 		k.opacity(),
@@ -101,7 +100,7 @@ function addBomb(pausableCtx: PausableCtx) {
 	]);
 
 	const bombSpr = bomb.add([
-		k.sprite("@bomb"),
+		k.sprite("bomb"),
 		k.pos(BOMB_POS),
 		k.anchor("center"),
 		k.scale(),
@@ -109,9 +108,8 @@ function addBomb(pausableCtx: PausableCtx) {
 		k.fixed(),
 	]);
 
-	cord.width = k.width() - 100;
+	cord.width = k.width() / 2;
 	let beatsLeft = 3;
-	let cordWidth = k.width() / 2;
 
 	function destroy() {
 		bomb.destroy();
@@ -126,9 +124,8 @@ function addBomb(pausableCtx: PausableCtx) {
 	bomb.onUpdate(() => {
 		if (beatsLeft < -1) return;
 
-		if (conductor) conductor.paused = bomb.paused;
+		if (conductor) conductor.paused = wareApp.gamePaused;
 
-		cordWidth = ((k.width() / 2) / 3) * beatsLeft;
 		if (beatsLeft != 0) {
 			fuse.pos = k.lerp(fuse.pos, cord.pos.add(cord.width, 50), 0.75);
 			cordtip.pos = fuse.pos.sub(cordtip.width / 2, 50);
@@ -140,7 +137,7 @@ function addBomb(pausableCtx: PausableCtx) {
 			fuse.pos = k.lerp(fuse.pos, k.vec2(cord.pos.x + cord.width, cord.pos.y + 50 - fuseYThing), 0.75);
 		}
 
-		cord.width = k.lerp(cord.width, cordWidth, 0.75);
+		cord.width = k.lerp(cord.width, ((k.width() / 2) / 3) * beatsLeft, 0.75);
 	});
 
 	function tick() {
@@ -148,8 +145,8 @@ function addBomb(pausableCtx: PausableCtx) {
 		if (beatsLeft > 0) {
 			beatsLeft--;
 			const tweenMult = 2 - beatsLeft + 1; // goes from 1 to 3;
-			pausableCtx.tween(k.vec2(1).add(0.33 * tweenMult), k.vec2(1).add((0.33 * tweenMult) / 2), 0.5 / 3, (p) => bombSpr.scale = p, k.easings.easeOutQuint);
-			pausableCtx.play("@tick", { detune: 25 * 2 - beatsLeft });
+			wareApp.pausableCtx.tween(k.vec2(1).add(0.33 * tweenMult), k.vec2(1).add((0.33 * tweenMult) / 2), 0.5 / 3, (p) => bombSpr.scale = p, k.easings.easeOutQuint);
+			wareApp.pausableCtx.play("tick", { detune: 25 * 2 - beatsLeft });
 			if (beatsLeft == 2) bombSpr.color = k.YELLOW;
 			else if (beatsLeft == 1) bombSpr.color = k.RED.lerp(k.YELLOW, 0.5);
 			else if (beatsLeft == 0) bombSpr.color = k.RED;
@@ -158,19 +155,12 @@ function addBomb(pausableCtx: PausableCtx) {
 			destroy();
 			// TODO: fix this kaboom parent
 			const kaboom = k.addKaboom(bombSpr.pos);
-			pausableCtx.play("@explosion");
+			kaboom.parent = wareApp.WareScene;
+			wareApp.pausableCtx.play("explosion");
 		}
 	}
 
 	return {
-		set paused(val: boolean) {
-			bomb.paused = val;
-		},
-
-		get paused() {
-			return bomb.paused;
-		},
-
 		bomb,
 		/** Will start a conductor which will explode the bomb in 4 beats (tick, tick, tick, BOOM!) */
 		tick,
@@ -178,20 +168,26 @@ function addBomb(pausableCtx: PausableCtx) {
 			conductor = k.conductor(bpm);
 			conductor.onBeat((beat, beatTime) => {
 				tick();
-				if (beat == 3) conductor.destroy();
+				if (beat == 4) destroy();
 			});
-			// TODO: THIS CONDUCTOR DOESN'T WANT TO PAUSE
 		},
 		destroy,
 		turnOff: () => {
 			fuse.fadeOut(0.5 / 3).onEnd(() => fuse.destroy());
 		},
-		get hasExploded() {
-			return beatsLeft == 0;
-		},
 		beatsLeft,
 	};
 }
+
+/** Type used for the return type of addBomb */
+export type WareBomb = {
+	turnOff(): void;
+	lit(bpm: number): void;
+	tick(): void;
+	destroy(): void;
+	beatsLeft: number;
+	bomb: GameObj;
+};
 
 type Sampler<T> = T | (() => T);
 

@@ -241,7 +241,7 @@ export function runTransition(wareApp: ReturnType<typeof createWareApp>, states:
 
 	trans.onStateEnter("prep", () => {
 		stateStartEvent.trigger("prep");
-		pausableCtx.play("@prepJingle", { speed: ware.speed });
+		pausableCtx.play("prepJingle", { speed: ware.speed });
 
 		chillguy.frame = 0;
 		screen.frame = 0;
@@ -302,7 +302,7 @@ export function runTransition(wareApp: ReturnType<typeof createWareApp>, states:
 		winConductor.onBeat(() => {
 		});
 
-		const sound = pausableCtx.play("@winJingle", { speed: ware.speed });
+		const sound = pausableCtx.play("winJingle", { speed: ware.speed });
 		chillguy.frame = 1;
 		screen.frame = 1;
 		chillcat.frame = 1;
@@ -318,7 +318,7 @@ export function runTransition(wareApp: ReturnType<typeof createWareApp>, states:
 		pausableCtx.tween(ZOOM_SCALE, k.vec2(1), 0.5 / ware.speed, (p) => trans.scale = p, k.easings.easeOutQuint);
 		pausableCtx.tween(0, 1, 0.25 / ware.speed, (p) => screen.opacity = p, k.easings.easeOutQuint);
 
-		const sound = pausableCtx.play("@loseJingle", { speed: ware.speed });
+		const sound = pausableCtx.play("loseJingle", { speed: ware.speed });
 		chillguy.frame = 2;
 		screen.frame = 2;
 		chillcat.frame = 2;
@@ -337,7 +337,7 @@ export function runTransition(wareApp: ReturnType<typeof createWareApp>, states:
 
 	trans.onStateEnter("speed", () => {
 		stateStartEvent.trigger("speed");
-		const sound = pausableCtx.play("@speedJingle", { speed: ware.speed });
+		const sound = pausableCtx.play("speedJingle", { speed: ware.speed });
 
 		const overlay = objs.add([
 			k.rect(k.width(), k.height()),

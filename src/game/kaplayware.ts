@@ -7,6 +7,7 @@ import { gameAPIs } from "./api";
 import { createPausableCtx, PausableCtx, runTransition, TransitionState } from "./transitions";
 import { InputButton, KAPLAYwareOpts, Minigame, MinigameAPI, MinigameCtx } from "./types";
 import games from "./games";
+import { WareBomb } from "../plugins/wareobjects";
 
 type Friend = keyof typeof assets | `${keyof typeof assets}-o`;
 type AtFriend = `@${Friend}`;
@@ -40,7 +41,7 @@ export function createWareApp() {
 		currentContext: null as MinigameCtx,
 		// bomb
 		timeRunning: false, // will turn true when transition is over (not same as gameRunning)
-		currentBomb: null as ReturnType<typeof k.addBomb> | null,
+		currentBomb: null as WareBomb | null,
 		conductor: k.conductor(140),
 		minigameHistory: [] as string[],
 		winState: undefined as boolean | undefined,
@@ -511,7 +512,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 			wareCtx.curGame = minigame;
 			minigame.start(wareApp.currentContext);
 
-			const gameBoxUpdate = gameBox.onUpdate(() => {
+			gameBox.onUpdate(() => {
 				if (!wareApp.gameRunning) return;
 
 				if (!wareApp.canPlaySounds) {
@@ -528,13 +529,11 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 				if (wareCtx.time <= 0 && wareApp.timeRunning) {
 					wareApp.timeRunning = false;
 					wareApp.onTimeOutEvents.trigger();
-					wareApp.currentBomb.tick(); // fial tick to explode
-					wareApp.currentBomb.destroy();
 				}
 
 				/** When there's 4 beats left */
 				if (wareCtx.time <= wareApp.conductor.beatInterval * 4 && !wareApp.currentBomb) {
-					wareApp.currentBomb = k.addBomb(wareApp.pausableCtx);
+					wareApp.currentBomb = k.addBomb(wareApp);
 					wareApp.currentBomb.bomb.parent = gameBox;
 					wareApp.currentBomb.lit(wareApp.conductor.bpm);
 				}
@@ -674,7 +673,6 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 		wareApp.conductor.bpm = 140 * wareCtx.speed;
 		wareApp.conductor.paused = wareApp.gamePaused;
 		if (wareApp.currentScene) wareApp.currentScene.paused = !wareApp.gameRunning;
-		if (wareApp.currentBomb) wareApp.currentBomb.paused = wareApp.gamePaused;
 
 		wareApp.inputEvents.forEach((ev) => ev.paused = !wareApp.inputEnabled || !wareApp.gameRunning);
 		wareApp.timerEvents.forEach((ev) => ev.paused = !wareApp.gameRunning || wareApp.gamePaused);
