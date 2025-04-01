@@ -16,3 +16,4 @@ export const getGameInput = (g: Minigame) => {
 };
 export const gameUsesMouse = (g: Minigame) => g.input == "mouse" || g.input == "mouse (hidden)";
 export const gameHidesMouse = (g: Minigame) => gameUsesMouse(g) && g.input != "mouse (hidden)";
+// TODO: Write a function to determine wheter a sprite name or sound name is default (includes a @ or doesnt)

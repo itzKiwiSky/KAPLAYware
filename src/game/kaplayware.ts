@@ -267,7 +267,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 			}
 			else if (api == "drawSprite") {
 				gameCtx[api] = (opts: DrawSpriteOpt) => {
-					opts.sprite = `${getGameID(minigame)}-${opts.sprite}`;
+					if (typeof opts.sprite == "string" && !opts.sprite.includes("@")) opts.sprite = `${getGameID(minigame)}-${opts.sprite}`;
 					return k.drawSprite(opts);
 				};
 			}
@@ -634,7 +634,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 			transition.onStateEnd((state) => {
 				if (state == "lose") {
 					if (!isGameOver()) return;
-					wareApp.pausableCtx.play("@gameOverJingle").onEnd(() => {
+					wareApp.pausableCtx.play("gameOverJingle").onEnd(() => {
 						k.go("gameover", wareCtx.score);
 					});
 					k.addPrompt("GAME OVER");
