@@ -1,10 +1,8 @@
-import { assets } from "@kaplayjs/crew";
 import { Minigame } from "../../src/game/types";
-import { mulfokColors } from "../../src/plugins/colors";
 
 const knockGame: Minigame = {
 	prompt: "knock",
-	input: { cursor: { hide: false } },
+	input: "mouse",
 	author: "amyspark-ng",
 	rgb: [74, 48, 82],
 	duration: (ctx) => ctx.difficulty == 3 ? 4.5 : 4,
@@ -18,14 +16,13 @@ const knockGame: Minigame = {
 		ctx.loadSound("door", "sounds/door.ogg");
 	},
 	start(ctx) {
-		const game = ctx.make();
-		game.add([ctx.rect(ctx.width() * 10, ctx.height() * 3), ctx.anchor("top"), ctx.color(74, 48, 82)]);
+		ctx.add([ctx.rect(ctx.width() * 10, ctx.height() * 3), ctx.anchor("top"), ctx.color(74, 48, 82)]);
 		const totalKnocks = ctx.difficulty == 1 ? 3 : ctx.difficulty == 2 ? 6 : ctx.difficulty == 3 ? 10 : 10;
 		let knocksLeft = totalKnocks;
 		let hasWon = false;
 
 		function addTextbox(string: string, angry: boolean) {
-			const t = game.add([
+			const t = ctx.add([
 				ctx.sprite(angry ? "angry" : "text"),
 				ctx.anchor("center"),
 				ctx.scale(),
@@ -36,7 +33,7 @@ const knockGame: Minigame = {
 				ctx.text(string, { font: "happy", align: "center" }),
 				ctx.scale(),
 				ctx.anchor("center"),
-				ctx.color(mulfokColors.VOID_VIOLET),
+				ctx.color(ctx.mulfok.VOID_VIOLET),
 			]);
 
 			ctx.tween(ctx.vec2(0), ctx.vec2(1), 0.1 / ctx.speed, (p) => t.scale = p, ctx.easings.easeOutQuint);
@@ -46,7 +43,7 @@ const knockGame: Minigame = {
 		}
 
 		const DOOR_SCALE = 4;
-		const door = game.add([
+		const door = ctx.add([
 			ctx.sprite("door"),
 			ctx.anchor("center"),
 			ctx.pos(ctx.center()),
@@ -58,7 +55,7 @@ const knockGame: Minigame = {
 			door.frame = 1;
 
 			ctx.play("door", { detune: ctx.rand(-50, 50) });
-			const bean = game.add([
+			const bean = ctx.add([
 				ctx.sprite("@bean"),
 				ctx.pos(ctx.center().add(0, 50)),
 				ctx.scale(3),
@@ -81,7 +78,7 @@ const knockGame: Minigame = {
 		door.onClick(() => {
 			if (!door.isHovering()) return;
 
-			if (!ctx.hasWon()) {
+			if (ctx.winState() == false) {
 				ctx.tween(ctx.vec2(DOOR_SCALE - 0.05 * totalKnocks - knocksLeft), ctx.vec2(DOOR_SCALE), 0.15 / ctx.speed, (p) => door.scale = p, ctx.easings.easeOutQuint);
 			}
 
@@ -107,13 +104,12 @@ const knockGame: Minigame = {
 
 					ctx.wait(0.5 / ctx.speed, () => {
 						ctx.burp({ speed: ctx.speed * 0.8 });
-						ctx.debug.log("HEY");
 						const heytextbox = addTextbox("HEY!", true);
 						heytextbox.use(ctx.fixed()); // TODO: this will work when fixed works
 						heytextbox.pos = ctx.center().sub(200, 0);
 					});
 
-					game.onUpdate(() => {
+					ctx.onUpdate(() => {
 						const wavedY = ctx.wave(ctx.center().y - 20, ctx.center().y, ctx.time() * 8 * ctx.speed);
 						camY = ctx.lerp(camY, wavedY, 0.5);
 						ctx.setCamPos(ctx.vec2(camX, camY));
@@ -127,7 +123,7 @@ const knockGame: Minigame = {
 		});
 
 		ctx.onTimeout(() => {
-			if (hasWon) return;
+			if (ctx.winState() == undefined) return;
 
 			if (knocksLeft > 0) {
 				ctx.lose();
@@ -137,8 +133,6 @@ const knockGame: Minigame = {
 				});
 			}
 		});
-
-		return game;
 	},
 };
 

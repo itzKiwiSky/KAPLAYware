@@ -1,19 +1,73 @@
-import { assets, crew } from "@kaplayjs/crew";
-import { GameObj, KAPLAYCtx } from "kaplay";
+import { AudioPlay, TimerController } from "kaplay";
+import { createWareApp } from "./kaplayware";
 import k from "../engine";
-import { KaplayWareCtx } from "./types";
 
-export function makeTransition(parent: GameObj, ware: KaplayWareCtx, state: "win" | "lose" | "prep" | "speed") {
-	const conductor = k.conductor(140 * ware.speed);
-	const endEvent = new k.KEvent();
+const pausableAPI = ["tween", "wait", "loop", "play"] as const;
+export type PausableCtx = Pick<typeof k, typeof pausableAPI[number]> & { resetContext(): void; };
+
+/** Creates a small context that includes tween, wait, loop and play, these will be paused if the WareApp is paused */
+export function createPausableCtx(wareApp: ReturnType<typeof createWareApp>) {
+	const ctx = {} as PausableCtx;
+
+	for (const api of pausableAPI) {
+		if (api == "play") {
+			ctx[api] = (...args: any[]) => {
+				const sound = k.play(...args as unknown as [any]);
+				wareApp.pausableSounds.push(sound);
+				return sound;
+			};
+		}
+		else {
+			ctx[api] = (...args: any[]) => {
+				// @ts-ignore
+				const timer = k[api](...args as unknown as [any]);
+				wareApp.pausableTimers.push(timer);
+				return timer as any;
+			};
+		}
+	}
+
+	ctx.resetContext = () => {
+		for (let i = wareApp.pausableTimers.length - 1; i >= 0; i--) {
+			wareApp.pausableTimers[i].cancel();
+			wareApp.pausableTimers.pop();
+		}
+
+		for (let i = wareApp.pausableSounds.length - 1; i >= 0; i--) {
+			wareApp.pausableSounds[i].stop();
+			wareApp.pausableSounds.pop();
+		}
+	};
+
+	return ctx;
+}
+
+export type TransitionState = "win" | "lose" | "prep" | "speed";
+
+export function runTransition(wareApp: ReturnType<typeof createWareApp>, states: TransitionState[]) {
+	const ware = wareApp.wareCtx;
+	const WareScene = wareApp.WareScene;
+	const conductor = k.conductor(140 * wareApp.wareCtx.speed);
+
+	const stateStartEvent = new k.KEvent();
+	const stateEndEvent = new k.KEvent();
+	const transitionEndEvent = new k.KEvent();
 	const inputPromptEvent = new k.KEvent();
 	const promptEvent = new k.KEvent();
 
-	const trans = parent.add([k.scale(), k.pos(k.center()), k.anchor("center")]);
+	const pausableCtx = wareApp.pausableCtx;
+
+	// woke agenda
+	// "trans" controls scale and position of the transitions, obj is just to attach, don't remove this
+	const trans = WareScene.add([k.scale(), k.pos(k.center()), k.anchor("center"), k.state(states[0], states)]);
 	const objs = trans.add([k.pos(-k.width() / 2, -k.height() / 2)]);
 	objs.add([k.sprite("bg")]);
 	objs.add([k.sprite("grass")]);
 	objs.add([k.sprite("table")]);
+
+	trans.onUpdate(() => {
+		conductor.paused = wareApp.gamePaused;
+	});
 
 	const ZOOM_SCALE = k.vec2(5.9);
 	const ZOOM_Y = 827;
@@ -52,7 +106,9 @@ export function makeTransition(parent: GameObj, ware: KaplayWareCtx, state: "win
 	}
 
 	// add hearts
-	for (let i = 0; i < (state == "lose" ? ware.lives + 1 : ware.lives); i++) {
+	for (let i = 0; i < (states[0] == "lose" ? ware.lives + 1 : ware.lives); i++) {
+		let shake = 0;
+
 		const heart = objs.add([
 			k.sprite("heart"),
 			k.pos(220, 60),
@@ -64,14 +120,26 @@ export function makeTransition(parent: GameObj, ware: KaplayWareCtx, state: "win
 			"heart",
 			{
 				kill() {},
+				shake(val: number = 14) {},
 			},
 		]);
 
 		heart.pos.x += (heart.width * 1.15) * i;
+		let pos = heart.pos;
+
+		heart.onUpdate(() => {
+			shake = k.lerp(shake, 0, 0.5);
+			const newPos = pos.add(k.Vec2.fromAngle(k.rand(0, 360)).scale(shake));
+			heart.pos = newPos;
+		});
+
+		heart.shake = (val: number = 14) => {
+			shake = val;
+		};
 
 		heart.kill = () => {
-			k.tween(heart.color, k.BLACK, 0.5 / ware.speed, (p) => heart.color = p);
-			heart.fadeOut(0.5 / ware.speed).onEnd(() => heart.destroy());
+			pausableCtx.tween(heart.color, k.BLACK, 0.75 / ware.speed, (p) => heart.color = p);
+			heart.fadeOut(0.75 / ware.speed).onEnd(() => heart.destroy());
 		};
 	}
 
@@ -109,94 +177,98 @@ export function makeTransition(parent: GameObj, ware: KaplayWareCtx, state: "win
 
 	const calendar = objs.add([
 		k.sprite("calendar"),
-		k.pos(660, 42),
+		k.pos(714, 84),
+		k.anchor("center"),
 	]);
 
-	const page = objs.add([
-		k.sprite("page"),
-		k.pos(calendar.pos),
-		k.anchor("top"),
-		k.scale(),
-		k.z(1),
-	]);
-	page.pos.x += page.width / 2 - 15;
-	page.add([k.text((ware.score - 1).toString(), { font: "happy" }), k.pos(0, 25), k.anchor("top"), k.z(1), k.color(k.Color.fromHex("#abdd64"))]);
+	function addCalendarPage(score: number) {
+		const fallingPage = objs.add([
+			k.sprite("page"),
+			k.pos(calendar.pos.sub(calendar.width / 2, calendar.height / 2)),
+			k.anchor("top"),
+			k.scale(),
+			k.opacity(),
+			k.z(1),
+		]);
+		fallingPage.pos.x += fallingPage.width / 2 - 15;
+		fallingPage.onDraw(() => {
+			k.drawText({
+				text: score.toString(),
+				font: "happy",
+				anchor: fallingPage.anchor,
+				align: "center",
+				pos: k.vec2(-5, 20),
+				color: k.Color.fromHex("#abdd64"),
+				opacity: fallingPage.opacity,
+			});
+		});
 
-	function finishTrans() {
-		trans.destroy();
-		objs.destroy();
-		conductor.destroy();
+		return fallingPage;
 	}
 
-	objs.onUpdate(() => {
-		// chillbutterfly.pos = k.mousePos();
-		// k.debug.log(chillbutterfly.pos);
+	const fallingPage = addCalendarPage(wareApp.wareCtx.score - 1);
 
-		// let oldScale = trans.scale;
-		// let oldPos = trans.pos;
-
-		// if (k.isKeyPressedRepeat("z")) trans.scale = trans.scale.add(0.1);
-		// else if (k.isKeyPressedRepeat("x")) trans.scale = trans.scale.sub(0.1);
-
-		// if (k.isKeyPressedRepeat("w")) trans.pos.y -= 1;
-		// else if (k.isKeyPressedRepeat("a")) trans.pos.x -= 1;
-		// else if (k.isKeyPressedRepeat("s")) trans.pos.y += 1;
-		// else if (k.isKeyPressedRepeat("d")) trans.pos.x += 1;
-
-		// if (oldScale != trans.scale || oldPos != trans.pos) {
-		// 	k.debug.log("POS: " + trans.pos + " | SCALE: " + trans.scale);
-		// }
-	});
+	function destroy() {
+		trans.destroy();
+		pausableCtx.resetContext();
+	}
 
 	conductor.onBeat((beat) => {
 		objs.get("flower").forEach((flower) => {
 			if (ware.difficulty == 1) {
-				k.tween(0.6, 1, 0.15 / ware.speed, (p) => flower.scale.y = p, k.easings.easeOutQuint);
+				pausableCtx.tween(0.6, 1, 0.35 / ware.speed, (p) => flower.scale.y = p, k.easings.easeOutBack);
 			}
 			else {
 				if (beat % 2 == 0) {
 					if (flower.id % 2 == 0) {
-						k.tween(1, 0.6, 0.15 / ware.speed, (p) => flower.scale.y = p, k.easings.easeOutQuint);
+						pausableCtx.tween(1, 0.6, 0.35 / ware.speed, (p) => flower.scale.y = p, k.easings.easeOutBack);
 					}
 					else {
-						k.tween(0.6, 1, 0.15 / ware.speed, (p) => flower.scale.y = p, k.easings.easeOutQuint);
+						pausableCtx.tween(0.6, 1, 0.35 / ware.speed, (p) => flower.scale.y = p, k.easings.easeOutBack);
 					}
 				}
 				else {
 					if (flower.id % 2 != 0) {
-						k.tween(1, 0.6, 0.15 / ware.speed, (p) => flower.scale.y = p, k.easings.easeOutQuint);
+						pausableCtx.tween(1, 0.6, 0.35 / ware.speed, (p) => flower.scale.y = p, k.easings.easeOutBack);
 					}
 					else {
-						k.tween(0.6, 1, 0.15 / ware.speed, (p) => flower.scale.y = p, k.easings.easeOutQuint);
+						pausableCtx.tween(0.6, 1, 0.35 / ware.speed, (p) => flower.scale.y = p, k.easings.easeOutBack);
 					}
 				}
 			}
 		});
 	});
 
-	if (state == "prep") {
-		k.play("@prepJingle", { speed: ware.speed });
+	trans.onStateEnter("prep", () => {
+		stateStartEvent.trigger("prep");
+		pausableCtx.play("prepJingle", { speed: ware.speed });
 
-		k.tween(page.scale.y, 1.8, 0.5 / ware.speed, (p) => page.scale.y = p, k.easings.easeOutExpo).onEnd(() => {
-			page.scale.y = 0.5;
-			page.pos.y += calendar.height;
-			page.anchor = "center";
-			page.onUpdate(() => {
-				page.pos.y += 1;
-				page.scale.y -= 0.1;
-				if (page.scale.y <= 0) page.destroy();
+		chillguy.frame = 0;
+		screen.frame = 0;
+		chillcat.frame = 0;
+		chillbutterfly.frame = 0;
+
+		const prepConductor = k.conductor(140 * wareApp.wareCtx.speed);
+
+		pausableCtx.tween(fallingPage.scale.y, 1.8, 0.35 / ware.speed, (p) => fallingPage.scale.y = p, k.easings.easeOutExpo).onEnd(() => {
+			fallingPage.scale.y = 0.5;
+			fallingPage.pos.y += calendar.height;
+			const Xpos = fallingPage.pos.x;
+			fallingPage.onUpdate(() => {
+				const xWave = k.wave(Xpos - 20, Xpos + 20, k.time() * wareApp.wareCtx.speed * 2);
+				fallingPage.pos.x = k.lerp(fallingPage.pos.x, xWave, 0.5);
 			});
+			pausableCtx.tween(fallingPage.pos.y, fallingPage.pos.y + 50, 0.4 / ware.speed, (p) => fallingPage.pos.y = p, k.easings.easeOutCubic);
+			pausableCtx.tween(fallingPage.opacity, 0, 0.4 / ware.speed, (p) => fallingPage.opacity = p, k.easings.linear);
 		});
 
-		const pagebelow = objs.add([
-			k.sprite("page"),
-			k.pos(page.pos),
-			k.anchor(page.anchor),
-			k.z(page.z - 1),
-		]);
-		pagebelow.add([k.text(ware.score.toString(), { font: "happy" }), k.pos(0, 25), k.anchor("top"), k.z(page.z - 1), k.color(k.Color.fromHex("#abdd64"))]);
+		const newPage = addCalendarPage(wareApp.wareCtx.score);
+		newPage.z = fallingPage.z - 1;
 
-		conductor.onBeat((beat) => {
+		// tween the first one here bc conductor doesn't do beat 0
+		const hearts = objs.get("heart");
+		pausableCtx.tween(k.vec2(1.5), k.vec2(1), 0.35 / ware.speed, (p) => hearts[0].scale = p, k.easings.easeOutQuint);
+		prepConductor.onBeat((beat) => {
 			if (beat == 1) {
 				inputPromptEvent.trigger();
 			}
@@ -204,50 +276,68 @@ export function makeTransition(parent: GameObj, ware: KaplayWareCtx, state: "win
 				promptEvent.trigger();
 			}
 
-			objs.get("heart").forEach((heart, index, arr) => {
-			});
+			const heartIdx = beat % (hearts.length);
+			const heartToBeat = hearts[heartIdx];
+			pausableCtx.tween(k.vec2(1.5), k.vec2(1), 0.35 / ware.speed, (p) => heartToBeat.scale = p, k.easings.easeOutQuint);
 
 			if (beat == 3) {
-				k.tween(trans.pos.y, ZOOM_Y, 1 / ware.speed, (p) => trans.pos.y = p, k.easings.easeOutQuint);
-				k.tween(trans.scale, ZOOM_SCALE, 1 / ware.speed, (p) => trans.scale = p, k.easings.easeOutQuint).onEnd(() => {
-					finishTrans();
-				});
-				k.tween(1, 0, 0.5 / ware.speed, (p) => screen.opacity = p, k.easings.easeOutQuint).onEnd(() => {
-					endEvent.trigger();
+				pausableCtx.tween(trans.pos.y, ZOOM_Y, 1 / ware.speed, (p) => trans.pos.y = p, k.easings.easeOutQuint);
+				pausableCtx.tween(trans.scale, ZOOM_SCALE, 1 / ware.speed, (p) => trans.scale = p, k.easings.easeOutQuint);
+				pausableCtx.tween(1, 0, 0.5 / ware.speed, (p) => screen.opacity = p, k.easings.easeOutQuint).onEnd(() => {
+					stateEndEvent.trigger("prep");
+					prepConductor.destroy();
 				});
 			}
 		});
-	}
-	else if (state == "lose" || state == "win") {
-		k.tween(ZOOM_Y, k.center().y, 0.5 / ware.speed, (p) => trans.pos.y = p, k.easings.easeOutQuint);
-		k.tween(ZOOM_SCALE, k.vec2(1), 0.5 / ware.speed, (p) => trans.scale = p, k.easings.easeOutQuint);
-		k.tween(0, 1, 0.25 / ware.speed, (p) => screen.opacity = p, k.easings.easeOutQuint);
+	});
 
-		if (state == "lose") {
-			const sound = k.play("@loseJingle", { speed: ware.speed });
-			chillguy.frame = 2;
-			screen.frame = 2;
-			chillcat.frame = 2;
-			chillbutterfly.frame = 2;
+	trans.onStateEnter("win", () => {
+		stateStartEvent.trigger("win");
+		pausableCtx.tween(ZOOM_Y, k.center().y, 0.5 / ware.speed, (p) => trans.pos.y = p, k.easings.easeOutQuint);
+		pausableCtx.tween(ZOOM_SCALE, k.vec2(1), 0.5 / ware.speed, (p) => trans.scale = p, k.easings.easeOutQuint);
+		pausableCtx.tween(0, 1, 0.25 / ware.speed, (p) => screen.opacity = p, k.easings.easeOutQuint);
 
-			objs.get("heart")[objs.get("heart").length - 1].kill();
-			k.wait(sound.duration() / ware.speed, () => {
-				endEvent.trigger();
-			});
-		}
-		else if (state == "win") {
-			const sound = k.play("@winJingle", { speed: ware.speed });
-			chillguy.frame = 1;
-			screen.frame = 1;
-			chillcat.frame = 1;
-			chillbutterfly.frame = 1;
-			k.wait(sound.duration() / ware.speed, () => {
-				endEvent.trigger();
-			});
-		}
-	}
-	else if (state == "speed") {
-		const sound = k.play("@speedJingle", { speed: ware.speed });
+		const winConductor = k.conductor(140 * wareApp.wareCtx.speed);
+		const hearts = objs.get("heart");
+		winConductor.onBeat(() => {
+		});
+
+		const sound = pausableCtx.play("winJingle", { speed: ware.speed });
+		chillguy.frame = 1;
+		screen.frame = 1;
+		chillcat.frame = 1;
+		chillbutterfly.frame = 1;
+		pausableCtx.wait(sound.duration() / ware.speed, () => {
+			stateEndEvent.trigger("win");
+		});
+	});
+
+	trans.onStateEnter("lose", () => {
+		stateStartEvent.trigger("lose");
+		pausableCtx.tween(ZOOM_Y, k.center().y, 0.5 / ware.speed, (p) => trans.pos.y = p, k.easings.easeOutQuint);
+		pausableCtx.tween(ZOOM_SCALE, k.vec2(1), 0.5 / ware.speed, (p) => trans.scale = p, k.easings.easeOutQuint);
+		pausableCtx.tween(0, 1, 0.25 / ware.speed, (p) => screen.opacity = p, k.easings.easeOutQuint);
+
+		const sound = pausableCtx.play("loseJingle", { speed: ware.speed });
+		chillguy.frame = 2;
+		screen.frame = 2;
+		chillcat.frame = 2;
+		chillbutterfly.frame = 2;
+
+		const dyingHeart = objs.get("heart")[objs.get("heart").length - 1];
+		dyingHeart.kill();
+		objs.get("heart").forEach((heart, index, arr) => {
+			if (index < arr.length - 1) heart.shake(7);
+		});
+
+		pausableCtx.wait(sound.duration() / ware.speed, () => {
+			stateEndEvent.trigger("lose");
+		});
+	});
+
+	trans.onStateEnter("speed", () => {
+		stateStartEvent.trigger("speed");
+		const sound = pausableCtx.play("speedJingle", { speed: ware.speed });
 
 		const overlay = objs.add([
 			k.rect(k.width(), k.height()),
@@ -260,18 +350,29 @@ export function makeTransition(parent: GameObj, ware: KaplayWareCtx, state: "win
 			overlay.color = k.lerp(overlay.color, k.hsl2rgb(HUE, 0.7, 0.8), 0.1);
 		});
 
-		k.wait(sound.duration() / ware.speed, () => {
-			endEvent.trigger();
+		pausableCtx.wait(sound.duration() / ware.speed, () => {
+			stateEndEvent.trigger("speed");
 		});
-	}
+	});
+
+	stateEndEvent.add((state) => {
+		if (states.indexOf(state) == states.length - 1) transitionEndEvent.trigger();
+		else trans.enterState(states[states.indexOf(state) + 1]);
+	});
 
 	return {
-		destroy() {
-			finishTrans();
+		destroy,
+
+		onStateStart(action: (state: TransitionState) => void) {
+			return stateStartEvent.add(action);
 		},
 
-		onEnd(action: () => void) {
-			return endEvent.add(action);
+		onStateEnd(action: (state: TransitionState) => void) {
+			return stateEndEvent.add(action);
+		},
+
+		onTransitionEnd(action: () => void) {
+			return transitionEndEvent.add(action);
 		},
 
 		onInputPromptTime(action: () => void) {

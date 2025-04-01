@@ -1,20 +1,17 @@
-import { Asset, AudioPlay, AudioPlayOpt, Color, GameObj, KAPLAYCtx, KEvent, KEventController, SpriteComp, SpriteCompOpt, SpriteData, TimerComp, Vec2 } from "kaplay";
+import { Asset, Color, GameObj, KAPLAYCtx, KEventController, SpriteComp, SpriteCompOpt, SpriteData, TweenController, Vec2 } from "kaplay";
 import k from "../engine";
 import { ConfettiOpt } from "../plugins/wareobjects";
 import { gameAPIs, loadAPIs } from "./api";
 import { CustomSprite } from "./kaplayware";
 
 /** A button */
-export type Button =
+export type InputButton =
 	| "action"
 	| "left"
 	| "right"
 	| "up"
 	| "down"
 	| "click";
-
-type CursorInput = { cursor: { hide: boolean; }; keys?: never; };
-type KeyInput = { keys: { use: boolean; }; cursor?: never; };
 
 /** The allowed load functions */
 export type LoadCtx = Pick<KAPLAYCtx, typeof loadAPIs[number]>;
@@ -24,18 +21,18 @@ export type MinigameAPI = {
 	/**
 	 * Register an event that runs once when a button is pressed.
 	 */
-	onButtonPress(btn: Button, action: () => void): KEventController;
+	onInputButtonPress(btn: InputButton, action: () => void): KEventController;
 	/**
 	 * Register an event that runs once when a button is released.
 	 */
-	onButtonRelease(btn: Button, action: () => void): KEventController;
+	onInputButtonRelease(btn: InputButton, action: () => void): KEventController;
 	/**
 	 * Register an event that runs every frame when a button is held down.
 	 */
-	onButtonDown(btn: Button, action: () => void): KEventController;
-	isButtonPressed(btn: Button): boolean;
-	isButtonDown(btn: Button): boolean;
-	isButtonReleased(btn: Button): boolean;
+	onInputButtonDown(btn: InputButton, action: () => void): KEventController;
+	isInputButtonPressed(btn: InputButton): boolean;
+	isInputButtonDown(btn: InputButton): boolean;
+	isInputButtonReleased(btn: InputButton): boolean;
 
 	onMouseMove(action: (pos: Vec2, delta: Vec2) => void): KEventController;
 	onMouseRelease(action: () => void): KEventController;
@@ -54,7 +51,7 @@ export type MinigameAPI = {
 	 * @param flashColor The color the flash will be
 	 * @param time How long the flash will be on screen
 	 */
-	flashCam(flashColor?: Color, time?: number): KEventController;
+	flashCam(flashColor?: Color, time?: number, opacity?: number): TweenController;
 	/** Gets the current RGB of the background of your minigame */
 	getRGB(): Color;
 	/** Sets the RGB to the background of your minigame */
@@ -93,7 +90,10 @@ export type MinigameAPI = {
 	 * @since v2000.0
 	 * @group Components
 	 */
-	sprite(spr: CustomSprite<string> | SpriteData | Asset<SpriteData>, opt?: SpriteCompOpt): SpriteComp;
+	sprite(spr: CustomSprite<string> | SpriteData | Asset<SpriteData>, opt?: SpriteCompOpt): SpriteComp & {
+		// TODO: Find a way to override the typing of return
+		sprite: string;
+	};
 	/** Register an event that runs once when timer runs out. */
 	onTimeout: (action: () => void) => KEventController;
 	/** Run this when player succeeded in completing the game. */
@@ -102,8 +102,14 @@ export type MinigameAPI = {
 	lose: () => void;
 	/** Run this when your minigame has 100% finished all win/lose animations etc */
 	finish: () => void;
-	/** Wheter ctx.win() has been called */
-	hasWon(): boolean;
+	/** The win/lose state of the current minigame
+	 * If ctx.win() has been called, it will return true
+	 *
+	 * If ctx.lose() was called, it will return false
+	 *
+	 * If nor ctx.win() or ctx.lose() has been called, it will return undefined
+	 */
+	winState(): boolean | undefined;
 	/** The current difficulty of the game */
 	difficulty: 1 | 2 | 3;
 	/** The speed multiplier */
@@ -145,16 +151,27 @@ export type Minigame = {
 	prompt: string | ((ctx: MinigameCtx, prompt: ReturnType<typeof k.addPrompt>) => void);
 	/** The author of the game */
 	author: string;
-	/** The RGB code for the game's background
+	/** The RGB (color) code for the game's background
 	 *
-	 * You can also use a regular kaplay color, you can get some from the mulfok32 palette
+	 * You can use a regular array of numbers like so:
 	 * @example
 	 * ```ts
-	 * import mulfokColors from "../../src/plugins/colors";
-	 * rgb: mulfokColors.VOID_PURPLE
+	 * rgb: [235, 38, 202]
+	 * ```
+	 *
+	 * You can also use a regular kaplay color, you can get some from the mulfok32 palette, which is exported in the context
+	 * @example
+	 * ```ts
+	 * rgb: (ctx) => ctx.mulfok.VOID_PURPLE
+	 * ```
+	 *
+	 * And if you're feeling fancy, determine the color based on context parameters with a function, like this:
+	 * @example
+	 * ```ts
+	 * rgb: (ctx) => ctx.difficulty == 3 ? ctx.Color.fromArray(237, 24, 63) : ctx.Color.fromArray(235, 38, 202)
 	 * ```
 	 */
-	rgb?: [number, number, number] | Color;
+	rgb?: [number, number, number] | Color | ((ctx: MinigameCtx) => Color);
 	/** The input the minigame uses, if both are empty will assume keys
 	 *
 	 * @cursor You can configure your game's cursor this way
@@ -168,7 +185,7 @@ export type Minigame = {
 	 * cursor: false // the game will not use cursor in any way
 	 * ```
 	 */
-	input?: KeyInput | CursorInput;
+	input?: "keys" | "mouse" | "mouse (hidden)";
 	/** How long the minigames goes for (choose a reasonable number)
 	 *
 	 * You can also use a callback, to change it based on difficulty
@@ -176,8 +193,20 @@ export type Minigame = {
 	 * ```ts
 	 * duration: (ctx) => ctx.difficulty == 3 ? 6 : 4
 	 * ```
+	 *
+	 * You can also make this callback return undefined, which would make your minigame run indefinetely, and would only be stopped once you call the `ctx.finish()` function
+	 * @example
+	 * ```ts
+	 * duration: () => undefined
+	 * start(ctx) {
+	 * 		ctx.wait(3, () => {
+	 * 			ctx.win();
+	 * 			ctx.finish();
+	 * 		})
+	 * }
+	 * ```
 	 */
-	duration?: number | ((ctx: MinigameCtx) => number);
+	duration?: number | ((ctx: MinigameCtx) => number | undefined);
 	/**
 	 * Assets URL prefix.
 	 */
@@ -190,57 +219,29 @@ export type Minigame = {
 	 * @example
 	 * ```js
 	 * load(ctx) {
-	 * 	ctx.loadSprite("bean", "sprites/bean.png")
+	 * 	ctx.loadSprite("hand", "sprites/hand.png")
 	 * }
 	 * ```
 	 */
 	load?: (ctx: LoadCtx) => void;
 	/**
-	 * Main entry of the game code. Should return a game object made by `k.make()` that contains the whole game.
+	 * Main entry of the game code.
 	 *
 	 * @example
 	 * ```js
 	 * start(ctx) {
-	 * 	const game = ctx.make();
-	 * 	// (Your game code will be here...)
-	 * 	return game;
+	 * 		const bean = ctx.add([
+	 * 			ctx.sprite("@bean"),
+	 * 		])
 	 * }
 	 * ```
 	 */
-	start: (ctx: MinigameCtx) => GameObj;
+	start: (ctx: MinigameCtx) => void;
 };
 
 export type KAPLAYwareOpts = {
+	games?: Minigame[];
 	debug?: boolean;
 	onlyMouse?: boolean;
 	inOrder?: boolean;
-};
-
-export type KaplayWareCtx = {
-	/** Wheter input is enabled */
-	inputEnabled: boolean;
-	/** Wheter the current game is running */
-	gameRunning: boolean;
-	/** The speed of the game */
-	speed: number;
-	/** The difficulty */
-	difficulty: 1 | 2 | 3;
-	/** The time left for a minigame to finish */
-	time: number;
-	/** The current score for the player */
-	score: number;
-	/** The lives left */
-	lives: number;
-	/** The index of the game in the games array */
-	gameIdx: number;
-	/** The amount of times the game has sped up */
-	timesSpeed: number;
-	/** Transition to the next game */
-	nextGame: () => void;
-	/** Returns the current minigame */
-	curGame: () => Minigame;
-	/** Runs a minigame */
-	runGame: (g: Minigame) => GameObj;
-	/** Speeds up the game */
-	speedUp: () => void;
 };

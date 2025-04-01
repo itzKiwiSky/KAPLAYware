@@ -1,6 +1,8 @@
-import { Color, KAPLAYCtx, Vec2 } from "kaplay";
+import { Color, GameObj, KAPLAYCtx, Vec2 } from "kaplay";
 import k from "../engine";
 import { getGameInput } from "../game/utils";
+import { createPausableCtx, PausableCtx } from "../game/transitions";
+import { createWareApp } from "../game/kaplayware";
 
 function addPrompt(prompt: string) {
 	const promptObj = k.add([
@@ -54,7 +56,7 @@ function addPrompt(prompt: string) {
 
 function addInputPrompt(input: ReturnType<typeof getGameInput>) {
 	const inputPrompt = k.add([
-		k.sprite("inputprompt_" + input),
+		k.sprite("input-" + input),
 		k.anchor("center"),
 		k.pos(k.center()),
 		k.scale(),
@@ -64,39 +66,41 @@ function addInputPrompt(input: ReturnType<typeof getGameInput>) {
 	return inputPrompt;
 }
 
-function addBomb() {
+function addBomb(wareApp: ReturnType<typeof createWareApp>): WareBomb {
 	const BOMB_POS = k.vec2(40, k.height() - 40);
 
-	const cord = k.add([
-		k.sprite("@bomb_cord", { tiled: true }),
-		k.pos(69, 527),
-		k.anchor("left"),
+	const bomb = wareApp.WareScene.add([]);
+	let conductor: ReturnType<typeof k.conductor> = null;
+
+	const cord = bomb.add([
+		k.sprite("bomb-cord", { tiled: true }),
+		k.pos(69, 528),
 		k.fixed(),
 	]);
 
-	const cordstart = k.add([
-		k.sprite("@bomb_cord_start"),
+	const cordstart = bomb.add([
+		k.sprite("bomb-cord-start"),
 		k.pos(29, 528),
 		k.fixed(),
 	]);
 
-	const cordtip = k.add([
-		k.sprite("@bomb_cord_tip"),
+	const cordtip = bomb.add([
+		k.sprite("bomb-cord-tip"),
 		k.pos(29, 528),
 		k.fixed(),
 	]);
 
-	const fuse = k.add([
-		k.sprite("@bomb_fuse"),
-		k.pos(),
+	const fuse = bomb.add([
+		k.sprite("bomb-fuse"),
+		k.pos(cordtip.pos),
 		k.anchor("center"),
 		k.scale(),
 		k.opacity(),
 		k.fixed(),
 	]);
 
-	const bomb = k.add([
-		k.sprite("@bomb"),
+	const bombSpr = bomb.add([
+		k.sprite("bomb"),
 		k.pos(BOMB_POS),
 		k.anchor("center"),
 		k.scale(),
@@ -104,9 +108,8 @@ function addBomb() {
 		k.fixed(),
 	]);
 
-	cord.width = k.width() - 100;
+	cord.width = k.width() / 2;
 	let beatsLeft = 3;
-	let cordWidth = k.width() / 2;
 
 	function destroy() {
 		bomb.destroy();
@@ -114,13 +117,15 @@ function addBomb() {
 		cord.destroy();
 		cordtip.destroy();
 		fuse.destroy();
+		conductor?.destroy();
 	}
 
 	let fuseYThing = 0;
 	bomb.onUpdate(() => {
 		if (beatsLeft < -1) return;
 
-		cordWidth = ((k.width() / 2) / 3) * beatsLeft;
+		if (conductor) conductor.paused = wareApp.gamePaused;
+
 		if (beatsLeft != 0) {
 			fuse.pos = k.lerp(fuse.pos, cord.pos.add(cord.width, 50), 0.75);
 			cordtip.pos = fuse.pos.sub(cordtip.width / 2, 50);
@@ -132,37 +137,57 @@ function addBomb() {
 			fuse.pos = k.lerp(fuse.pos, k.vec2(cord.pos.x + cord.width, cord.pos.y + 50 - fuseYThing), 0.75);
 		}
 
-		cord.width = k.lerp(cord.width, cordWidth, 0.75);
+		cord.width = k.lerp(cord.width, ((k.width() / 2) / 3) * beatsLeft, 0.75);
 	});
 
+	function tick() {
+		if (!bombSpr.exists()) return;
+		if (beatsLeft > 0) {
+			beatsLeft--;
+			const tweenMult = 2 - beatsLeft + 1; // goes from 1 to 3;
+			wareApp.pausableCtx.tween(k.vec2(1).add(0.33 * tweenMult), k.vec2(1).add((0.33 * tweenMult) / 2), 0.5 / 3, (p) => bombSpr.scale = p, k.easings.easeOutQuint);
+			wareApp.pausableCtx.play("tick", { detune: 25 * 2 - beatsLeft });
+			if (beatsLeft == 2) bombSpr.color = k.YELLOW;
+			else if (beatsLeft == 1) bombSpr.color = k.RED.lerp(k.YELLOW, 0.5);
+			else if (beatsLeft == 0) bombSpr.color = k.RED;
+		}
+		else {
+			destroy();
+			// TODO: fix this kaboom parent
+			const kaboom = k.addKaboom(bombSpr.pos);
+			kaboom.parent = wareApp.WareScene;
+			wareApp.pausableCtx.play("explosion");
+		}
+	}
+
 	return {
+		bomb,
+		/** Will start a conductor which will explode the bomb in 4 beats (tick, tick, tick, BOOM!) */
+		tick,
+		lit(bpm = 140) {
+			conductor = k.conductor(bpm);
+			conductor.onBeat((beat, beatTime) => {
+				tick();
+				if (beat == 4) destroy();
+			});
+		},
 		destroy,
 		turnOff: () => {
 			fuse.fadeOut(0.5 / 3).onEnd(() => fuse.destroy());
 		},
-		tick: () => {
-			if (!bomb.exists()) return;
-			if (beatsLeft > 0) {
-				beatsLeft--;
-				const tweenMult = 2 - beatsLeft + 1; // goes from 1 to 3;
-				k.tween(k.vec2(1).add(0.33 * tweenMult), k.vec2(1).add((0.33 * tweenMult) / 2), 0.5 / 3, (p) => bomb.scale = p, k.easings.easeOutQuint);
-				k.play("@tick", { detune: 25 * 2 - beatsLeft });
-				if (beatsLeft == 2) bomb.color = k.YELLOW;
-				else if (beatsLeft == 1) bomb.color = k.RED.lerp(k.YELLOW, 0.5);
-				else if (beatsLeft == 0) bomb.color = k.RED;
-			}
-			else {
-				destroy();
-				k.addKaboom(bomb.pos);
-				k.play("@explosion");
-			}
-		},
-		get hasExploded() {
-			return beatsLeft == 0;
-		},
 		beatsLeft,
 	};
 }
+
+/** Type used for the return type of addBomb */
+export type WareBomb = {
+	turnOff(): void;
+	lit(bpm: number): void;
+	tick(): void;
+	destroy(): void;
+	beatsLeft: number;
+	bomb: GameObj;
+};
 
 type Sampler<T> = T | (() => T);
 
@@ -180,7 +205,7 @@ export type ConfettiOpt = {
 	obj?: () => { draw: () => void; };
 };
 
-function makeConfetti(opt?: ConfettiOpt) {
+function addConfetti(opt?: ConfettiOpt) {
 	const DEF_COUNT = 80;
 	const DEF_GRAVITY = 800;
 	const DEF_AIR_DRAG = 0.9;
@@ -194,7 +219,7 @@ function makeConfetti(opt?: ConfettiOpt) {
 
 	opt = opt ?? {};
 
-	const confetti = k.make();
+	const confetti = k.add([]);
 	// @ts-ignore
 	const sample = <T>(s: Sampler<T>): T => typeof s === "function" ? s() : s;
 	for (let i = 0; i < (opt.count ?? DEF_COUNT); i++) {
@@ -235,15 +260,16 @@ function makeConfetti(opt?: ConfettiOpt) {
 			p.scale.x = k.wave(-1, 1, k.time() * spin);
 		});
 	}
+
 	return confetti;
 }
 
 export function wareObjectsPlugin(k: KAPLAYCtx) {
 	return {
+		addBomb,
 		addPrompt,
 		addInputPrompt,
-		addBomb,
-		makeConfetti,
+		addConfetti,
 	};
 }
 

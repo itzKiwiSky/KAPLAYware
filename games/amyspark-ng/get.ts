@@ -1,12 +1,11 @@
 import { assets } from "@kaplayjs/crew";
 import { Vec2 } from "kaplay";
 import { Minigame } from "../../src/game/types";
-import mulfokColors from "../../src/plugins/colors";
 
 const getGame: Minigame = {
 	prompt: "get",
 	author: "amyspark-ng",
-	rgb: mulfokColors.GREEN,
+	rgb: (ctx) => ctx.mulfok.GREEN,
 	duration: (ctx) => ctx.difficulty == 3 ? 3.5 : 4,
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {
@@ -20,15 +19,14 @@ const getGame: Minigame = {
 	start(ctx) {
 		ctx.speed = 1.6;
 		ctx.difficulty = 3;
-		const game = ctx.make();
 		const SPEED = 300 * ctx.speed;
-		game.add([ctx.sprite("grass")]);
+		ctx.add([ctx.sprite("grass")]);
 
 		let appleOnFloor = false;
 		let appleFinishedMoving = false;
 
 		const getApplePos = () => {
-			const randAngle = ctx.rand(25, 230); // not greater than 270 so it doesn't fall on the tree
+			const randAngle = ctx.rand(2, 4); // i don't get this angle system
 			const magnitude = ctx.difficulty == 1
 				? 150
 				: ctx.difficulty == 2
@@ -42,7 +40,7 @@ const getGame: Minigame = {
 			return ctx.vec2(X, Y);
 		};
 
-		const bean = game.add([
+		const bean = ctx.add([
 			ctx.sprite("@bean"),
 			ctx.pos(getApplePos()),
 			ctx.area(),
@@ -52,7 +50,7 @@ const getGame: Minigame = {
 			ctx.z(5),
 		]);
 
-		const trunk = game.add([
+		const trunk = ctx.add([
 			ctx.sprite("trunk"),
 			ctx.anchor("bot"),
 			ctx.scale(),
@@ -61,7 +59,7 @@ const getGame: Minigame = {
 		]);
 
 		let bushShake = 0;
-		const bush = game.add([
+		const bush = ctx.add([
 			ctx.sprite("bush"),
 			ctx.anchor("center"),
 			ctx.scale(),
@@ -80,7 +78,7 @@ const getGame: Minigame = {
 			},
 		]);
 
-		const apple = game.add([
+		const apple = ctx.add([
 			ctx.sprite("@apple"),
 			ctx.pos(bush.screenPos() as Vec2),
 			ctx.area({ scale: ctx.vec2(0.5) }),
@@ -99,8 +97,8 @@ const getGame: Minigame = {
 			bean.pos.y = ctx.clamp(bean.pos.y, -bean.height / 2, ctx.height() + bean.height / 2);
 
 			// this is to prevent bean going faster on diagonal movement
-			movement.x = ctx.isButtonDown("left") ? -1 : ctx.isButtonDown("right") ? 1 : 0;
-			movement.y = ctx.isButtonDown("up") ? -1 : ctx.isButtonDown("down") ? 1 : 0;
+			movement.x = ctx.isInputButtonDown("left") ? -1 : ctx.isInputButtonDown("right") ? 1 : 0;
+			movement.y = ctx.isInputButtonDown("up") ? -1 : ctx.isInputButtonDown("down") ? 1 : 0;
 
 			// this just lerps a movement to the unit, which rounds that 1.4 to 1 :thumbsup:
 			lerpMovement = ctx.lerp(lerpMovement, movement.unit().scale(SPEED), 0.75);
@@ -113,11 +111,13 @@ const getGame: Minigame = {
 		bean.onCollide("apple", () => {
 			if (!appleFinishedMoving) return;
 			apple.destroy();
-			if (!ctx.hasWon()) ctx.win();
+			ctx.win();
 			ctx.tween(ctx.vec2(3), ctx.vec2(1.5), 0.35 / ctx.speed, (p) => bean.scale = p, ctx.easings.easeOutQuint);
-			ctx.play("crunch", { detune: ctx.rand(-50, 50) }).onEnd(() => {
-				ctx.tween(ctx.vec2(1.6), ctx.vec2(1.5), 0.25 / ctx.speed, (p) => bean.scale = p, ctx.easings.easeOutQuint);
-				ctx.burp({ detune: ctx.rand(-50 / ctx.speed, 50 * ctx.speed) }).onEnd(() => {
+			const crunch = ctx.play("crunch", { detune: ctx.rand(-50, 50) });
+			ctx.wait(crunch.duration(), () => {
+				ctx.tween(ctx.vec2(1), ctx.vec2(1.5), 0.25 / ctx.speed, (p) => bean.scale = p, ctx.easings.easeOutQuint);
+				const burp = ctx.burp({ detune: ctx.rand(-50 / ctx.speed, 50 * ctx.speed) });
+				ctx.wait(burp.duration(), () => {
 					ctx.wait(0.1 / ctx.speed, () => {
 						ctx.finish();
 					});
@@ -125,12 +125,12 @@ const getGame: Minigame = {
 			});
 		});
 
-		game.onDraw(() => {
-			if (appleOnFloor && !ctx.hasWon()) {
+		ctx.onDraw(() => {
+			if (appleOnFloor && !ctx.winState()) {
 				ctx.drawCircle({
 					radius: 10,
 					scale: ctx.vec2(2, 1),
-					color: mulfokColors.VOID_VIOLET,
+					color: ctx.mulfok.VOID_VIOLET,
 					opacity: 0.4,
 					pos: apple.pos.add(10, 0),
 				});
@@ -140,7 +140,7 @@ const getGame: Minigame = {
 			ctx.drawCircle({
 				radius: 20,
 				scale: ctx.vec2(2, 1),
-				color: mulfokColors.VOID_VIOLET,
+				color: ctx.mulfok.VOID_VIOLET,
 				opacity: 0.4,
 				pos: bean.pos.add(25, -20),
 			});
@@ -158,14 +158,12 @@ const getGame: Minigame = {
 			if (apple.exists()) {
 				bean.sprite = "@beant";
 				apple.destroy();
-				const badapple = game.add([ctx.sprite("badapple"), ctx.scale(), ctx.pos(apple.pos.sub(15, 0)), ctx.anchor("center")]);
+				const badapple = ctx.add([ctx.sprite("badapple"), ctx.scale(), ctx.pos(apple.pos.sub(15, 0)), ctx.anchor("center")]);
 				ctx.tween(ctx.vec2(1.5), ctx.vec2(1), 0.15 / ctx.speed, (p) => badapple.scale = p, ctx.easings.easeOutQuint);
 				ctx.lose();
 				ctx.wait(0.5 / ctx.speed, () => ctx.finish());
 			}
 		});
-
-		return game;
 	},
 };
 

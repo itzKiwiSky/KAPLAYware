@@ -1,5 +1,6 @@
 import { assets } from "@kaplayjs/crew";
 import { Minigame } from "../../src/game/types";
+import { GameObj, Vec2 } from "kaplay";
 
 const newGame: Minigame = {
 	prompt: "chase",
@@ -10,8 +11,6 @@ const newGame: Minigame = {
 	load(ctx) {
 	},
 	start(ctx) {
-		const game = ctx.make();
-
 		const moveRate = 0.5 / ctx.speed;
 		let level;
 
@@ -65,7 +64,7 @@ const newGame: Minigame = {
 		};
 
 		class Grid {
-			grid = [];
+			grid = [] as GameObj[][];
 			w = 12;
 			h = 9;
 
@@ -77,7 +76,7 @@ const newGame: Minigame = {
 							this.grid[r][c] == null;
 						}
 						else {
-							this.grid[r][c] = game.add([
+							this.grid[r][c] = ctx.add([
 								ctx.pos(this.getWorldPos(c, r)),
 								ctx.sprite("@steel"),
 							]);
@@ -127,13 +126,13 @@ const newGame: Minigame = {
 
 		const grid = new Grid();
 
-		const kat = game.add([
+		const kat = ctx.add([
 			ctx.sprite("@kat"),
 			ctx.pos(grid.getWorldPos(1, 7)),
 			ctx.area(),
 		]);
 
-		const karat = game.add([
+		const karat = ctx.add([
 			ctx.sprite("@karat"),
 			ctx.pos(grid.getWorldPos(8, 3).add(16, 16)),
 			ctx.area(),
@@ -141,28 +140,28 @@ const newGame: Minigame = {
 			"karat",
 		]);
 
-		ctx.onButtonPress("left", () => {
+		ctx.onInputButtonPress("left", () => {
 			var cellCoords = grid.getCellCoords(kat.pos);
 			var moveCoords = ctx.vec2(cellCoords.x - 1, cellCoords.y);
 
 			moveTo(kat, moveCoords);
 		});
 
-		ctx.onButtonPress("right", () => {
+		ctx.onInputButtonPress("right", () => {
 			var cellCoords = grid.getCellCoords(kat.pos);
 			var moveCoords = ctx.vec2(cellCoords.x + 1, cellCoords.y);
 
 			moveTo(kat, moveCoords);
 		});
 
-		ctx.onButtonPress("up", () => {
+		ctx.onInputButtonPress("up", () => {
 			var cellCoords = grid.getCellCoords(kat.pos);
 			var moveCoords = ctx.vec2(cellCoords.x, cellCoords.y - 1);
 
 			moveTo(kat, moveCoords);
 		});
 
-		ctx.onButtonPress("down", () => {
+		ctx.onInputButtonPress("down", () => {
 			var cellCoords = grid.getCellCoords(kat.pos);
 			var moveCoords = ctx.vec2(cellCoords.x, cellCoords.y + 1);
 
@@ -170,7 +169,7 @@ const newGame: Minigame = {
 		});
 
 		let karatMoveLoop = ctx.loop(moveRate, () => {
-			let availableDirections = [];
+			let availableDirections = [] as Vec2[];
 			var cellCoords = grid.getCellCoords(karat.pos);
 			for (const [k, dir] of Object.entries(directions)) {
 				var dc = dir.add(cellCoords.x, cellCoords.y);
@@ -203,8 +202,6 @@ const newGame: Minigame = {
 				ctx.wait(0.5, () => ctx.finish());
 			}
 		});
-
-		return game;
 	},
 };
 

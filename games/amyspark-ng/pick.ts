@@ -15,9 +15,7 @@ const pickGame: Minigame = {
 		ctx.loadSprite("nosebot", "sprites/pick/nosebot.png", { sliceY: 1, sliceX: 3 });
 	},
 	start(ctx) {
-		const game = ctx.make();
-
-		const hand = game.add([
+		const hand = ctx.add([
 			ctx.sprite("hand"),
 			ctx.anchor("bot"),
 			ctx.pos(ctx.center().x, ctx.height()),
@@ -53,14 +51,15 @@ const pickGame: Minigame = {
 			pinkyFingerArea.pos.x = hand.width / 2 - 40;
 		}
 
-		const nosebot = game.add([
+		const nosebot = ctx.add([
 			ctx.sprite("nosebot"),
 			ctx.pos(ctx.center().x + 1, 188),
 			ctx.anchor("top"),
 			ctx.z(0),
+			ctx.area(), // FIXME: Remove when area() fix
 		]);
 
-		const nosetop = game.add([
+		const nosetop = ctx.add([
 			ctx.sprite("nosetop"),
 			ctx.pos(ctx.center().x, 0),
 			ctx.anchor("top"),
@@ -74,11 +73,8 @@ const pickGame: Minigame = {
 
 		let moving = true;
 		let pressedAction = false;
-		game.onUpdate(() => {
+		ctx.onUpdate(() => {
 			if (!moving) return;
-
-			// nosebot.pos.y = ctx.mousePos().y;
-			// ctx.debug.log(nosebot.pos.y);
 
 			const x = ctx.wave(hand.width, ctx.width() - hand.width, ctx.time() * ctx.speed);
 			hand.pos.x = ctx.lerp(hand.pos.x, x, 0.5);
@@ -86,7 +82,7 @@ const pickGame: Minigame = {
 
 		let boogersLeft = ctx.difficulty < 3 ? 1 : 2;
 		let collidedWithMiddle = false;
-		ctx.onButtonPress("action", () => {
+		ctx.onInputButtonPress("action", () => {
 			if (pressedAction) return;
 			pressedAction = true;
 			moving = false;
@@ -116,7 +112,7 @@ const pickGame: Minigame = {
 
 					booger.frame = ctx.randi(0, 2);
 
-					const trail = game.add([
+					const trail = ctx.add([
 						ctx.sprite("booger"),
 						ctx.pos(nosebot.toWorld(boogernostril.pos).x + 25, nosebot.toWorld(boogernostril.pos).y),
 						ctx.z(hand.z),
@@ -167,8 +163,6 @@ const pickGame: Minigame = {
 				});
 			}
 		});
-
-		return game;
 	},
 };
 

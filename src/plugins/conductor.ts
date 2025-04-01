@@ -32,7 +32,7 @@ export function conductorPlug(k: KAPLAYCtx) {
 				const oldBeat = Math.floor(currentBeat);
 				currentBeat = Math.floor(beatTime);
 				if (currentBeat != oldBeat) {
-					beatHitEv.trigger(currentBeat);
+					beatHitEv.trigger(currentBeat, beatTime);
 				}
 			});
 
@@ -42,12 +42,12 @@ export function conductorPlug(k: KAPLAYCtx) {
 			}
 
 			if (sound) {
-				sound.onEnd(() => this.destroy());
+				sound.onEnd(() => destroy());
 			}
 
 			return {
 				/** Will run every beat of your conductor */
-				onBeat(action: (beat: number) => void) {
+				onBeat(action: (beat: number, beatTime: number) => void) {
 					return beatHitEv.add(action);
 				},
 				/** Destroys the current instance (won't work anymore) */

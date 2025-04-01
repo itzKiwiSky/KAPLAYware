@@ -1,27 +1,11 @@
 import k from "../../src/engine";
 import { Minigame } from "../../src/game/types";
 
-function mapWithKeyframes(progress: number, keyframes: Record<number, number>) {
-	const keys = Object.keys(keyframes).map(Number).sort((a, b) => a - b);
-
-	if (progress <= keys[0]) return keyframes[keys[0]];
-	if (progress >= keys[keys.length - 1]) return keyframes[keys[keys.length - 1]];
-
-	for (let i = 0; i < keys.length - 1; i++) {
-		const k1 = keys[i], k2 = keys[i + 1];
-
-		if (progress >= k1 && progress <= k2) {
-			const t = (progress - k1) / (k2 - k1);
-			return keyframes[k1] + t * (keyframes[k2] - keyframes[k1]);
-		}
-	}
-}
-
 const strikeGame: Minigame = {
 	prompt: "strike",
 	author: "amyspark-ng",
 	rgb: k.WHITE,
-	input: { cursor: { hide: true } },
+	input: "mouse (hidden)",
 	duration: 5,
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {
@@ -33,8 +17,6 @@ const strikeGame: Minigame = {
 		ctx.loadSound("ballhit", "sounds/ballhit.mp3");
 	},
 	start(ctx) {
-		const game = ctx.make();
-
 		let bolaZ = 0;
 		let ballDirection = -1;
 		let catLastHit = true;
@@ -42,21 +24,21 @@ const strikeGame: Minigame = {
 		ctx.play("ballhit", { detune: ctx.rand(50, 100) });
 		let timeout = false;
 
-		const gato = game.add([
+		const gato = ctx.add([
 			ctx.sprite("gato"),
 			ctx.anchor("bot"),
 			ctx.pos(ctx.center().x, ctx.height()),
 			ctx.scale(),
 		]);
 
-		const gatoracket = game.add([
+		const gatoracket = ctx.add([
 			ctx.sprite("racket"),
 			ctx.anchor("center"),
 			ctx.scale(1 / 3),
 			ctx.pos(gato.pos.x, gato.pos.y - 100),
 		]);
 
-		const markbola = game.add([
+		const markbola = ctx.add([
 			ctx.sprite("markbola"),
 			ctx.pos(),
 			ctx.rotate(0),
@@ -65,7 +47,7 @@ const strikeGame: Minigame = {
 			ctx.area({ scale: ctx.vec2(0.8) }),
 		]);
 
-		const racket = game.add([
+		const racket = ctx.add([
 			ctx.sprite("racket"),
 			ctx.anchor("center"),
 			ctx.pos(ctx.mousePos()),
@@ -75,7 +57,7 @@ const strikeGame: Minigame = {
 		let didntHitBall = false;
 		let gatoRacketDirection = 0; // -1 left 0 gato 1 right;
 		const mapBounce = (z: number, minHeight: number, maxHeight: number) => minHeight + (maxHeight - minHeight) * 4 * z * (1 - z); // la parabola
-		game.onUpdate(() => {
+		ctx.onUpdate(() => {
 			racket.pos = ctx.mousePos();
 			racket.scale.x = ctx.lerp(racket.scale.x, ctx.mousePos().x <= ctx.center().x ? -1 : 1, 0.25);
 
@@ -134,8 +116,6 @@ const strikeGame: Minigame = {
 				});
 			}
 		});
-
-		return game;
 	},
 };
 

@@ -1,13 +1,12 @@
 import { Minigame } from "../../src/game/types";
-import mulfokColors from "../../src/plugins/colors";
 import { curDraggin } from "../../src/plugins/drag";
 
 const uploadGame: Minigame = {
 	prompt: "upload",
 	author: "amyspark-ng",
-	rgb: mulfokColors.DARK_BEANT_BLUE,
+	rgb: (ctx) => ctx.mulfok.DARK_BEANT_BLUE,
 	duration: 4,
-	input: { cursor: { hide: false } },
+	input: "mouse",
 	urlPrefix: "games/amyspark-ng/assets/sprites/upload/",
 	load(ctx) {
 		ctx.loadSprite("window", "window.png");
@@ -16,13 +15,12 @@ const uploadGame: Minigame = {
 		ctx.loadSprite("banned", "banned.png");
 	},
 	start(ctx) {
-		const game = ctx.make();
 		let hasUploaded = false;
 
 		function addFile(spr: string) {
 			const randFilePos = () => ctx.vec2(ctx.rand(20, 50), ctx.rand(10, ctx.height() - 30));
 
-			const file = game.add([
+			const file = ctx.add([
 				ctx.sprite(`@${spr}`),
 				ctx.pos(randFilePos()),
 				ctx.scale(),
@@ -39,7 +37,7 @@ const uploadGame: Minigame = {
 			file.onClick(() => {
 				if (hasUploaded) return;
 
-				const ghostFile = game.add([
+				const ghostFile = ctx.add([
 					ctx.sprite(file.sprite),
 					ctx.opacity(0.5),
 					ctx.drag(),
@@ -55,7 +53,7 @@ const uploadGame: Minigame = {
 				]);
 				ghostFile.pick();
 
-				ctx.onMouseRelease(() => ghostFile.trigger("dragEnd"));
+				ctx.onMouseRelease(() => ghostFile.drop());
 				ghostFile.onDragEnd(() => {
 					if (!ghostFile.dragging || hasUploaded) return;
 
@@ -84,11 +82,11 @@ const uploadGame: Minigame = {
 			return file;
 		}
 
-		const desktop = game.add([
+		const desktop = ctx.add([
 			ctx.sprite("window"),
 		]);
 
-		const dropArea = game.add([
+		const dropArea = ctx.add([
 			ctx.rect(415, 482),
 			ctx.area(),
 			ctx.color(ctx.BLACK),
@@ -97,7 +95,7 @@ const uploadGame: Minigame = {
 			"ignorepoint",
 		]);
 
-		game.onUpdate(() => {
+		ctx.onUpdate(() => {
 			if (dropArea.isHovering() && !hasUploaded && curDraggin != null) dropArea.opacity = ctx.lerp(dropArea.opacity, 0.5, 0.5);
 			else dropArea.opacity = ctx.lerp(dropArea.opacity, 0, 0.5);
 		});
@@ -114,8 +112,6 @@ const uploadGame: Minigame = {
 				});
 			}
 		});
-
-		return game;
 	},
 };
 
