@@ -16,6 +16,7 @@ const tapGame: Minigame = {
 		ctx.loadSound("monkey", "sounds/monkey.mp3");
 		ctx.loadSound("sadmonkey", "sounds/sadmonkey.mp3");
 		ctx.loadSound("buzzer", "sounds/buzzer.mp3");
+		ctx.loadSound("tap", "sounds/tap.wav");
 	},
 	start(ctx) {
 		const screenframe = ctx.add([ctx.sprite("screenframe")]);
@@ -39,7 +40,7 @@ const tapGame: Minigame = {
 			for (let row = 0; row < rows; row++) {
 				for (let col = 0; col < cols; col++) {
 					const v = ctx.vec2(row * 90, col * 80);
-					v.x += 70;
+					v.x += 75;
 					v.y += 80;
 					grid.push(v);
 				}
@@ -70,8 +71,9 @@ const tapGame: Minigame = {
 
 			const num = i + 1;
 			const number = ctx.add([
-				ctx.rect(50, 60, { fill: false }),
+				ctx.rect(50, 60),
 				ctx.area(),
+				ctx.opacity(0),
 				ctx.anchor("center"),
 				ctx.pos(cellPos),
 				ctx.z(0),
@@ -80,6 +82,39 @@ const tapGame: Minigame = {
 					n: num,
 				},
 			]);
+
+			number.onUpdate(() => {
+				if (number.isHovering()) number.opacity = ctx.lerp(number.opacity, 0.1, 0.5);
+				else number.opacity = ctx.lerp(number.opacity, 0, 0.5);
+			});
+
+			number.onClick(() => {
+				if (lost) return;
+				if (number.n == numbers[numbersHit.length]) {
+					numbersHit.push(number.n);
+					number.destroy();
+					ctx.play("tap", { detune: ctx.map(numbersHit.length, 0, numbers.length, 0, 100) });
+					const flash = ctx.add([ctx.rect(50, 60), ctx.opacity(), ctx.anchor("center"), ctx.pos(number.pos)]);
+					flash.fadeOut(0.35 / ctx.speed, ctx.easings.easeOutQuint).onEnd(() => {
+						flash.destroy();
+					});
+				}
+				else monkeyWrong();
+
+				if (numbersHit.length >= numbers.length) {
+					ctx.play("monkey", { detune: ctx.rand(50, 100) });
+					ctx.tween(ctx.mulfok.BEAN_GREEN, ctx.mulfok.VOID_PURPLE, 0.5 / ctx.speed, (p) => screen.color = p, ctx.easings.easeOutQuint);
+					ctx.win();
+					ctx.wait(1 / ctx.speed, () => ctx.finish());
+					const banana = ctx.add([
+						ctx.sprite("bananas"),
+						ctx.anchor("center"),
+						ctx.pos(ctx.center().x, -500),
+					]);
+
+					ctx.tween(-200, ctx.center().y, 0.5 / ctx.speed, (p) => banana.pos.y = p, ctx.easings.easeOutBounce);
+				}
+			});
 
 			number.onDraw(() => {
 				ctx.drawText({
@@ -90,37 +125,6 @@ const tapGame: Minigame = {
 				});
 			});
 		}
-
-		ctx.onInputButtonPress("click", () => {
-			for (const number of ctx.get("number").reverse()) {
-				if (number.isHovering()) {
-					if (lost) return;
-					if (number.n == numbers[numbersHit.length]) {
-						numbersHit.push(number.n);
-						number.destroy();
-						const flash = ctx.add([ctx.rect(50, 60), ctx.opacity(), ctx.anchor("center"), ctx.pos(number.pos)]);
-						flash.fadeOut(0.35 / ctx.speed, ctx.easings.easeOutQuint).onEnd(() => {
-							flash.destroy();
-						});
-					}
-					else monkeyWrong();
-
-					if (numbersHit.length >= numbers.length) {
-						ctx.play("monkey", { detune: ctx.rand(50, 100) });
-						ctx.tween(ctx.mulfok.BEAN_GREEN, ctx.mulfok.VOID_PURPLE, 0.5 / ctx.speed, (p) => screen.color = p, ctx.easings.easeOutQuint);
-						ctx.win();
-						ctx.wait(1 / ctx.speed, () => ctx.finish());
-						const banana = ctx.add([
-							ctx.sprite("bananas"),
-							ctx.anchor("center"),
-							ctx.pos(ctx.center().x, -500),
-						]);
-
-						ctx.tween(-200, ctx.center().y, 0.5 / ctx.speed, (p) => banana.pos.y = p, ctx.easings.easeOutQuint);
-					}
-				}
-			}
-		});
 
 		ctx.onTimeout(() => {
 			if (numbersHit.length < numbers.length + 1) monkeyWrong();

@@ -5,7 +5,7 @@ const uploadGame: Minigame = {
 	prompt: "upload",
 	author: "amyspark-ng",
 	rgb: (ctx) => ctx.mulfok.DARK_BLUE,
-	duration: () => undefined,
+	duration: 4,
 	input: "mouse",
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {
