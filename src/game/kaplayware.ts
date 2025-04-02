@@ -24,7 +24,7 @@ export function createWareApp() {
 		gamePaused: false,
 		inputEnabled: false,
 		drawEvents: [] as KEventController[],
-		updateEvents: [] as KEventController[],
+		generalEvents: [] as KEventController[],
 		inputEvents: [] as KEventController[],
 		timerEvents: [] as TimerController[],
 		sounds: [] as AudioPlay[],
@@ -45,20 +45,20 @@ export function createWareApp() {
 		conductor: k.conductor(140),
 		minigameHistory: [] as string[],
 		winState: undefined as boolean | undefined,
-		addDrawEvent(ev: KEventController) {
-			this.updateEvents.push(ev);
-			return ev;
-		},
 
-		addUpdateEvent(ev: KEventController) {
-			this.updateEvents.push(ev);
+		addGeneralEvent(ev: KEventController) {
+			this.generalEvents.push(ev);
 			return ev;
 		},
-		clearUpdateEvents() {
-			for (let i = this.updateEvents.length - 1; i >= 0; i--) {
-				this.updateEvents[i].cancel();
-				this.updateEvents.pop();
+		clearGeneralEvents() {
+			for (let i = this.generalEvents.length - 1; i >= 0; i--) {
+				this.generalEvents[i].cancel();
+				this.generalEvents.pop();
 			}
+		},
+		addDrawEvent(ev: KEventController) {
+			this.drawEvents.push(ev);
+			return ev;
 		},
 		clearDrawEvents() {
 			for (let i = this.drawEvents.length - 1; i >= 0; i--) {
@@ -158,9 +158,13 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 					return wareApp.currentScene.add(...args);
 				};
 			}
-			else if (api == "onUpdate") {
+			// TODO: Rewrite this stupid system
+			// Try to put as many events in a single array, why have timer and, draw and general events sepparated? I forgot
+			// Could check if return type of gameCtx[api] == KEventController or TimerController, if so push to updates array
+			else if (api == "onUpdate" || api == "onCollide" || api == "onCollideEnd" || api == "onCollideUpdate") {
 				gameCtx[api] = (...args: any[]) => {
-					return wareApp.addUpdateEvent(k.onUpdate(...args as unknown as [any]));
+					// @ts-ignore
+					return wareApp.addGeneralEvent(k[api](...args as unknown as [any]));
 				};
 			}
 			else if (api == "onDraw") {
@@ -397,7 +401,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 				wareApp.clearSounds();
 				wareApp.clearTimers();
 				wareApp.clearInput();
-				wareApp.clearUpdateEvents();
+				wareApp.clearGeneralEvents();
 				wareApp.onTimeOutEvents.clear();
 				wareApp.gameRunning = false;
 				wareApp.canPlaySounds = false;
@@ -676,7 +680,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 
 		wareApp.inputEvents.forEach((ev) => ev.paused = !wareApp.inputEnabled || !wareApp.gameRunning);
 		wareApp.timerEvents.forEach((ev) => ev.paused = !wareApp.gameRunning || wareApp.gamePaused);
-		wareApp.updateEvents.forEach((ev) => ev.paused = !wareApp.gameRunning || wareApp.gamePaused);
+		wareApp.generalEvents.forEach((ev) => ev.paused = !wareApp.gameRunning || wareApp.gamePaused);
 		wareApp.pausedSounds.forEach((sound) => sound.paused = true);
 		wareApp.pausableSounds.forEach((sound) => sound.paused = wareApp.gamePaused);
 		wareApp.pausableTimers.forEach((timer) => timer.paused = wareApp.gamePaused);
