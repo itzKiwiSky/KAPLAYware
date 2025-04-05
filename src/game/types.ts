@@ -1,8 +1,9 @@
 import { Asset, Color, GameObj, KAPLAYCtx, KEventController, SpriteComp, SpriteCompOpt, SpriteData, TweenController, Vec2 } from "kaplay";
 import k from "../engine";
 import { ConfettiOpt } from "../plugins/wareobjects";
-import { gameAPIs, loadAPIs } from "./api";
+import { gameAPIs } from "./api";
 import { CustomSprite } from "./kaplayware";
+import { LoadCtx } from "./context";
 
 /** A button */
 export type InputButton =
@@ -12,9 +13,6 @@ export type InputButton =
 	| "up"
 	| "down"
 	| "click";
-
-/** The allowed load functions */
-export type LoadCtx = Pick<KAPLAYCtx, typeof loadAPIs[number]>;
 
 /** The specific API for minigames */
 export type MinigameAPI = {
@@ -92,7 +90,7 @@ export type MinigameAPI = {
 	 */
 	sprite(spr: CustomSprite<string> | SpriteData | Asset<SpriteData>, opt?: SpriteCompOpt): SpriteComp & {
 		// TODO: Find a way to override the typing of return
-		sprite: string;
+		sprite: CustomSprite<string>;
 	};
 	/** Register an event that runs once when timer runs out. */
 	onTimeout: (action: () => void) => KEventController;

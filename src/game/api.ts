@@ -1,7 +1,4 @@
-import { AudioPlayOpt, DrawSpriteOpt, KAPLAYCtx } from "kaplay";
-import { createWareApp } from "./kaplayware";
-import { Minigame } from "./types";
-import { getGameID } from "./utils";
+export const pauseAPIs = ["tween", "wait", "loop", "play"] as const;
 
 export const loadAPIs = [
 	"loadRoot",
@@ -146,3 +143,6 @@ export const gameAPIs = [
 	"get",
 	"mulfok",
 ] as const;
+
+export const generalEventControllers = ["onUpdate", "onCollide", "onCollideUpdate", "onCollideEnd"] as const;
+export const inputEventControllers = [];

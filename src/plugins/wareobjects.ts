@@ -1,7 +1,6 @@
 import { Color, GameObj, KAPLAYCtx, Vec2 } from "kaplay";
 import k from "../engine";
 import { getGameInput } from "../game/utils";
-import { createPausableCtx, PausableCtx } from "../game/transitions";
 import { createWareApp } from "../game/kaplayware";
 
 function addPrompt(prompt: string) {
@@ -66,10 +65,19 @@ function addInputPrompt(input: ReturnType<typeof getGameInput>) {
 	return inputPrompt;
 }
 
+export type WareBomb = GameObj<{ tick(): void; beatsLeft: number; turnOff(): void; lit(bpm?: number): void; }>;
+
 function addBomb(wareApp: ReturnType<typeof createWareApp>): WareBomb {
 	const BOMB_POS = k.vec2(40, k.height() - 40);
 
-	const bomb = wareApp.WareScene.add([]);
+	const bomb = wareApp.WareScene.add([{
+		tick,
+		get beatsLeft() {
+			return beatsLeft;
+		},
+		turnOff,
+		lit,
+	}]);
 	let conductor: ReturnType<typeof k.conductor> = null;
 
 	const cord = bomb.add([
@@ -92,7 +100,7 @@ function addBomb(wareApp: ReturnType<typeof createWareApp>): WareBomb {
 
 	const fuse = bomb.add([
 		k.sprite("bomb-fuse"),
-		k.pos(cordtip.pos),
+		k.pos(cord.pos.add(cord.width, 50)),
 		k.anchor("center"),
 		k.scale(),
 		k.opacity(),
@@ -155,39 +163,27 @@ function addBomb(wareApp: ReturnType<typeof createWareApp>): WareBomb {
 			destroy();
 			// TODO: fix this kaboom parent
 			const kaboom = k.addKaboom(bombSpr.pos);
-			kaboom.parent = wareApp.WareScene;
+			kaboom.parent = wareApp.gameBox;
 			wareApp.pausableCtx.play("explosion");
 		}
 	}
 
-	return {
-		bomb,
-		/** Will start a conductor which will explode the bomb in 4 beats (tick, tick, tick, BOOM!) */
-		tick,
-		lit(bpm = 140) {
-			conductor = k.conductor(bpm);
-			conductor.onBeat((beat, beatTime) => {
-				tick();
-				if (beat == 4) destroy();
-			});
-		},
-		destroy,
-		turnOff: () => {
-			fuse.fadeOut(0.5 / 3).onEnd(() => fuse.destroy());
-		},
-		beatsLeft,
-	};
-}
+	/** Will start a conductor which will explode the bomb in 4 beats (tick, tick, tick, BOOM!) */
+	function lit(bpm = 140) {
+		conductor = k.conductor(bpm);
+		conductor.onBeat((beat, beatTime) => {
+			tick();
+			if (beat == 4) destroy();
+		});
+	}
 
-/** Type used for the return type of addBomb */
-export type WareBomb = {
-	turnOff(): void;
-	lit(bpm: number): void;
-	tick(): void;
-	destroy(): void;
-	beatsLeft: number;
-	bomb: GameObj;
-};
+	function turnOff() {
+		conductor.destroy();
+		fuse.fadeOut(0.5 / 3).onEnd(() => fuse.destroy());
+	}
+
+	return bomb;
+}
 
 type Sampler<T> = T | (() => T);
 

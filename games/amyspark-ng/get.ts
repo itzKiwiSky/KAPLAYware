@@ -18,7 +18,6 @@ const getGame: Minigame = {
 	},
 	start(ctx) {
 		ctx.speed = 1.6;
-		ctx.difficulty = 3;
 		const SPEED = 300 * ctx.speed;
 		ctx.add([ctx.sprite("grass")]);
 

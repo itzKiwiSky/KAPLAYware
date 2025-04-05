@@ -15,7 +15,6 @@ const uploadGame: Minigame = {
 		ctx.loadSound("notification", "sounds/notification.mp3");
 	},
 	start(ctx) {
-		ctx.difficulty = 3;
 		let dragThingOp = 0;
 		let curDragging: any = null;
 
@@ -39,19 +38,20 @@ const uploadGame: Minigame = {
 		});
 
 		window.on("drop", (good) => {
+			if (good) ctx.win();
+			else ctx.lose();
+
 			ctx.wait(1 / ctx.speed, () => {
 				if (good) {
 					window.frame = ctx.randi(2, 4);
 					ctx.play("notification", { detune: ctx.rand(0, 50) });
-					ctx.win();
-					ctx.wait(0.5 / ctx.speed, () => ctx.finish());
 				}
 				else {
 					window.frame = 1;
 					ctx.play("notification", { detune: ctx.rand(-150, -50) });
-					ctx.lose();
-					ctx.wait(0.5 / ctx.speed, () => ctx.finish());
 				}
+
+				ctx.wait(0.5 / ctx.speed, () => ctx.finish());
 			});
 		});
 

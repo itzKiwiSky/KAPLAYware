@@ -1,12 +1,12 @@
 import k from "../engine";
 import { assets } from "@kaplayjs/crew";
-import { Asset, AudioPlay, AudioPlayOpt, Color, DrawSpriteOpt, GameObj, KEventController, Key, SpriteCompOpt, SpriteData, TimerController, Uniform, Vec2 } from "kaplay";
+import { AudioPlay, GameObj, KEventController, PosComp, RotateComp, ScaleComp, TimerController } from "kaplay";
 import cursor from "../plugins/cursor";
-import { coolPrompt, gameHidesMouse, gameUsesMouse, getGameID, getGameInput } from "./utils";
-import { gameAPIs } from "./api";
-import { createPausableCtx, PausableCtx, runTransition, TransitionState } from "./transitions";
-import { InputButton, KAPLAYwareOpts, Minigame, MinigameAPI, MinigameCtx } from "./types";
+import { coolPrompt, gameHidesMouse, getGameID, getGameInput } from "./utils";
+import { runTransition, TransitionState } from "./transitions";
+import { KAPLAYwareOpts, Minigame, MinigameCtx } from "./types";
 import games from "./games";
+import { createGameCtx, createPauseCtx, PauseCtx } from "./context";
 import { WareBomb } from "../plugins/wareobjects";
 
 type Friend = keyof typeof assets | `${keyof typeof assets}-o`;
@@ -14,9 +14,15 @@ type AtFriend = `@${Friend}`;
 export type CustomSprite<T extends string> = T extends AtFriend | string & {} ? AtFriend | string & {} : string;
 
 export function createWareApp() {
-	return {
+	const wareApp = {
 		/** Main object, if you want to pause every object, pause this */
 		WareScene: k.add([k.area(), k.rect(0, 0)]),
+		/** The parent of the camera, gets its position offsetted for shakes */
+		shakeCamera: null as GameObj<PosComp>,
+		/** The camera object, modify its scale or angle to simulate camera */
+		camera: null as GameObj<PosComp | ScaleComp | RotateComp | { shake: number; }>,
+		/** The container for minigames, if you want to pause the minigame you should pause this */
+		gameBox: null as GameObj<PosComp>,
 		wareCtx: null as ReturnType<typeof kaplayware>,
 		/** Wheter the current minigame should be running (will be false when the transition hasn't finished) */
 		gameRunning: false,
@@ -35,13 +41,13 @@ export function createWareApp() {
 		onTimeOutEvents: new k.KEvent(),
 		currentColor: k.rgb(),
 		currentScene: null as GameObj,
-		pausableCtx: null as PausableCtx,
+		pausableCtx: null as PauseCtx,
 		pausableTimers: [] as TimerController[],
 		pausableSounds: [] as AudioPlay[],
 		currentContext: null as MinigameCtx,
 		// bomb
 		timeRunning: false, // will turn true when transition is over (not same as gameRunning)
-		currentBomb: null as WareBomb | null,
+		currentBomb: null as WareBomb,
 		conductor: k.conductor(140),
 		minigameHistory: [] as string[],
 		winState: undefined as boolean | undefined,
@@ -102,7 +108,27 @@ export function createWareApp() {
 			}
 		},
 	};
+
+	wareApp.shakeCamera = wareApp.WareScene.add([k.pos(), k.rect(0, 0), k.area()]);
+	wareApp.camera = wareApp.shakeCamera.add([
+		k.pos(k.center()),
+		k.anchor("center"),
+		k.scale(),
+		k.rotate(),
+		k.opacity(0),
+		k.rect(0, 0),
+		k.area(),
+		{
+			shake: 0,
+		},
+	]);
+	wareApp.gameBox = wareApp.camera.add([k.pos(-k.width() / 2, -k.height() / 2), k.area(), k.rect(0, 0)]);
+
+	return wareApp;
 }
+
+/** Object that holds some a lot of managers for the KAPLAYware engine */
+export type WareApp = ReturnType<typeof createWareApp>;
 
 export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 	const DEFAULT_DURATION = 4;
@@ -115,7 +141,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 	opts.onlyMouse = opts.onlyMouse ?? false;
 
 	const wareApp = createWareApp();
-	wareApp.pausableCtx = createPausableCtx(wareApp);
+	wareApp.pausableCtx = createPauseCtx(wareApp);
 
 	// debug variables
 	let skipMinigame = false;
@@ -123,19 +149,8 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 	let restartMinigame = false;
 	let overrideDifficulty = null as 1 | 2 | 3;
 
-	const shakeCamera = wareApp.WareScene.add([k.pos(), k.rect(0, 0), k.area()]);
-	const camera = shakeCamera.add([
-		k.pos(k.center()),
-		k.anchor("center"),
-		k.scale(),
-		k.rotate(),
-		k.opacity(0),
-		k.rect(0, 0),
-		k.area(),
-		{
-			shake: 0,
-		},
-	]);
+	const shakeCamera = wareApp.shakeCamera;
+	const camera = wareApp.camera;
 
 	camera.onUpdate(() => {
 		camera.shake = k.lerp(camera.shake, 0, 5 * k.dt());
@@ -143,319 +158,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 		shakeCamera.pos = k.vec2().add(posShake);
 	});
 
-	/** The container for minigames, if you want to pause the minigame you should pause this */
-	const gameBox = camera.add(
-		[k.pos(-k.width() / 2, -k.height() / 2), k.area(), k.rect(0, 0)],
-	); // k.area() temporal fix due to v4000 weirdness
-
-	function createGameContext(minigame: Minigame): MinigameCtx {
-		const gameCtx = {};
-		for (const api of gameAPIs) {
-			gameCtx[api] = k[api];
-
-			if (api == "add") {
-				gameCtx[api] = (...args: any[]) => {
-					return wareApp.currentScene.add(...args);
-				};
-			}
-			// TODO: Rewrite this stupid system
-			// Try to put as many events in a single array, why have timer and, draw and general events sepparated? I forgot
-			// Could check if return type of gameCtx[api] == KEventController or TimerController, if so push to updates array
-			else if (api == "onUpdate" || api == "onCollide" || api == "onCollideEnd" || api == "onCollideUpdate") {
-				gameCtx[api] = (...args: any[]) => {
-					// @ts-ignore
-					return wareApp.addGeneralEvent(k[api](...args as unknown as [any]));
-				};
-			}
-			else if (api == "onDraw") {
-				gameCtx[api] = (...args: any[]) => {
-					return wareApp.addDrawEvent(wareApp.currentScene.onDraw(...args as [any]));
-				};
-			}
-			else if (api == "get") {
-				gameCtx[api] = (...args: any[]) => {
-					return wareApp.currentScene.get(...args as [any]);
-				};
-			}
-
-			if (api == "onClick") {
-				gameCtx[api] = (...args: any[]) => {
-					// @ts-ignore
-					return wareApp.addInput(k.onClick(...args));
-				};
-			}
-			else if (api == "area") {
-				// override area onClick too!!
-				gameCtx[api] = (...args: any[]) => {
-					const areaComp = k.area(...args);
-					return {
-						...areaComp,
-						onClick(action: () => void) {
-							const ev = k.onMousePress("left", () => this.isHovering() ? action() : false);
-							wareApp.inputEvents.push(ev); // doesn't return because onClick returns void here
-						},
-					};
-				};
-			}
-			else if (api == "wait") {
-				gameCtx[api] = (...args: any[]) => {
-					return wareApp.addTimer(k.wait(args[0], args[1]));
-				};
-			}
-			else if (api == "loop") {
-				gameCtx[api] = (...args: any[]) => {
-					return wareApp.addTimer(k.loop(args[0], args[1]));
-				};
-			}
-			else if (api == "tween") {
-				gameCtx[api] = (...args: any[]) => {
-					// @ts-ignore
-					return wareApp.addTimer(k.tween(...args));
-				};
-			}
-			else if (api == "addLevel") {
-				gameCtx[api] = (...args: any[]) => {
-					// @ts-ignore
-					const level = k.addLevel(...args);
-					level.parent = wareApp.currentScene;
-					return level;
-				};
-			}
-			else if (api == "play") {
-				gameCtx[api] = (soundName: any, opts: AudioPlayOpt) => {
-					// if sound name is string, check for @, else just send it
-					const sound = k.play(typeof soundName == "string" ? (soundName.startsWith("@") ? soundName : `${getGameID(minigame)}-${soundName}`) : soundName, opts);
-
-					const newSound = {
-						...sound,
-						set paused(param: boolean) {
-							if (wareApp.canPlaySounds) {
-								sound.paused = param;
-								return;
-							}
-
-							// ALL OF THIS HAPPENS IF YOU CAN'T PLAY SOUNDS (queue stuff)
-							sound.paused = true;
-
-							// this means that it was queued to play but the user paused it
-							if (wareApp.queuedSounds.includes(sound) && param == true) {
-								wareApp.queuedSounds.splice(wareApp.queuedSounds.indexOf(sound), 1);
-							}
-
-							// this means the user removed it from queue but wants to add it again probably
-							if (!wareApp.queuedSounds.includes(sound) && param == false) {
-								wareApp.queuedSounds.push(sound);
-							}
-						},
-						get paused() {
-							return sound.paused;
-						},
-					};
-
-					// if can't play sounds and the user intended to play it at start, pause it
-					if (!wareApp.canPlaySounds) {
-						if (!sound.paused) {
-							wareApp.queuedSounds.push(sound);
-							sound.paused = true;
-						}
-					}
-
-					wareApp.addSound(newSound);
-					return newSound;
-				};
-			}
-			else if (api == "burp") {
-				gameCtx[api] = (opts: AudioPlayOpt) => {
-					return gameCtx["play"](k._k.audio.burpSnd, opts);
-				};
-			}
-			else if (api == "drawSprite") {
-				gameCtx[api] = (opts: DrawSpriteOpt) => {
-					if (typeof opts.sprite == "string" && !opts.sprite.includes("@")) opts.sprite = `${getGameID(minigame)}-${opts.sprite}`;
-					return k.drawSprite(opts);
-				};
-			}
-			else if (api == "getSprite") {
-				gameCtx[api] = (name: string) => {
-					return k.getSprite(`${getGameID(minigame)}-${name}`);
-				};
-			}
-			else if (api == "shader") {
-				gameCtx[api] = (name: string, uniform: Uniform | (() => Uniform)) => {
-					return k.shader(`${getGameID(minigame)}-${name}`, uniform);
-				};
-			}
-			// TODO: Make fixed component work with the minigame camera api
-			else if (api == "fixed") {
-				gameCtx[api] = () => {
-					let fixed = true;
-
-					return {
-						id: "fixed",
-						set fixed(val: boolean) {
-							fixed = val;
-							if (fixed == true) this.parent = wareApp.WareScene;
-							else this.parent = wareApp.currentScene;
-						},
-						get fixed() {
-							return fixed;
-						},
-					};
-				};
-			}
-		}
-
-		function dirToKeys(button: InputButton): Key[] {
-			if (button == "left") return ["left", "a"];
-			else if (button == "down") return ["down", "s"];
-			else if (button == "up") return ["up", "w"];
-			else if (button == "right") return ["right", "d"];
-			else if (button == "action") return ["space"];
-		}
-
-		const gameAPI: MinigameAPI = {
-			getCamAngle: () => camera.angle,
-			setCamAngle: (val: number) => camera.angle = val,
-			getCamPos: () => camera.pos,
-			setCamPos: (val: Vec2) => camera.pos = val,
-			getCamScale: () => camera.scale,
-			setCamScale: (val: Vec2) => camera.scale = val,
-			shakeCam: (val: number = 12) => camera.shake += val,
-			flashCam: (flashColor: Color = k.WHITE, timeOut: number = 1, opacity: number) => {
-				const r = shakeCamera.add([
-					k.pos(k.center()),
-					k.rect(k.width() * 2, k.height() * 2),
-					k.color(flashColor),
-					k.anchor("center"),
-					k.opacity(opacity),
-					k.fixed(),
-					k.z(999), // HACK: make sure is at front of everyone :skull: //
-					"flash",
-				]);
-				const f = r.fadeOut(timeOut);
-				f.onEnd(() => k.destroy(r));
-				return f;
-			},
-			getRGB: () => wareApp.currentColor,
-			setRGB: (val) => wareApp.currentColor = val,
-
-			onInputButtonPress: (btn, action) => {
-				let ev: KEventController = null;
-				if (btn == "click") ev = gameBox.onMousePress("left", action);
-				else ev = gameBox.onKeyPress(dirToKeys(btn), action);
-				wareApp.addInput(ev);
-				return ev;
-			},
-			onInputButtonDown: (btn, action) => {
-				let ev: KEventController = null;
-				if (btn == "click") ev = gameBox.onMouseDown("left", action);
-				else ev = gameBox.onKeyDown(dirToKeys(btn), action);
-				wareApp.addInput(ev);
-				return ev;
-			},
-			onInputButtonRelease: (btn, action) => {
-				let ev: KEventController = null;
-				if (btn == "click") ev = gameBox.onMouseRelease("left", action);
-				else ev = gameBox.onKeyRelease(dirToKeys(btn), action);
-				wareApp.addInput(ev);
-				return ev;
-			},
-			isInputButtonPressed: (btn) => {
-				if (btn == "click") return k.isMousePressed("left");
-				else return k.isKeyPressed(dirToKeys(btn));
-			},
-			isInputButtonDown: (btn) => {
-				if (btn == "click") return k.isMouseDown("left");
-				else return k.isKeyDown(dirToKeys(btn));
-			},
-			isInputButtonReleased: (btn) => {
-				if (btn == "click") return k.isMouseReleased("left");
-				else return k.isKeyDown(dirToKeys(btn));
-			},
-			onMouseMove(action) {
-				const ev = k.onMouseMove(action);
-				wareApp.inputEvents.push(ev);
-				return ev;
-			},
-			onMouseRelease(action) {
-				const ev = k.onMouseRelease(action);
-				wareApp.inputEvents.push(ev);
-				return ev;
-			},
-			onTimeout: (action) => wareApp.onTimeOutEvents.add(action),
-			win() {
-				wareCtx.score++;
-				wareApp.timeRunning = false;
-				wareApp.winState = true;
-				wareApp.currentBomb?.turnOff();
-			},
-			lose() {
-				wareCtx.lives--;
-				wareApp.timeRunning = false;
-				wareApp.winState = false;
-			},
-			finish() {
-				if (wareApp.winState == undefined) {
-					throw new Error("Finished minigame without setting the win condition!! Please call ctx.win() or ctx.lose() before calling ctx.finish()");
-				}
-				wareApp.clearSounds();
-				wareApp.clearTimers();
-				wareApp.clearInput();
-				wareApp.clearGeneralEvents();
-				wareApp.onTimeOutEvents.clear();
-				wareApp.gameRunning = false;
-				wareApp.canPlaySounds = false;
-				wareApp.currentBomb?.destroy();
-				gameBox.clearEvents(); // this clears the time running update, not the onUpdate events of the minigame
-				// removes the scene
-				k.wait(0.2 / wareCtx.speed, () => {
-					wareApp.clearDrawEvents(); // clears them after you can't see them anymore
-					wareApp.currentScene.destroy();
-					// removes fixed objects too (they aren't attached to the gamebox)
-					wareApp.WareScene.get("fixed").forEach((obj) => obj.destroy());
-					// reset camera
-					this.setCamPos(k.center());
-					this.setCamAngle(0);
-					this.setCamScale(k.vec2(1));
-					camera.get("flash").forEach((f) => f.destroy());
-					camera.shake = 0;
-				});
-				wareCtx.nextGame();
-			},
-			sprite: (spr: CustomSprite<string> | SpriteData | Asset<SpriteData>, opts?: SpriteCompOpt) => {
-				const hasAt = (t: any) => typeof t == "string" && t.startsWith("@");
-				const getSpriteThing = (t: any) => hasAt(t) ? t : `${getGameID(minigame)}-${t}`;
-				const spriteComp = k.sprite(getSpriteThing(spr), opts);
-
-				return {
-					...spriteComp,
-					set sprite(val: CustomSprite<string>) {
-						spriteComp.sprite = getSpriteThing(val);
-					},
-
-					get sprite() {
-						if (spriteComp.sprite.startsWith(getGameID(minigame))) return spriteComp.sprite.replace(`${getGameID(minigame)}-`, "");
-						else return spriteComp.sprite;
-					},
-				};
-			},
-			winState: () => wareApp.winState,
-			addConfetti(opts) {
-				const confetti = k.addConfetti(opts);
-				confetti.parent = gameBox;
-				return confetti;
-			},
-			difficulty: wareCtx.difficulty,
-			lives: wareCtx.lives,
-			speed: wareCtx.speed,
-			timeLeft: wareCtx.time,
-		};
-
-		return {
-			...gameCtx,
-			...gameAPI,
-		} as unknown as MinigameCtx;
-	}
+	const gameBox = wareApp.gameBox;
 
 	const wareCtx = {
 		score: 1, // will transition from 0 to 1 on first prep
@@ -500,7 +203,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 			// OBJECT STUFF
 			gameBox.removeAll();
 
-			wareApp.currentContext = createGameContext(minigame) as MinigameCtx;
+			wareApp.currentContext = createGameCtx(wareApp, minigame) as MinigameCtx;
 			const gDuration = typeof minigame.duration == "number" ? minigame.duration : minigame.duration(wareApp.currentContext);
 			const durationEnabled = gDuration != undefined;
 			wareCtx.time = durationEnabled ? (gDuration / wareCtx.speed) : 1;
@@ -538,7 +241,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 				/** When there's 4 beats left */
 				if (wareCtx.time <= wareApp.conductor.beatInterval * 4 && !wareApp.currentBomb) {
 					wareApp.currentBomb = k.addBomb(wareApp);
-					wareApp.currentBomb.bomb.parent = gameBox;
+					wareApp.currentBomb.parent = gameBox;
 					wareApp.currentBomb.lit(wareApp.conductor.bpm);
 				}
 			});

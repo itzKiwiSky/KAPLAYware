@@ -1,10 +1,9 @@
 import { assets } from "@kaplayjs/crew";
 import { SpriteAtlasData } from "kaplay";
 import k from "./engine";
-import { loadAPIs } from "./game/api";
 import games from "./game/games";
-import { LoadCtx } from "./game/types";
 import { getGameID } from "./game/utils";
+import { createLoadCtx } from "./game/context";
 
 k.loadSprite("logo", "sprites/logo.png");
 k.loadSprite("menu-buttons", "sprites/menu/buttons.png", { sliceX: 2, sliceY: 3 });
@@ -79,62 +78,11 @@ k.loadSpriteAtlas("sprites/cursor.png", {
 	},
 });
 
-// load game assets
-const loadCtx = {};
-
-for (const api of loadAPIs) {
-	loadCtx[api] = k[api];
-}
-
 games.forEach((game) => {
 	if (!game.load) return;
-
-	// patch loadXXX() functions to scoped asset names
-	const loaders = [
-		"loadSprite",
-		"loadSpriteAtlas",
-		"loadAseprite",
-		"loadPedit",
-		"loadJSON",
-		"loadSound",
-		"loadFont",
-		"loadBitmapFont",
-		"loadShader",
-		"loadShaderURL",
-	];
-
-	for (const loader of loaders) {
-		loadCtx[loader] = (name: string, ...args: any) => {
-			if (typeof name === "string") {
-				name = `${getGameID(game)}-${name}`;
-			}
-			return k[loader](name, ...args);
-		};
-
-		if (loader == "loadSpriteAtlas") {
-			loadCtx[loader] = (path: string, data: SpriteAtlasData) => {
-				Object.keys(data).forEach((key) => {
-					delete Object.assign(data, { [`${getGameID(game)}-${key}`]: data[key] })[key]; // renames the keys
-				});
-				return k.loadSpriteAtlas(path, data);
-			};
-		}
-	}
-
-	// patch loadRoot() to consider g.urlPrefix
-	if (game.urlPrefix != undefined) {
-		loadCtx["loadRoot"] = (p: string) => {
-			if (p) k.loadRoot(game.urlPrefix + p);
-			return k.loadRoot().slice(game.urlPrefix.length);
-		};
-		k.loadRoot(game.urlPrefix);
-	}
-	else {
-		k.loadRoot("");
-	}
-
+	const loadCtx = createLoadCtx(game);
 	// DON'T change the order of this
-	game.load(loadCtx as LoadCtx);
+	game.load(loadCtx);
 	loadCtx["loadRoot"] = k.loadRoot;
 });
 

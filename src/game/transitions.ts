@@ -2,46 +2,6 @@ import { AudioPlay, TimerController } from "kaplay";
 import { createWareApp } from "./kaplayware";
 import k from "../engine";
 
-const pausableAPI = ["tween", "wait", "loop", "play"] as const;
-export type PausableCtx = Pick<typeof k, typeof pausableAPI[number]> & { resetContext(): void; };
-
-/** Creates a small context that includes tween, wait, loop and play, these will be paused if the WareApp is paused */
-export function createPausableCtx(wareApp: ReturnType<typeof createWareApp>) {
-	const ctx = {} as PausableCtx;
-
-	for (const api of pausableAPI) {
-		if (api == "play") {
-			ctx[api] = (...args: any[]) => {
-				const sound = k.play(...args as unknown as [any]);
-				wareApp.pausableSounds.push(sound);
-				return sound;
-			};
-		}
-		else {
-			ctx[api] = (...args: any[]) => {
-				// @ts-ignore
-				const timer = k[api](...args as unknown as [any]);
-				wareApp.pausableTimers.push(timer);
-				return timer as any;
-			};
-		}
-	}
-
-	ctx.resetContext = () => {
-		for (let i = wareApp.pausableTimers.length - 1; i >= 0; i--) {
-			wareApp.pausableTimers[i].cancel();
-			wareApp.pausableTimers.pop();
-		}
-
-		for (let i = wareApp.pausableSounds.length - 1; i >= 0; i--) {
-			wareApp.pausableSounds[i].stop();
-			wareApp.pausableSounds.pop();
-		}
-	};
-
-	return ctx;
-}
-
 export type TransitionState = "win" | "lose" | "prep" | "speed";
 
 export function runTransition(wareApp: ReturnType<typeof createWareApp>, states: TransitionState[]) {
