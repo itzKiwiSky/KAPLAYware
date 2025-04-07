@@ -1,6 +1,7 @@
 import games from "./games";
 import { Minigame } from "./types";
 
+// TODO: Get rid of coolPrompt and make all the prompts "explicit"
 export const coolPrompt = (prompt: string) => prompt.toUpperCase() + (prompt[prompt.length - 1] == "!" ? "" : "!");
 export const getGameID = (g: Minigame) => {
 	const modules = import.meta.glob("../../games/*/*.ts", { eager: true });

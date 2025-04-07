@@ -1,7 +1,7 @@
 import { Minigame } from "../../src/game/types";
 
 const dontGame: Minigame = {
-	prompt: "don't",
+	prompt: "DONT'T!",
 	author: "amyspark-ng",
 	rgb: (ctx) => ctx.mulfok.VOID_VIOLET,
 	duration: 3,

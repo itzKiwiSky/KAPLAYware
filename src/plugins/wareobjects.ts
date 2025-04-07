@@ -1,13 +1,13 @@
 import { Color, GameObj, KAPLAYCtx, Vec2 } from "kaplay";
 import k from "../engine";
 import { getGameInput } from "../game/utils";
-import { createWareApp } from "../game/kaplayware";
+import { WareApp } from "../game/kaplayware";
 
-function addPrompt(prompt: string) {
-	const promptObj = k.add([
+function addPrompt(wareApp: WareApp, promptText: string) {
+	const promptObj = wareApp.WareScene.add([
 		k.color(k.WHITE),
 		k.fixed(),
-		k.text(`[a]${prompt}[/a]`, {
+		k.text(`[a]${promptText}[/a]`, {
 			align: "center",
 			size: 100,
 			styles: {
@@ -20,63 +20,95 @@ function addPrompt(prompt: string) {
 		k.anchor("center"),
 		k.scale(),
 		k.opacity(),
-		k.timer(),
 		k.z(101),
 		{
-			shakyLetters: true,
+			/** Set this to true if you wish for the object to not use the default animation */
+			overrideAnimation: false,
+			end() {
+			},
 		},
 	]);
 
-	promptObj.tween(0, 1.2, 0.25, (p) => promptObj.scale.x = p, k.easings.easeOutExpo);
-	promptObj.tween(0, 0.9, 0.25, (p) => promptObj.scale.y = p, k.easings.easeOutExpo).onEnd(() => {
-		promptObj.tween(promptObj.scale, k.vec2(1), 0.25 * 1.1, (p) => promptObj.scale = p, k.easings.easeOutElastic).onEnd(() => {
-			// now do the shaky letters
-
-			let magnitude = 0;
-			let angle = 0;
-			promptObj.onUpdate(() => {
-				if (promptObj.shakyLetters) {
-					magnitude = k.lerp(magnitude, k.randi(2, 8), 0.1);
-					angle = k.lerp(angle, angle + 1, 0.1) % 360;
-					promptObj.textTransform = (idx, ch) => ({
-						pos: k.vec2(magnitude * Math.cos(angle * ((idx % 2) + 1) + 1), magnitude * Math.sin(angle * ((idx % 2) + 1) + 1)),
-					});
-				}
-				else {
-					promptObj.textTransform = (idx, ch) => ({
-						pos: k.vec2(),
-					});
-				}
+	if (promptObj.overrideAnimation == false) {
+		// the shaky letters
+		let magnitude = 0;
+		let angle = 0;
+		promptObj.onUpdate(() => {
+			magnitude = k.lerp(magnitude, k.randi(2, 8), 0.1);
+			angle = k.lerp(angle, angle + 1, 0.1) % 360;
+			promptObj.textTransform = (idx, ch) => ({
+				pos: k.vec2(magnitude * Math.cos(angle * ((idx % 2) + 1) + 1), magnitude * Math.sin(angle * ((idx % 2) + 1) + 1)),
 			});
 		});
-	});
+
+		// the jumpy
+		wareApp.pausableCtx.tween(0, 1.2, 0.25 / wareApp.wareCtx.speed, (p) => promptObj.scale.x = p, k.easings.easeOutExpo);
+		wareApp.pausableCtx.tween(0, 0.9, 0.25 / wareApp.wareCtx.speed, (p) => promptObj.scale.y = p, k.easings.easeOutExpo).onEnd(() => {
+			wareApp.pausableCtx.tween(promptObj.scale, k.vec2(1), 0.25 * 1.1, (p) => promptObj.scale = p, k.easings.easeOutElastic).onEnd(() => {
+			});
+		});
+
+		promptObj.end = () => {
+			promptObj.fadeOut(0.25 / wareApp.wareCtx.speed).onEnd(() => promptObj.destroy());
+		};
+	}
+
 	return promptObj;
 }
 
-function addInputPrompt(input: ReturnType<typeof getGameInput>) {
-	const inputPrompt = k.add([
+function addInputPrompt(wareApp: WareApp, input: ReturnType<typeof getGameInput>) {
+	const prompt = wareApp.WareScene.add([{
+		end() {},
+	}]);
+
+	const inputBg = prompt.add([
+		k.sprite("input-circle"),
+		k.scale(),
+		k.pos(k.center()),
+		k.rotate(),
+		k.anchor("center"),
+	]);
+
+	const inputPrompt = prompt.add([
 		k.sprite("input-" + input),
 		k.anchor("center"),
 		k.pos(k.center()),
 		k.scale(),
 	]);
 
-	k.tween(k.vec2(0), k.vec2(1), 0.25, (p) => inputPrompt.scale = p, k.easings.easeOutElastic);
-	return inputPrompt;
+	prompt.onUpdate(() => {
+		inputBg.angle += 0.1 * wareApp.wareCtx.speed;
+		inputPrompt.scale = inputPrompt.scale.scale(inputBg.scale);
+	});
+	wareApp.pausableCtx.tween(k.vec2(0), k.vec2(1), 0.25 / wareApp.wareCtx.speed, (p) => inputBg.scale = p, k.easings.easeOutExpo);
+	wareApp.pausableCtx.tween(k.vec2(0), k.vec2(1), 0.25 / wareApp.wareCtx.speed, (p) => inputPrompt.scale = p, k.easings.easeOutElastic);
+
+	prompt.end = () => {
+		const tween = wareApp.pausableCtx.tween(k.vec2(1), k.vec2(0), 0.25 / wareApp.wareCtx.speed, (p) => inputBg.scale = p, k.easings.easeOutExpo);
+		tween.onEnd(() => {
+			prompt.destroy();
+		});
+		return tween;
+	};
+	return prompt;
 }
 
-export type WareBomb = GameObj<{ tick(): void; beatsLeft: number; turnOff(): void; lit(bpm?: number): void; }>;
+export type WareBomb = GameObj<{ tick(): void; beatsLeft: number; turnOff(): void; explode(): void; hasExploded: boolean; lit(bpm?: number): void; }>;
 
-function addBomb(wareApp: ReturnType<typeof createWareApp>): WareBomb {
+function addBomb(wareApp: WareApp): WareBomb {
 	const BOMB_POS = k.vec2(40, k.height() - 40);
 
 	const bomb = wareApp.WareScene.add([{
 		tick,
+		get hasExploded() {
+			return hasExploded;
+		},
 		get beatsLeft() {
 			return beatsLeft;
 		},
 		turnOff,
 		lit,
+		explode,
 	}]);
 	let conductor: ReturnType<typeof k.conductor> = null;
 
@@ -148,6 +180,15 @@ function addBomb(wareApp: ReturnType<typeof createWareApp>): WareBomb {
 		cord.width = k.lerp(cord.width, ((k.width() / 2) / 3) * beatsLeft, 0.75);
 	});
 
+	let hasExploded = false;
+	function explode() {
+		destroy();
+		const kaboom = k.addKaboom(bombSpr.pos);
+		kaboom.parent = wareApp.WareScene;
+		wareApp.pausableCtx.play("explosion");
+		hasExploded = true;
+	}
+
 	function tick() {
 		if (!bombSpr.exists()) return;
 		if (beatsLeft > 0) {
@@ -159,13 +200,7 @@ function addBomb(wareApp: ReturnType<typeof createWareApp>): WareBomb {
 			else if (beatsLeft == 1) bombSpr.color = k.RED.lerp(k.YELLOW, 0.5);
 			else if (beatsLeft == 0) bombSpr.color = k.RED;
 		}
-		else {
-			destroy();
-			// TODO: fix this kaboom parent
-			const kaboom = k.addKaboom(bombSpr.pos);
-			kaboom.parent = wareApp.gameBox;
-			wareApp.pausableCtx.play("explosion");
-		}
+		else explode();
 	}
 
 	/** Will start a conductor which will explode the bomb in 4 beats (tick, tick, tick, BOOM!) */

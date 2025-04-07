@@ -1,10 +1,10 @@
 import { AudioPlay, TimerController } from "kaplay";
-import { createWareApp } from "./kaplayware";
+import { createWareApp, WareApp } from "./kaplayware";
 import k from "../engine";
 
 export type TransitionState = "win" | "lose" | "prep" | "speed";
 
-export function runTransition(wareApp: ReturnType<typeof createWareApp>, states: TransitionState[]) {
+export function runTransition(wareApp: WareApp, states: TransitionState[]) {
 	const ware = wareApp.wareCtx;
 	const WareScene = wareApp.WareScene;
 	const conductor = k.conductor(140 * wareApp.wareCtx.speed);
@@ -209,6 +209,7 @@ export function runTransition(wareApp: ReturnType<typeof createWareApp>, states:
 		chillbutterfly.frame = 0;
 
 		const prepConductor = k.conductor(140 * wareApp.wareCtx.speed);
+		trans.onUpdate(() => prepConductor.paused = wareApp.gamePaused);
 
 		pausableCtx.tween(fallingPage.scale.y, 1.8, 0.35 / ware.speed, (p) => fallingPage.scale.y = p, k.easings.easeOutExpo).onEnd(() => {
 			fallingPage.scale.y = 0.5;

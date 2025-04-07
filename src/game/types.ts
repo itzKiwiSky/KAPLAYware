@@ -2,8 +2,18 @@ import { Asset, Color, GameObj, KAPLAYCtx, KEventController, SpriteComp, SpriteC
 import k from "../engine";
 import { ConfettiOpt } from "../plugins/wareobjects";
 import { gameAPIs } from "./api";
-import { CustomSprite } from "./kaplayware";
 import { LoadCtx } from "./context";
+import { assets } from "@kaplayjs/crew";
+
+type Friend = keyof typeof assets | `${keyof typeof assets}-o`;
+type AtFriend = `@${Friend}`;
+type CustomSprite<T extends string> = T extends AtFriend | string & {} ? AtFriend | string & {} : string;
+interface WareSprite extends Omit<SpriteComp, "sprite"> {
+	/**
+	 * Name of the sprite.
+	 */
+	sprite: CustomSprite<string>;
+}
 
 /** A button */
 export type InputButton =
@@ -54,7 +64,7 @@ export type MinigameAPI = {
 	getRGB(): Color;
 	/** Sets the RGB to the background of your minigame */
 	setRGB(val: Color): void;
-	/** ### Custom sprite component for kaplayware that holds default assets
+	/** ### Custom sprite component for KAPLAYware that holds default assets
 	 *
 	 * Attach and render a sprite to a Game Object.
 	 *
@@ -88,10 +98,7 @@ export type MinigameAPI = {
 	 * @since v2000.0
 	 * @group Components
 	 */
-	sprite(spr: CustomSprite<string> | SpriteData | Asset<SpriteData>, opt?: SpriteCompOpt): SpriteComp & {
-		// TODO: Find a way to override the typing of return
-		sprite: CustomSprite<string>;
-	};
+	sprite(spr: CustomSprite<string> | SpriteData | Asset<SpriteData>, opt?: SpriteCompOpt): WareSprite;
 	/** Register an event that runs once when timer runs out. */
 	onTimeout: (action: () => void) => KEventController;
 	/** Run this when player succeeded in completing the game. */

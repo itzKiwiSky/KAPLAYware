@@ -9,10 +9,6 @@ import games from "./games";
 import { createGameCtx, createPauseCtx, PauseCtx } from "./context";
 import { WareBomb } from "../plugins/wareobjects";
 
-type Friend = keyof typeof assets | `${keyof typeof assets}-o`;
-type AtFriend = `@${Friend}`;
-export type CustomSprite<T extends string> = T extends AtFriend | string & {} ? AtFriend | string & {} : string;
-
 export function createWareApp() {
 	const wareApp = {
 		/** Main object, if you want to pause every object, pause this */
@@ -236,6 +232,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 				if (wareCtx.time <= 0 && wareApp.timeRunning) {
 					wareApp.timeRunning = false;
 					wareApp.onTimeOutEvents.trigger();
+					if (!wareApp.currentBomb.hasExploded) wareApp.currentBomb.explode();
 				}
 
 				/** When there's 4 beats left */
@@ -304,26 +301,20 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 			let inputPrompt: ReturnType<typeof k.addInputPrompt> = null;
 			let prompt: ReturnType<typeof k.addPrompt> = null;
 
-			transition.onInputPromptTime(() => {
-				inputPrompt = k.addInputPrompt(getGameInput(choosenGame));
-				inputPrompt.parent = wareApp.WareScene;
-				wareApp.pausableCtx.tween(k.vec2(0), k.vec2(1), 0.15 / wareCtx.speed, (p) => inputPrompt.scale = p, k.easings.easeOutElastic);
-			});
+			transition.onInputPromptTime(() => inputPrompt = k.addInputPrompt(wareApp, getGameInput(choosenGame)));
 
 			transition.onPromptTime(() => {
-				wareApp.pausableCtx.tween(inputPrompt.scale, k.vec2(0), 0.15 / wareCtx.speed, (p) => inputPrompt.scale = p, k.easings.easeOutQuint).onEnd(() =>
-					inputPrompt.destroy()
-				);
-				if (typeof choosenGame.prompt == "string") prompt = k.addPrompt(coolPrompt(choosenGame.prompt));
+				inputPrompt.end();
+				if (typeof choosenGame.prompt == "string") prompt = k.addPrompt(wareApp, coolPrompt(choosenGame.prompt));
 				else {
-					prompt = k.addPrompt("");
+					prompt = k.addPrompt(wareApp, "");
 					choosenGame.prompt(wareApp.currentContext, prompt);
 				}
 				prompt.parent = wareApp.WareScene;
 
 				wareApp.pausableCtx.wait(0.15 / wareCtx.speed, () => {
 					cursor.visible = gameHidesMouse(choosenGame);
-					prompt.fadeOut(0.15 / wareCtx.speed).onEnd(() => prompt.destroy());
+					prompt.end();
 				});
 			});
 
@@ -344,7 +335,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 					wareApp.pausableCtx.play("gameOverJingle").onEnd(() => {
 						k.go("gameover", wareCtx.score);
 					});
-					k.addPrompt("GAME OVER");
+					k.addPrompt(wareApp, "GAME OVER");
 				}
 			});
 

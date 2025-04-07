@@ -20,7 +20,7 @@ import { Minigame } from "../../src/game/types";
 
 const ${gamePrompt}Game: Minigame = {
 	author: "${author}",
-	prompt: "${gamePrompt}",
+	prompt: "${gamePrompt.toUpperCase() + "!"}",
 	input: "keys",
 	duration: 4,
 	urlPrefix: "${assets_dir}",
