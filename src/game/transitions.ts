@@ -21,9 +21,9 @@ export function runTransition(wareApp: WareApp, states: TransitionState[]) {
 	// "trans" controls scale and position of the transitions, obj is just to attach, don't remove this
 	const trans = WareScene.add([k.scale(), k.pos(k.center()), k.anchor("center"), k.state(states[0], states)]);
 	const objs = trans.add([k.pos(-k.width() / 2, -k.height() / 2)]);
-	objs.add([k.sprite("bg")]);
-	objs.add([k.sprite("grass")]);
-	objs.add([k.sprite("table")]);
+	objs.add([k.sprite("trans1-bg")]);
+	objs.add([k.sprite("trans1-grass")]);
+	objs.add([k.sprite("trans1-table")]);
 
 	trans.onUpdate(() => {
 		conductor.paused = wareApp.gamePaused;
@@ -33,14 +33,14 @@ export function runTransition(wareApp: WareApp, states: TransitionState[]) {
 	const ZOOM_Y = 827;
 
 	const coffee = objs.add([
-		k.sprite("coffee"),
+		k.sprite("trans1-coffee"),
 		k.pos(65, 290),
 		k.anchor("center"),
 	]);
 	coffee.play("hot", { speed: 8 * ware.speed, loop: true });
 
 	const flowerpot = objs.add([
-		k.sprite("flowerpot"),
+		k.sprite("trans1-flowerpot"),
 		k.pos(680, 280),
 		k.anchor("top"),
 	]);
@@ -48,7 +48,7 @@ export function runTransition(wareApp: WareApp, states: TransitionState[]) {
 	// add flowers
 	for (let i = 0; i < ware.difficulty; i++) {
 		const flower = objs.add([
-			k.sprite("flower"),
+			k.sprite("trans1-flower"),
 			k.pos(flowerpot.pos.x, flowerpot.pos.y + 2),
 			k.anchor("bot"),
 			k.scale(),
@@ -70,7 +70,7 @@ export function runTransition(wareApp: WareApp, states: TransitionState[]) {
 		let shake = 0;
 
 		const heart = objs.add([
-			k.sprite("heart"),
+			k.sprite("trans1-heart"),
 			k.pos(220, 60),
 			k.scale(),
 			k.color(),
@@ -104,46 +104,46 @@ export function runTransition(wareApp: WareApp, states: TransitionState[]) {
 	}
 
 	const screen = objs.add([
-		k.sprite("screen"),
+		k.sprite("trans1-screen"),
 		k.pos(288, 147),
 		k.opacity(),
 	]);
 
 	const computer = objs.add([
-		k.sprite("computer"),
+		k.sprite("trans1-computer"),
 		k.pos(236, 130),
 	]);
 
 	const chillguy = objs.add([
-		k.sprite("chillguy"),
+		k.sprite("trans1-chillguy"),
 		k.scale(),
 		k.pos(214, 599),
 		k.anchor("bot"),
 	]);
 
 	const chillcat = objs.add([
-		k.sprite("chillcat"),
+		k.sprite("trans1-chillcat"),
 		k.scale(),
 		k.pos(598, 600),
 		k.anchor("bot"),
 	]);
 
 	const chillbutterfly = objs.add([
-		k.sprite("chillbutterfly"),
+		k.sprite("trans1-chillbutterfly"),
 		k.scale(),
 		k.pos(470, 491),
 		k.anchor("center"),
 	]);
 
 	const calendar = objs.add([
-		k.sprite("calendar"),
+		k.sprite("trans1-calendar"),
 		k.pos(714, 84),
 		k.anchor("center"),
 	]);
 
 	function addCalendarPage(score: number) {
 		const fallingPage = objs.add([
-			k.sprite("page"),
+			k.sprite("trans1-page"),
 			k.pos(calendar.pos.sub(calendar.width / 2, calendar.height / 2)),
 			k.anchor("top"),
 			k.scale(),

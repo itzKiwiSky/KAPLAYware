@@ -9,12 +9,6 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 	let transitionOpacity = 0;
 	k.onUpdate(() => {
 		if (k.isKeyPressed("escape")) ware.paused = !ware.paused;
-		// if (k.isKeyPressed("escape")) {
-		// 	if (!ware.paused) ware.paused = true;
-		// 	else k.go("select");
-		// }
-
-		// if (ware.paused && k.isKeyPressed("enter")) ware.paused = false;
 		transitionOpacity = k.lerp(transitionOpacity, ware.paused ? 1 : 0, 0.75);
 	});
 

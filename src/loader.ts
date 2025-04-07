@@ -13,22 +13,21 @@ k.loadSprite("menu-check", "sprites/menu/check.png");
 k.loadBitmapFont("happy", "fonts/happy.png", 31, 39);
 k.loadBitmapFont("happy-o", "fonts/happy-o.png", 31, 39);
 
-// transition
-// TODO: rename these a sensible thing
-k.loadSprite("bg", "sprites/transition/pack1/bg.png");
-k.loadSprite("computer", "sprites/transition/pack1/computer.png");
-k.loadSprite("screen", "sprites/transition/pack1/screen.png", { sliceX: 3, sliceY: 1 });
-k.loadSprite("calendar", "sprites/transition/pack1/calendar.png");
-k.loadSprite("page", "sprites/transition/pack1/page.png");
-k.loadSprite("chillguy", "sprites/transition/pack1/chillguy.png", { sliceX: 3, sliceY: 1 });
-k.loadSprite("chillcat", "sprites/transition/pack1/chillcat.png", { sliceX: 3, sliceY: 1 });
-k.loadSprite("chillbutterfly", "sprites/transition/pack1/chillbutterfly.png", { sliceX: 3, sliceY: 1 });
-k.loadSprite("table", "sprites/transition/pack1/table.png");
-k.loadSprite("grass", "sprites/transition/pack1/grass.png");
-k.loadSprite("coffee", "sprites/transition/pack1/coffee.png", { sliceX: 7, sliceY: 1, anims: { "hot": { from: 0, to: 6 } } });
-k.loadSprite("flowerpot", "sprites/transition/pack1/flowerpot.png");
-k.loadSprite("flower", "sprites/transition/pack1/flowers.png", { sliceX: 3, sliceY: 1 });
-k.loadSprite("heart", "sprites/transition/pack1/heart.png");
+// transition 1
+k.loadSprite("trans1-bg", "sprites/transition/pack1/bg.png");
+k.loadSprite("trans1-computer", "sprites/transition/pack1/computer.png");
+k.loadSprite("trans1-screen", "sprites/transition/pack1/screen.png", { sliceX: 3, sliceY: 1 });
+k.loadSprite("trans1-calendar", "sprites/transition/pack1/calendar.png");
+k.loadSprite("trans1-page", "sprites/transition/pack1/page.png");
+k.loadSprite("trans1-chillguy", "sprites/transition/pack1/chillguy.png", { sliceX: 3, sliceY: 1 });
+k.loadSprite("trans1-chillcat", "sprites/transition/pack1/chillcat.png", { sliceX: 3, sliceY: 1 });
+k.loadSprite("trans1-chillbutterfly", "sprites/transition/pack1/chillbutterfly.png", { sliceX: 3, sliceY: 1 });
+k.loadSprite("trans1-table", "sprites/transition/pack1/table.png");
+k.loadSprite("trans1-grass", "sprites/transition/pack1/grass.png");
+k.loadSprite("trans1-coffee", "sprites/transition/pack1/coffee.png", { sliceX: 7, sliceY: 1, anims: { "hot": { from: 0, to: 6 } } });
+k.loadSprite("trans1-flowerpot", "sprites/transition/pack1/flowerpot.png");
+k.loadSprite("trans1-flower", "sprites/transition/pack1/flowers.png", { sliceX: 3, sliceY: 1 });
+k.loadSprite("trans1-heart", "sprites/transition/pack1/heart.png");
 
 // input
 k.loadSprite("input-circle", "sprites/transition/input/circle.png");

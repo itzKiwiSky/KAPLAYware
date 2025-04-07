@@ -78,7 +78,7 @@ const knockGame: Minigame = {
 		door.onClick(() => {
 			if (!door.isHovering()) return;
 
-			if (ctx.winState() == false) {
+			if (!ctx.winState()) {
 				ctx.tween(ctx.vec2(DOOR_SCALE - 0.05 * totalKnocks - knocksLeft), ctx.vec2(DOOR_SCALE), 0.15 / ctx.speed, (p) => door.scale = p, ctx.easings.easeOutQuint);
 			}
 
@@ -105,7 +105,7 @@ const knockGame: Minigame = {
 					ctx.wait(0.5 / ctx.speed, () => {
 						ctx.burp({ speed: ctx.speed * 0.8 });
 						const heytextbox = addTextbox("HEY!", true);
-						heytextbox.use(ctx.fixed()); // TODO: this will work when fixed works
+						heytextbox.use(ctx.fixed());
 						heytextbox.pos = ctx.center().sub(200, 0);
 					});
 

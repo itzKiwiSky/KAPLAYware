@@ -169,7 +169,7 @@ const transformGame: Minigame = {
 				});
 
 				ctx.win();
-				ctx.wait(1 / ctx.speed, () => ctx.finish());
+				ctx.wait(1.5 / ctx.speed, () => ctx.finish());
 			});
 		}
 

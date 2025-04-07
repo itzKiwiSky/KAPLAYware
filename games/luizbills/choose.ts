@@ -7,6 +7,7 @@ const colorGame: Minigame = {
 	urlPrefix: "games/luizbills/assets/",
 	input: "mouse",
 	duration: 4,
+	colorDependant: true,
 	load(ctx) {
 		ctx.loadSound("correct", "sounds/applause.ogg");
 	},

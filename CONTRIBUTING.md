@@ -293,8 +293,6 @@ If there's anything wrong in your minigame, we'll tell you when you're doing you
 
 ![alt text](images/debug.png)
 
-<!-- TODO: Replace this OLD picture eventually -->
-
 ### Advanced testing
 You can limit the minigames played by their `gameID` with `.env.development` file in the root folder. Copy `.env.development.example` file and save it without `.example` suffix. Then list games in `VITE_ONLY_MINIGAMES` like `{yourname}:{gamename}`, one per line.
 

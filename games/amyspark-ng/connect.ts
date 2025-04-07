@@ -8,6 +8,7 @@ const newGame: Minigame = {
 	rgb: (ctx) => ctx.mulfok.DARK_PURPLE,
 	duration: (ctx) => ctx.difficulty == 3 ? 7 : 5,
 	urlPrefix: "games/amyspark-ng/assets",
+	colorDependant: true,
 	load(ctx) {
 		ctx.loadSprite("plug", "/sprites/connect/plug.png");
 		ctx.loadSprite("box", "/sprites/connect/box.png");

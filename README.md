@@ -6,4 +6,4 @@ Play a bunch of minigame created by our greatest developers and members of our c
 ### GAME MIGHT BE A LITTLE BROKEN running on Kaplay v4000 alpha 17
 If you want to learn how to contribute to it, read [CONTRIBUTING.md](/CONTRIBUTING.md)
 
-![transition computer](/assets//sprites/transition/computer.png)
+![transition computer](/assets/sprites/transition/pack1/computer.png)

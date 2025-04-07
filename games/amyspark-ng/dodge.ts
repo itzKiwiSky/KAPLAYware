@@ -22,7 +22,7 @@ const dodgeGame: Minigame = {
 		ctx.loadSound("wifi", "sounds/explosion.wav");
 	},
 	start(ctx) {
-		// const secondgame = ctx.add([]);
+		const game = ctx.add([]);
 		ctx.setGravity(2500);
 
 		let timeout = false;
@@ -50,7 +50,7 @@ const dodgeGame: Minigame = {
 		function runCloudLoop() {
 			if (isDead || timeout) return;
 			ctx.wait(ctx.rand(0.35, 1) / ctx.speed, () => {
-				const cloud = ctx.add([
+				const cloud = game.add([
 					ctx.sprite("cloud"),
 					ctx.pos(ctx.width() + 300, ctx.center().y - ctx.rand(50, 200)),
 					ctx.color(),
@@ -72,7 +72,7 @@ const dodgeGame: Minigame = {
 
 		function addCactus() {
 			if (isDead || !cactusEnabled || timeout) return;
-			const cactus = ctx.add([
+			const cactus = game.add([
 				ctx.pos(ctx.width() + 10, GROUND_Y + ctx.rand(20, 25)),
 				ctx.sprite("cactus"),
 				ctx.anchor("bot"),
@@ -96,7 +96,7 @@ const dodgeGame: Minigame = {
 				GROUND_Y - 150,
 			]);
 
-			const ptero = ctx.add([
+			const ptero = game.add([
 				ctx.pos(ctx.width() + 100, y),
 				ctx.sprite("ptero"),
 				ctx.color(),
@@ -116,7 +116,7 @@ const dodgeGame: Minigame = {
 		function runSandLoop() {
 			if (isDead || timeout) return;
 			ctx.wait(ctx.rand(0.5, 2) / ctx.speed, () => {
-				const sand = ctx.add([
+				const sand = game.add([
 					ctx.sprite("sand"),
 					ctx.pos(ctx.width() + 300, GROUND_Y + ctx.rand(30, 40)),
 					ctx.color(),
@@ -134,8 +134,9 @@ const dodgeGame: Minigame = {
 			});
 		}
 
+		// TODO: Fix the ground of thi minigame
 		function addGround() {
-			const ground = ctx.add([
+			const ground = game.add([
 				ctx.sprite("ground", { tiled: true }),
 				ctx.color(PRIMARY_COLOR),
 				ctx.pos(0, GROUND_Y),
@@ -152,6 +153,8 @@ const dodgeGame: Minigame = {
 				ctx.area({ offset: ctx.vec2(0, 30), scale: ctx.vec2(1, 5) }),
 				ctx.body({ isStatic: true }),
 			]);
+
+			ground.pos.x = -ground.width;
 			ground2.gravityScale = 0;
 			ground2.width = ctx.width();
 
@@ -166,12 +169,12 @@ const dodgeGame: Minigame = {
 			});
 		}
 
-		const dino = ctx.add([
+		const dino = game.add([
 			ctx.sprite("dino"),
 			ctx.color(PRIMARY_COLOR),
 			ctx.anchor("bot"),
 			ctx.pos(80, GROUND_Y + 50),
-			ctx.area({ scale: ctx.vec2(0.25, 2), offset: ctx.vec2(-10, 0) }),
+			ctx.area({ scale: ctx.vec2(0.25, 1), offset: ctx.vec2(-10, 0) }),
 			ctx.body({ stickToPlatform: false }),
 			ctx.z(3),
 		]);
@@ -287,8 +290,7 @@ const dodgeGame: Minigame = {
 		if (ctx.difficulty == 2 || ctx.difficulty == 3) pteroAllowed = true;
 
 		ctx.onUpdate(() => {
-			// TODO: Figure out what the hell this meant (probably all objects were added to it and paused when lost)
-			// secondgame.paused = timeout || isDead;
+			game.paused = timeout || isDead;
 		});
 
 		addGround();

@@ -14,29 +14,59 @@ function getHexagonShape(ctx: MinigameCtx) {
 }
 
 function addBackground(ctx: MinigameCtx) {
-	const col1D = ctx.Color.fromHex("#291834");
-	const col2D = ctx.Color.fromHex("#36213f");
+	const color = {
+		ColorPrimary: ctx.Color.fromHex("#291834"),
+		ColorSecondary: ctx.Color.fromHex("#36213f"),
+	};
+
+	const parent = ctx.add([
+		ctx.rotate(5),
+		ctx.anchor("center"),
+		ctx.scale(),
+	]);
 
 	const bg = ctx.add([
 		ctx.rect(ctx.width(), ctx.height()),
-		ctx.pos(ctx.center()),
-		ctx.anchor("center"),
-		ctx.scale(8),
 		{
-			speed: 0.1,
+			offsetX: 0,
+			offsetY: 0,
+			cellSize: 148,
+			speed: 64 * ctx.speed,
+			set angle(val: number) {
+				parent.angle = val;
+			},
+			get angle() {
+				return parent.angle;
+			},
 		},
 	]);
 
-	// TODO: Fix background looking all weird
-	bg.use(ctx.shader("background", () => ({
-		"u_time": ctx.time() / 10,
-		"u_color1": col1D,
-		"u_color2": col2D,
-		"u_speed": ctx.vec2(-1, 2).scale(bg.speed),
-		"u_angle": 5,
-		"u_scale": 2,
-		"u_aspect": ctx.width() / ctx.height(),
-	})));
+	bg.onDraw(() => {
+		for (let y = -2; y < ctx.height() / bg.cellSize; y++) {
+			for (let x = -2; x < ctx.width() / bg.cellSize; x++) {
+				ctx.drawRect({
+					pos: ctx.vec2(x * bg.cellSize + bg.offsetX, y * bg.cellSize + bg.offsetY),
+					width: bg.cellSize,
+					height: bg.cellSize,
+					color: (x + y) % 2
+						? ctx.rgb(color.ColorPrimary.r, color.ColorPrimary.g, color.ColorPrimary.b)
+						: ctx.rgb(color.ColorSecondary.r, color.ColorSecondary.g, color.ColorSecondary.b),
+				});
+			}
+		}
+	});
+
+	bg.onUpdate(() => {
+		bg.offsetX += bg.speed * ctx.dt();
+		bg.offsetY += bg.speed * ctx.dt();
+
+		if (bg.offsetX >= bg.cellSize * 2) {
+			bg.offsetX = 0;
+		}
+		if (bg.offsetY >= bg.cellSize * 2) {
+			bg.offsetY = 0;
+		}
+	});
 
 	return bg;
 }
@@ -97,34 +127,6 @@ const clickGame: Minigame = {
 		ctx.loadSound("fullcombo", "sounds/clickeryfullcombo.ogg");
 		ctx.loadSound("explode", "sounds/explode.mp3");
 		ctx.loadSound("clickpress", "sounds/clickPress.ogg");
-		// made by MF
-		ctx.loadShader(
-			"background",
-			null,
-			`
-	uniform float u_time;
-	uniform vec3 u_color1;
-	uniform vec3 u_color2;
-	uniform vec2 u_speed;
-	uniform float u_angle;
-	uniform float u_scale;
-	uniform float u_aspect;
-	
-	#define PI 3.14159265359
-	vec4 frag(vec2 pos, vec2 uv, vec4 color, sampler2D tex) {
-		float angle = u_angle * PI / 180.0;
-		mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
-		vec2 size = vec2(u_scale);
-		vec2 p = (pos + vec2(u_time) * u_speed) * vec2(u_aspect, 1.0);
-		p = p * rot;
-		float total = floor(p.x * size.x) + floor(p.y * size.y);
-		bool isEven = mod(total, 2.0) == 0.0;
-		vec4 col1 = vec4(u_color1 / 255.0, 1.0);
-		vec4 col2 = vec4(u_color2 / 255.0, 1.0);
-		return (isEven) ? col1 : col2;
-	}
-	`,
-		);
 	},
 	start(ctx) {
 		const SCORE_TO_WIN = ctx.difficulty == 1 ? ctx.randi(4, 6) : ctx.difficulty == 2 ? ctx.randi(8, 10) : ctx.difficulty == 3 ? ctx.randi(18, 20) : ctx.rand(18, 20);
@@ -193,6 +195,7 @@ const clickGame: Minigame = {
 		});
 
 		ctx.onInputButtonRelease("click", () => {
+			if (!hexagon.isHovering()) return;
 			ctx.play("clickpress", { detune: ctx.rand(-400, -200) });
 		});
 

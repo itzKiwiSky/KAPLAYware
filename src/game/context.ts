@@ -239,13 +239,15 @@ export function createGameCtx(wareApp: WareApp, game: Minigame) {
 				return k.shader(`${getGameID(game)}-${name}`, uniform);
 			};
 		}
-		// TODO: Make fixed component work with the minigame camera api
 		else if (api == "fixed") {
 			gameCtx[api] = () => {
 				let fixed = true;
 
 				return {
 					id: "fixed",
+					add() {
+						this.parent = wareApp.WareScene;
+					},
 					set fixed(val: boolean) {
 						fixed = val;
 						if (fixed == true) this.parent = wareApp.WareScene;

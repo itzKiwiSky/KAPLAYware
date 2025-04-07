@@ -92,7 +92,6 @@ export function createWareApp() {
 			this.sounds.push(sound);
 			return sound;
 		},
-		// TODO: There's a bug where if you pause and unpause quickly in some minigames the next minigame will have the sounds of the preivous one, i don't think pausedSounds gets cleared when they stop playing
 		clearSounds() {
 			for (let i = this.sounds.length - 1; i >= 0; i--) {
 				this.sounds[i].stop();
@@ -102,6 +101,11 @@ export function createWareApp() {
 			for (let i = this.queuedSounds.length - 1; i >= 0; i--) {
 				this.queuedSounds[i].stop();
 				this.queuedSounds.pop();
+			}
+
+			for (let i = this.pausedSounds.length - 1; i >= 0; i--) {
+				this.pausedSounds[i].stop();
+				this.pausedSounds.pop();
 			}
 		},
 	};
@@ -266,7 +270,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 
 			const shouldSpeedUp = () => {
 				// TODO: make this more random and fun
-				return (forceSpeed || wareCtx.score + 1 % 5 == 0) && wareCtx.speed <= SPEED_LIMIT;
+				return (forceSpeed || (wareCtx.score + 1) % 5 == 0) && wareCtx.speed <= SPEED_LIMIT;
 			};
 
 			const copyOfWinState = wareApp.winState; // when isGameOver() is called winState will be undefined because it was resetted, when the order of this is reversed, it will be fixed
@@ -368,7 +372,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 
 	wareApp.wareCtx = wareCtx;
 
-	k.watch(wareCtx, "time", "Time left", (t) => t.toFixed(2));
+	k.watch(wareCtx, "time", "Time left");
 	k.watch(wareCtx, "score", "Score");
 	k.watch(wareCtx, "lives", "Lives");
 	k.watch(wareCtx, "difficulty", "Difficulty");
@@ -431,13 +435,12 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 		}
 	});
 
-	camera.onDraw(() => {
+	wareApp.WareScene.onDraw(() => {
 		// draws the background
 		k.drawRect({
-			width: k.width() * 2,
-			height: k.height() * 2,
-			anchor: "center",
-			pos: k.center().add(shakeCamera.pos),
+			width: k.width(),
+			height: k.height(),
+			fixed: true,
 			color: wareApp.currentColor,
 		});
 	});

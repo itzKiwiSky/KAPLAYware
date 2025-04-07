@@ -8,7 +8,13 @@ import { assets } from "@kaplayjs/crew";
 type Friend = keyof typeof assets | `${keyof typeof assets}-o`;
 type AtFriend = `@${Friend}`;
 type CustomSprite<T extends string> = T extends AtFriend | string & {} ? AtFriend | string & {} : string;
-interface WareSprite extends Omit<SpriteComp, "sprite"> {
+
+/**
+ * A modified {@link sprite `sprite()`} component to fit KAPLAYware.
+ *
+ * @group Component Types
+ */
+interface WareSpriteComp extends Omit<SpriteComp, "sprite"> {
 	/**
 	 * Name of the sprite.
 	 */
@@ -101,7 +107,7 @@ export type MinigameAPI = {
 	 * @since v2000.0
 	 * @group Components
 	 */
-	sprite(spr: CustomSprite<string> | SpriteData | Asset<SpriteData>, opt?: SpriteCompOpt): WareSprite;
+	sprite(spr: CustomSprite<string> | SpriteData | Asset<SpriteData>, opt?: SpriteCompOpt): WareSpriteComp;
 	/** Register an event that runs once when timer runs out. */
 	onTimeout: (action: () => void) => KEventController;
 	/** Run this when player succeeded in completing the game. */
@@ -223,6 +229,8 @@ export type Minigame = {
 	playsOwnMusic?: boolean;
 	/** Wheter the minigame should appear on an specific difficulty */
 	difficulty?: 1 | 2 | 3 | "BOSS";
+	/** Wheter the minigame depends on colors to be played (crucial for accesability) */
+	colorDependant?: boolean;
 	/**
 	 * The function that loads the game's custom assets
 	 *
