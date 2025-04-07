@@ -2,7 +2,7 @@ import { GameObj } from "kaplay";
 import { Minigame } from "../../src/game/types.ts";
 
 const newGame: Minigame = {
-	prompt: "connect",
+	prompt: "CONNECT!",
 	author: "amyspark-ng",
 	input: "mouse",
 	rgb: (ctx) => ctx.mulfok.DARK_PURPLE,

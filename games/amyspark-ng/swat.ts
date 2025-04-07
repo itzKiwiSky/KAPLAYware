@@ -1,7 +1,7 @@
 import { Minigame } from "../../src/game/types";
 
 const swatGame: Minigame = {
-	prompt: "swat",
+	prompt: "SWAT!",
 	author: "amyspark-ng",
 	rgb: (ctx) => ctx.mulfok.LIGHT_BROWN,
 	duration: (ctx) => ctx.difficulty == 3 ? 5 : 4,

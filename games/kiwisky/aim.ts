@@ -2,7 +2,7 @@ import kaplay, { GameObj, Vec2 } from "kaplay";
 import { Minigame } from "../../src/game/types.ts";
 
 const aimGame: Minigame = {
-	prompt: "aim",
+	prompt: "AIM!",
 	author: "kiwisky",
 	rgb: [141, 183, 255],
 	urlPrefix: "games/kiwisky/assets/",

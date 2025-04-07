@@ -3,7 +3,7 @@ import { Minigame } from "../../src/game/types";
 import { GameObj, Vec2 } from "kaplay";
 
 const newGame: Minigame = {
-	prompt: "chase",
+	prompt: "CHASE!",
 	author: "nanopoison",
 	rgb: [133, 97, 97],
 	duration: (ctx) => ctx.difficulty == 3 ? 5 : 4,

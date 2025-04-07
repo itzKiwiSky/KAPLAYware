@@ -1,7 +1,7 @@
 import { Minigame } from "../../src/game/types";
 
 const fishGame: Minigame = {
-	prompt: "fish",
+	prompt: "FISH!",
 	author: "erik",
 	rgb: [109, 128, 250],
 	duration: (ctx) => 10 - ctx.difficulty / 2,

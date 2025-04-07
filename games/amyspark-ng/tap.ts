@@ -2,7 +2,7 @@ import { Vec2 } from "kaplay";
 import { Minigame } from "../../src/game/types";
 
 const tapGame: Minigame = {
-	prompt: "tap",
+	prompt: "TAP!",
 	author: "amyspark-ng",
 	rgb: [0, 0, 0],
 	input: "mouse (hidden)",

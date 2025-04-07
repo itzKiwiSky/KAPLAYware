@@ -1,7 +1,7 @@
 import { Minigame } from "../../src/game/types";
 
 const dodgeGame: Minigame = {
-	prompt: "dodge",
+	prompt: "DODGE!",
 	author: "amyspark-ng",
 	duration: (ctx) => ctx.difficulty == 1 || ctx.difficulty == 2 ? 6 : 8,
 	rgb: [255, 255, 255],

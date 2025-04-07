@@ -1,7 +1,7 @@
 import { Minigame } from "../../src/game/types";
 
 const mineGame: Minigame = {
-	prompt: "mine",
+	prompt: "MINE!",
 	author: "amyspark-ng",
 	rgb: (ctx) => ctx.mulfok.VOID_VIOLET,
 	input: "mouse (hidden)",

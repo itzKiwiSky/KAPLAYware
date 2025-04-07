@@ -3,7 +3,7 @@ import { Vec2 } from "kaplay";
 import { Minigame } from "../../src/game/types";
 
 const getGame: Minigame = {
-	prompt: "get",
+	prompt: "GET!",
 	author: "amyspark-ng",
 	rgb: (ctx) => ctx.mulfok.GREEN,
 	duration: (ctx) => ctx.difficulty == 3 ? 3.5 : 4,

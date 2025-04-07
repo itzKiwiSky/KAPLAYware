@@ -3,7 +3,7 @@ import { Minigame } from "../../src/game/types.ts";
 
 // almost 300 lines of pure unadultered pain that took me a whole day to write
 const sortGame: Minigame = {
-	prompt: "sort",
+	prompt: "SORT!",
 	author: "amyspark-ng",
 	duration: (ctx) => ctx.difficulty == 3 ? 7 : 6,
 	rgb: [166, 133, 159],

@@ -1,7 +1,7 @@
 import { Minigame } from "../../src/game/types.ts";
 
 const colorGame: Minigame = {
-	prompt: "choose",
+	prompt: "CHOOSE!",
 	author: "luizbills",
 	rgb: [0, 0, 0],
 	urlPrefix: "games/luizbills/assets/",

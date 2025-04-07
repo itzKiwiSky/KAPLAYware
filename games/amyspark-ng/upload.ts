@@ -2,7 +2,7 @@ import { Vec2 } from "kaplay";
 import { Minigame } from "../../src/game/types";
 
 const uploadGame: Minigame = {
-	prompt: "upload",
+	prompt: "UPLOAD!",
 	author: "amyspark-ng",
 	rgb: (ctx) => ctx.mulfok.DARK_BLUE,
 	duration: 4,

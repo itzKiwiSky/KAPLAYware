@@ -1,7 +1,7 @@
 import { Minigame } from "../../src/game/types";
 
 const knockGame: Minigame = {
-	prompt: "knock",
+	prompt: "KNOCK!",
 	input: "mouse",
 	author: "amyspark-ng",
 	rgb: [74, 48, 82],

@@ -2,7 +2,7 @@ import k from "../engine";
 import { assets } from "@kaplayjs/crew";
 import { AudioPlay, GameObj, KEventController, PosComp, RotateComp, ScaleComp, TimerController } from "kaplay";
 import cursor from "../plugins/cursor";
-import { coolPrompt, gameHidesMouse, getGameID, getGameInput } from "./utils";
+import { gameHidesMouse, getGameID, getGameInput } from "./utils";
 import { runTransition, TransitionState } from "./transitions";
 import { KAPLAYwareOpts, Minigame, MinigameCtx } from "./types";
 import games from "./games";
@@ -305,7 +305,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 
 			transition.onPromptTime(() => {
 				inputPrompt.end();
-				if (typeof choosenGame.prompt == "string") prompt = k.addPrompt(wareApp, coolPrompt(choosenGame.prompt));
+				if (typeof choosenGame.prompt == "string") prompt = k.addPrompt(wareApp, choosenGame.prompt);
 				else {
 					prompt = k.addPrompt(wareApp, "");
 					choosenGame.prompt(wareApp.currentContext, prompt);

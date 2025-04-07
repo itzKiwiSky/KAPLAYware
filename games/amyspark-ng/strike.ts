@@ -2,7 +2,7 @@ import k from "../../src/engine";
 import { Minigame } from "../../src/game/types";
 
 const strikeGame: Minigame = {
-	prompt: "strike",
+	prompt: "STRIKE!",
 	author: "amyspark-ng",
 	rgb: k.WHITE,
 	input: "mouse (hidden)",
