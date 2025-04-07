@@ -92,6 +92,7 @@ export function createWareApp() {
 			this.sounds.push(sound);
 			return sound;
 		},
+		// TODO: There's a bug where if you pause and unpause quickly in some minigames the next minigame will have the sounds of the preivous one, i don't think pausedSounds gets cleared when they stop playing
 		clearSounds() {
 			for (let i = this.sounds.length - 1; i >= 0; i--) {
 				this.sounds[i].stop();
@@ -134,7 +135,6 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 	opts.games = opts.games ?? games;
 	opts.debug = opts.debug ?? false;
 	opts.inOrder = opts.inOrder ?? false;
-	opts.onlyMouse = opts.onlyMouse ?? false;
 
 	const wareApp = createWareApp();
 	wareApp.pausableCtx = createPauseCtx(wareApp);
@@ -260,28 +260,46 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 			else if (wareCtx.score >= 20) wareCtx.difficulty = 3;
 			wareApp.gameRunning = false;
 
+			let games = [...opts.games];
+
 			if (overrideDifficulty) wareCtx.difficulty = overrideDifficulty;
-			if (opts.onlyMouse) opts.games = opts.games.filter((game) => getGameInput(game) == "mouse");
 
 			const shouldSpeedUp = () => {
-				return (forceSpeed || wareCtx.score % 5 == 0) && wareCtx.speed <= SPEED_LIMIT;
+				// TODO: make this more random and fun
+				return (forceSpeed || wareCtx.score + 1 % 5 == 0) && wareCtx.speed <= SPEED_LIMIT;
 			};
 
 			const copyOfWinState = wareApp.winState; // when isGameOver() is called winState will be undefined because it was resetted, when the order of this is reversed, it will be fixed
 			const isGameOver = () => copyOfWinState == false && wareCtx.lives == 0;
 
-			const availableGames = opts.games.filter((game) => {
-				if (wareApp.minigameHistory.length == 0 || opts.games.length == 1) return true;
+			// remove the ones that don't match the input
+			games = games.filter((game) => {
+				if (!opts.input) return true;
+				else return getGameInput(game) == opts.input;
+			});
+
+			// remove the ones that don't match the difficulty
+			games = games.filter((game) => {
+				if (!game.difficulty) return true;
+				else if (game.difficulty != wareCtx.difficulty) {
+					k.debug.log(`game: ` + getGameID(game) + " didn't match current difficulty " + wareCtx.difficulty);
+					return false;
+				}
+			});
+
+			// now remove the previous one so we can get a new one
+			games = games.filter((game) => {
+				if (wareApp.minigameHistory.length == 0 || games.length == 1) return true;
 				else if (restartMinigame && !skipMinigame) return game == wareCtx.curGame;
 				else {
 					const previousPreviousID = wareApp.minigameHistory[wareCtx.score - 3];
-					const previousPreviousGame = opts.games.find((game) => getGameID(game) == previousPreviousID);
+					const previousPreviousGame = games.find((game) => getGameID(game) == previousPreviousID);
 					if (previousPreviousGame) return game != wareCtx.curGame && game != previousPreviousGame;
 					else return game != wareCtx.curGame;
 				}
 			});
 
-			const choosenGame = opts.inOrder ? availableGames[wareCtx.score % availableGames.length] : k.choose(availableGames);
+			const choosenGame = opts.inOrder ? games[wareCtx.score % games.length] : k.choose(games);
 
 			let transitionStates: TransitionState[] = ["prep"];
 			if (wareApp.winState != undefined) transitionStates.splice(0, 0, wareApp.winState == true ? "win" : "lose");

@@ -1,9 +1,9 @@
-import { Asset, AudioPlayOpt, Color, DrawSpriteOpt, KAPLAYCtx, KEventController, Key, SpriteAtlasData, SpriteCompOpt, SpriteData, Uniform, Vec2 } from "kaplay";
+import { Asset, AudioPlayOpt, Color, DrawSpriteOpt, EaseFunc, KAPLAYCtx, KEventController, Key, SpriteAtlasData, SpriteCompOpt, SpriteData, Uniform, Vec2 } from "kaplay";
 import k from "../engine";
 import { InputButton, Minigame, MinigameAPI, MinigameCtx } from "./types";
 import { getGameID, isDefaultAsset } from "./utils";
 import { gameAPIs, generalEventControllers, loadAPIs, pauseAPIs } from "./api";
-import { CustomSprite, WareApp } from "./kaplayware";
+import { WareApp } from "./kaplayware";
 
 /** The allowed load functions */
 export type LoadCtx = Pick<KAPLAYCtx, typeof loadAPIs[number]>;
@@ -257,6 +257,32 @@ export function createGameCtx(wareApp: WareApp, game: Minigame) {
 				};
 			};
 		}
+		else if (api == "opacity") {
+			gameCtx[api] = (opacity: number) => {
+				const comp = k.opacity(opacity);
+				return {
+					...comp,
+					fadeOut(time: number, easeFunc: EaseFunc = k.easings.linear) {
+						return wareApp.pausableCtx.tween(
+							this.opacity,
+							0,
+							time,
+							(a) => this.opacity = a,
+							easeFunc,
+						);
+					},
+					fadeIn(time: number, easeFunc: EaseFunc = k.easings.linear) {
+						return wareApp.pausableCtx.tween(
+							this.opacity,
+							0,
+							time,
+							(a) => this.opacity = a,
+							easeFunc,
+						);
+					},
+				};
+			};
+		}
 	}
 
 	function dirToKeys(button: InputButton): Key[] {
@@ -376,14 +402,14 @@ export function createGameCtx(wareApp: WareApp, game: Minigame) {
 			});
 			wareApp.wareCtx.nextGame();
 		},
-		sprite: (spr: CustomSprite<string> | SpriteData | Asset<SpriteData>, opts?: SpriteCompOpt) => {
+		sprite: (spr: string | SpriteData | Asset<SpriteData>, opts?: SpriteCompOpt) => {
 			const hasAt = (t: any) => typeof t == "string" && t.startsWith("@");
 			const getSpriteThing = (t: any) => hasAt(t) ? t : `${getGameID(game)}-${t}`;
 			const spriteComp = k.sprite(getSpriteThing(spr), opts);
 
 			return {
 				...spriteComp,
-				set sprite(val: CustomSprite<string>) {
+				set sprite(val: string) {
 					spriteComp.sprite = getSpriteThing(val);
 				},
 

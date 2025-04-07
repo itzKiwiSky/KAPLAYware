@@ -49,7 +49,8 @@ function addPrompt(wareApp: WareApp, promptText: string) {
 		});
 
 		promptObj.end = () => {
-			promptObj.fadeOut(0.25 / wareApp.wareCtx.speed).onEnd(() => promptObj.destroy());
+			// can't use fade out because it's not paused lol
+			wareApp.pausableCtx.tween(promptObj.opacity, 0, 0.25 / wareApp.wareCtx.speed, (p) => promptObj.opacity = p).onEnd(() => promptObj.destroy());
 		};
 	}
 
@@ -78,7 +79,6 @@ function addInputPrompt(wareApp: WareApp, input: ReturnType<typeof getGameInput>
 
 	prompt.onUpdate(() => {
 		inputBg.angle += 0.1 * wareApp.wareCtx.speed;
-		inputPrompt.scale = inputPrompt.scale.scale(inputBg.scale);
 	});
 	wareApp.pausableCtx.tween(k.vec2(0), k.vec2(1), 0.25 / wareApp.wareCtx.speed, (p) => inputBg.scale = p, k.easings.easeOutExpo);
 	wareApp.pausableCtx.tween(k.vec2(0), k.vec2(1), 0.25 / wareApp.wareCtx.speed, (p) => inputPrompt.scale = p, k.easings.easeOutElastic);

@@ -1,5 +1,5 @@
 import games from "./games";
-import { Minigame } from "./types";
+import { Minigame, MinigameInput } from "./types";
 
 export const getGameID = (g: Minigame) => {
 	const modules = import.meta.glob("../../games/*/*.ts", { eager: true });
@@ -9,10 +9,12 @@ export const getGameID = (g: Minigame) => {
 };
 export const getGameByID = (id: string) => games.find((minigame) => `${minigame.author}:${minigame.prompt}` == id);
 
-export const getGameInput = (g: Minigame) => {
+export function getGameInput(g: Minigame): MinigameInput {
+	if (g.difficulty == "BOSS") return "both";
 	if (gameUsesMouse(g)) return "mouse";
 	else return "keys";
-};
+}
+
 export const gameUsesMouse = (g: Minigame) => g.input == "mouse" || g.input == "mouse (hidden)";
 export const gameHidesMouse = (g: Minigame) => gameUsesMouse(g) && g.input != "mouse (hidden)";
 export const isDefaultAsset = (assetName: any) => typeof assetName == "string" && assetName.includes("@");

@@ -15,6 +15,9 @@ interface WareSprite extends Omit<SpriteComp, "sprite"> {
 	sprite: CustomSprite<string>;
 }
 
+/** The type of input a minigame does */
+export type MinigameInput = "mouse" | "keys" | "both";
+
 /** A button */
 export type InputButton =
 	| "action"
@@ -218,6 +221,8 @@ export type Minigame = {
 	urlPrefix?: string;
 	/** Wheter your game plays its own music or if it should play a random jingle from our selection of jingles */
 	playsOwnMusic?: boolean;
+	/** Wheter the minigame should appear on an specific difficulty */
+	difficulty?: 1 | 2 | 3 | "BOSS";
 	/**
 	 * The function that loads the game's custom assets
 	 *
@@ -247,6 +252,6 @@ export type Minigame = {
 export type KAPLAYwareOpts = {
 	games?: Minigame[];
 	debug?: boolean;
-	onlyMouse?: boolean;
+	input?: MinigameInput;
 	inOrder?: boolean;
 };

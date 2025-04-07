@@ -99,9 +99,13 @@ const tapGame: Minigame = {
 						flash.destroy();
 					});
 				}
-				else monkeyWrong();
+				else {
+					if (ctx.winState() != undefined) return;
+					monkeyWrong();
+				}
 
 				if (numbersHit.length >= numbers.length) {
+					if (ctx.winState() != undefined) return;
 					ctx.play("monkey", { detune: ctx.rand(50, 100) });
 					ctx.tween(ctx.mulfok.BEAN_GREEN, ctx.mulfok.VOID_PURPLE, 0.5 / ctx.speed, (p) => screen.color = p, ctx.easings.easeOutQuint);
 					ctx.win();
