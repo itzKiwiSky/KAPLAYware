@@ -153,6 +153,13 @@ const uploadGame: Minigame = {
 				}
 			}
 		});
+
+		ctx.onTimeout(() => {
+			if (ctx.winState() == undefined) {
+				ctx.lose();
+				ctx.wait(0.5 / ctx.speed, () => ctx.finish());
+			}
+		});
 	},
 };
 

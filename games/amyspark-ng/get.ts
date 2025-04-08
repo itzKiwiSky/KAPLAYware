@@ -16,7 +16,6 @@ const getGame: Minigame = {
 		ctx.loadSound("crunch", "sounds/crunch.mp3");
 		ctx.loadSound("rustle", "sounds/bushrustle.mp3");
 	},
-	// TODO: Fix the tree thing
 	start(ctx) {
 		ctx.speed = 1.6;
 		const SPEED = 300 * ctx.speed;
@@ -47,7 +46,8 @@ const getGame: Minigame = {
 			ctx.anchor("bot"),
 			ctx.scale(1.5),
 			ctx.rotate(),
-			ctx.z(5),
+			ctx.z(0.5),
+			ctx.body(),
 		]);
 
 		const trunk = ctx.add([
@@ -56,6 +56,8 @@ const getGame: Minigame = {
 			ctx.scale(),
 			ctx.pos(649, 584),
 			ctx.z(1),
+			ctx.area({ scale: ctx.vec2(0.5, 0.1), offset: ctx.vec2(-25, 0) }),
+			ctx.body({ isStatic: true }),
 		]);
 
 		let bushShake = 0;
@@ -93,8 +95,8 @@ const getGame: Minigame = {
 		const movement = ctx.vec2();
 		let lerpMovement = ctx.vec2();
 		bean.onUpdate(() => {
-			bean.pos.x = ctx.clamp(bean.pos.x, -bean.width / 2, ctx.width() + bean.width / 2);
-			bean.pos.y = ctx.clamp(bean.pos.y, -bean.height / 2, ctx.height() + bean.height / 2);
+			bean.pos.x = ctx.clamp(bean.pos.x, bean.width / 2, ctx.width() - bean.width / 2);
+			bean.pos.y = ctx.clamp(bean.pos.y, bean.height / 2, ctx.height() - bean.height / 2);
 
 			// this is to prevent bean going faster on diagonal movement
 			movement.x = ctx.isInputButtonDown("left") ? -1 : ctx.isInputButtonDown("right") ? 1 : 0;

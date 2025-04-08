@@ -97,6 +97,7 @@ export type WareBomb = GameObj<{ tick(): void; beatsLeft: number; turnOff(): voi
 
 function addBomb(wareApp: WareApp): WareBomb {
 	const BOMB_POS = k.vec2(40, k.height() - 40);
+	let beatsLeft = 3;
 
 	const bomb = wareApp.WareScene.add([{
 		tick,
@@ -112,72 +113,61 @@ function addBomb(wareApp: WareApp): WareBomb {
 	}]);
 	let conductor: ReturnType<typeof k.conductor> = null;
 
-	const cord = bomb.add([
-		k.sprite("bomb-cord", { tiled: true }),
-		k.pos(69, 528),
-		k.fixed(),
-	]);
-
-	const cordstart = bomb.add([
-		k.sprite("bomb-cord-start"),
-		k.pos(29, 528),
-		k.fixed(),
-	]);
-
-	const cordtip = bomb.add([
-		k.sprite("bomb-cord-tip"),
-		k.pos(29, 528),
-		k.fixed(),
-	]);
-
-	const fuse = bomb.add([
-		k.sprite("bomb-fuse"),
-		k.pos(cord.pos.add(cord.width, 50)),
-		k.anchor("center"),
-		k.scale(),
-		k.opacity(),
-		k.fixed(),
-	]);
-
 	const bombSpr = bomb.add([
 		k.sprite("bomb"),
 		k.pos(BOMB_POS),
 		k.anchor("center"),
 		k.scale(),
 		k.color(),
-		k.fixed(),
+		k.z(1),
 	]);
 
-	cord.width = k.width() / 2;
-	let beatsLeft = 3;
+	const cordstart = bomb.add([
+		k.sprite("bomb-cord-start"),
+		k.pos(29, 528),
+	]);
+
+	const cord = bomb.add([
+		k.sprite("bomb-cord", { tiled: true, width: k.width() / 2 }),
+		k.pos(69, 528),
+	]);
+
+	const cordtip = cord.add([
+		k.sprite("bomb-cord-tip"),
+		k.pos(cord.width, 0),
+		k.anchor("center"),
+		k.opacity(),
+	]);
+	cordtip.pos.y += cordtip.height / 2;
+
+	const fuse = cordtip.add([
+		k.sprite("bomb-fuse"),
+		k.pos(0, 22),
+		k.anchor("center"),
+		k.scale(),
+		k.opacity(),
+	]);
 
 	function destroy() {
 		bomb.destroy();
-		cordstart.destroy();
-		cord.destroy();
-		cordtip.destroy();
-		fuse.destroy();
 		conductor?.destroy();
 	}
 
-	let fuseYThing = 0;
+	let movingFuse = false;
 	bomb.onUpdate(() => {
 		if (beatsLeft < -1) return;
 
+		const width = k.lerp(cord.width, ((k.width() / 2) / 3) * beatsLeft, 0.75);
+		cord.width = width;
+		cordtip.pos.x = width;
+
 		if (conductor) conductor.paused = wareApp.gamePaused;
-
-		if (beatsLeft != 0) {
-			fuse.pos = k.lerp(fuse.pos, cord.pos.add(cord.width, 50), 0.75);
-			cordtip.pos = fuse.pos.sub(cordtip.width / 2, 50);
-		}
-		else {
-			fuseYThing += 1.5;
-			if (cordtip.exists()) cordtip.destroy();
+		if (beatsLeft == 0 && !movingFuse) {
 			if (cordstart.exists()) cordstart.destroy();
-			fuse.pos = k.lerp(fuse.pos, k.vec2(cord.pos.x + cord.width, cord.pos.y + 50 - fuseYThing), 0.75);
+			cordtip.opacity = 0;
+			movingFuse = true;
+			wareApp.pausableCtx.tween(fuse.pos.y, fuse.pos.y - 30, conductor.beatInterval, (p) => fuse.pos.y = p);
 		}
-
-		cord.width = k.lerp(cord.width, ((k.width() / 2) / 3) * beatsLeft, 0.75);
 	});
 
 	let hasExploded = false;

@@ -26,7 +26,6 @@ const mineGame: Minigame = {
 			},
 		});
 	},
-	// TODO: Fix a few things so it's perfect
 	start(ctx) {
 		ctx.add([ctx.sprite("bg")]);
 		const getHits = () => {
@@ -57,18 +56,19 @@ const mineGame: Minigame = {
 		]);
 
 		function hitParticles() {
-			const particleSpeed = ctx.vec2(0, 500).scale(ctx.speed);
+			const particleSpeed = ctx.vec2(ctx.rand(-10, 10), 500).scale(ctx.speed);
 			const splatter = ctx.add([
-				ctx.pos(ctx.mousePos()),
+				ctx.pos(rocks.pos.sub(0, rocks.height / 2).add(ctx.rand(-40, 50), ctx.rand(-40, 50))),
 				ctx.z(rocks.z + 1),
 				ctx.particles({
 					max: 20,
 					speed: [particleSpeed.x, particleSpeed.y],
-					acceleration: [particleSpeed.scale(2), particleSpeed.scale(2)],
+					acceleration: [particleSpeed.scale(2), particleSpeed.scale(3)],
 					lifeTime: [999, 999],
 					colors: [ctx.WHITE],
-					opacities: [1.0, 0.0],
-					angle: [0, 0],
+					opacities: [1.0],
+					angle: [0, 360],
+					angularVelocity: [0, 50 * ctx.speed],
 					// @ts-ignore
 					texture: ctx.getSprite("peddle").data.tex,
 					// @ts-ignore
@@ -82,7 +82,7 @@ const mineGame: Minigame = {
 				}),
 			]);
 
-			splatter.emit(ctx.randi(30, 40));
+			splatter.emit(ctx.randi(10, 20));
 			splatter.onEnd(() => splatter.destroy());
 		}
 
@@ -95,7 +95,10 @@ const mineGame: Minigame = {
 				insideRock = true;
 
 				// you hit too soft
-				if (ctx.mouseDeltaPos().y < 40) return;
+				if (ctx.mouseDeltaPos().y < 40) {
+					ctx.tween(0.9, 1, 0.15 / ctx.speed, (p) => rocks.scale.y = p, ctx.easings.easeOutQuint);
+					return;
+				}
 
 				if (!timeOut && hitsLeft > 0) {
 					hitsLeft--;
@@ -109,6 +112,7 @@ const mineGame: Minigame = {
 					hasWon = true;
 					hitParticles();
 					ctx.play("rockhit", { detune: ctx.rand(-50, 50) });
+					// TODO: Figure out why frames 5 and 6 are empty
 					rocks.play("diamond", { speed: 5 * ctx.speed });
 					ctx.play("bling", { detune: ctx.rand(-50, 50), speed: ctx.speed });
 					ctx.tween(ctx.vec2(1.5), ctx.vec2(1), 0.15 / ctx.speed, (p) => rocks.scale = p, ctx.easings.easeOutQuint);
