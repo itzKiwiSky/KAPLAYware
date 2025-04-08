@@ -10,6 +10,7 @@ const newGame: Minigame = {
 	urlPrefix: "games/nanopoison/assets",
 	load(ctx) {
 	},
+	// TODO: Touch up, need to contact nanopoison
 	start(ctx) {
 		const moveRate = 0.5 / ctx.speed;
 		let level;

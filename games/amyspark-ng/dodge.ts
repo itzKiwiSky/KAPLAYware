@@ -21,6 +21,7 @@ const dodgeGame: Minigame = {
 		ctx.loadSound("explosion", "sounds/explosion.wav");
 		ctx.loadSound("wifi", "sounds/explosion.wav");
 	},
+	// TODO: Touch up (add the browser overlya)
 	start(ctx) {
 		const game = ctx.add([]);
 		ctx.setGravity(2500);

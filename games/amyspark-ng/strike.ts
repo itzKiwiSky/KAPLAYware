@@ -16,6 +16,7 @@ const strikeGame: Minigame = {
 		ctx.loadSound("cheer", "sounds/applause.ogg");
 		ctx.loadSound("ballhit", "sounds/ballhit.mp3");
 	},
+	// TODO: Make more juicy, make more clear when one should be careful of the ball, do the remake
 	start(ctx) {
 		let bolaZ = 0;
 		let ballDirection = -1;

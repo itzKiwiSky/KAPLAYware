@@ -2,7 +2,7 @@ import { Asset, Color, GameObj, KAPLAYCtx, KEventController, SpriteComp, SpriteC
 import k from "../engine";
 import { ConfettiOpt } from "../plugins/wareobjects";
 import { gameAPIs } from "./api";
-import { LoadCtx } from "./context";
+import { LoadCtx, MinigameCtx } from "./context";
 import { assets } from "@kaplayjs/crew";
 
 type Friend = keyof typeof assets | `${keyof typeof assets}-o`;
@@ -133,9 +133,6 @@ export type MinigameAPI = {
 	/** The time left for the minigame to finish */
 	timeLeft: number;
 };
-
-/** The context for the allowed functions in a minigame */
-export type MinigameCtx = Pick<typeof k, typeof gameAPIs[number]> & MinigameAPI;
 
 /** The type for a minigame */
 export type Minigame = {

@@ -1,6 +1,6 @@
 import { Asset, AudioPlayOpt, Color, DrawSpriteOpt, EaseFunc, KAPLAYCtx, KEventController, Key, SpriteAtlasData, SpriteCompOpt, SpriteData, Uniform, Vec2 } from "kaplay";
 import k from "../engine";
-import { InputButton, Minigame, MinigameAPI, MinigameCtx } from "./types";
+import { InputButton, Minigame, MinigameAPI } from "./types";
 import { getGameID, isDefaultAsset } from "./utils";
 import { gameAPIs, generalEventControllers, loadAPIs, pauseAPIs } from "./api";
 import { WareApp } from "./kaplayware";
@@ -104,6 +104,10 @@ export function createPauseCtx(wareApp: WareApp) {
 	return ctx;
 }
 
+/** The context for the allowed functions in a minigame */
+export type MinigameCtx = Pick<typeof k, typeof gameAPIs[number]> & MinigameAPI;
+
+/** Creates the context minigames use to add objects and buncha other stuff */
 export function createGameCtx(wareApp: WareApp, game: Minigame) {
 	const gameCtx = {};
 	for (const api of gameAPIs) {

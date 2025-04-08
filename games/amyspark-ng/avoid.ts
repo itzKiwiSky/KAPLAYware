@@ -38,6 +38,7 @@ const avoidGame: Minigame = {
 			},
 		});
 	},
+	// TODO: Do PR #18
 	start(ctx) {
 		let SPEED = 300 * ctx.speed;
 		const movement = ctx.vec2(0);

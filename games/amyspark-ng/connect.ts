@@ -14,6 +14,7 @@ const newGame: Minigame = {
 		ctx.loadSprite("box", "/sprites/connect/box.png");
 		ctx.loadSound("plug", "/sounds/switch.mp3");
 	},
+	// TODO: Do the remake
 	start(ctx) {
 		const allColors = [
 			ctx.Color.fromHex("#cc425e"),
@@ -53,7 +54,6 @@ const newGame: Minigame = {
 				"plugbox",
 			]);
 
-			// FIXME: When area collisions is fixed remove the aarea here i think
 			const plugObj = sourceObj.add([
 				ctx.sprite("plug"),
 				ctx.area(),

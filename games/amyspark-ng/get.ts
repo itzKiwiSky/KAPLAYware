@@ -16,6 +16,7 @@ const getGame: Minigame = {
 		ctx.loadSound("crunch", "sounds/crunch.mp3");
 		ctx.loadSound("rustle", "sounds/bushrustle.mp3");
 	},
+	// TODO: Fix the tree thing
 	start(ctx) {
 		ctx.speed = 1.6;
 		const SPEED = 300 * ctx.speed;

@@ -30,6 +30,7 @@ const spreadGame: Minigame = {
 
 		ctx.loadSound("crunch", "sounds/crunch.mp3");
 	},
+	// TODO: Do the remake
 	start(ctx) {
 		let overChecker = false;
 		let canSpread = true;

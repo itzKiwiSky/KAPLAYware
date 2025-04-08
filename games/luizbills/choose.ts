@@ -11,6 +11,7 @@ const colorGame: Minigame = {
 	load(ctx) {
 		ctx.loadSound("correct", "sounds/applause.ogg");
 	},
+	// TODO: Do the remake
 	start(ctx) {
 		const possibleColors = {
 			"red": ctx.mulfok.RED,

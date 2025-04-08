@@ -26,6 +26,7 @@ const mineGame: Minigame = {
 			},
 		});
 	},
+	// TODO: Fix a few things so it's perfect
 	start(ctx) {
 		ctx.add([ctx.sprite("bg")]);
 		const getHits = () => {

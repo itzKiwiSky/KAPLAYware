@@ -20,6 +20,7 @@ const swatGame: Minigame = {
 		ctx.loadSound("breakglass", "sounds/breakglass.ogg");
 		ctx.loadSound("breakvase", "sounds/breakvase.ogg");
 	},
+	// TODO: Touch up the gameplay, flies are annoying
 	start(ctx) {
 		const table = ctx.add([
 			ctx.sprite("table"),

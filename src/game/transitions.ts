@@ -312,6 +312,7 @@ export function runTransition(wareApp: WareApp, states: TransitionState[]) {
 		});
 
 		pausableCtx.wait(sound.duration() / ware.speed, () => {
+			overlay.destroy();
 			stateEndEvent.trigger("speed");
 		});
 	});

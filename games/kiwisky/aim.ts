@@ -22,6 +22,7 @@ const aimGame: Minigame = {
 		ctx.loadSound("pop3", "/aim/sounds/balloon_pop-03.mp3");
 		ctx.loadSound("explode", "/aim/sounds/explosion.wav");
 	},
+	// TODO: Touch up some stuff
 	start(ctx) {
 		const balloons: number = ctx.difficulty == 1
 			? ctx.randi(3, 4)

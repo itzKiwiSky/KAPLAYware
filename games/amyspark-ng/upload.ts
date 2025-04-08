@@ -14,6 +14,7 @@ const uploadGame: Minigame = {
 		ctx.loadSprite("drop", "sprites/upload/drop.png");
 		ctx.loadSound("notification", "sounds/notification.mp3");
 	},
+	// TODO: Touch up file spawning
 	start(ctx) {
 		let dragThingOp = 0;
 		let curDragging: any = null;

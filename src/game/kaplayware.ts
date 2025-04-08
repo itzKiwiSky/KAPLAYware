@@ -1,18 +1,17 @@
 import k from "../engine";
-import { assets } from "@kaplayjs/crew";
 import { AudioPlay, GameObj, KEventController, PosComp, RotateComp, ScaleComp, TimerController } from "kaplay";
 import cursor from "../plugins/cursor";
 import { gameHidesMouse, getGameID, getGameInput } from "./utils";
 import { runTransition, TransitionState } from "./transitions";
-import { KAPLAYwareOpts, Minigame, MinigameCtx } from "./types";
+import { KAPLAYwareOpts, Minigame } from "./types";
 import games from "./games";
-import { createGameCtx, createPauseCtx, PauseCtx } from "./context";
+import { createGameCtx, createPauseCtx, MinigameCtx, PauseCtx } from "./context";
 import { WareBomb } from "../plugins/wareobjects";
 
 export function createWareApp() {
 	const wareApp = {
 		/** Main object, if you want to pause every object, pause this */
-		WareScene: k.add([k.area(), k.rect(0, 0)]),
+		WareScene: k.add([]),
 		/** The parent of the camera, gets its position offsetted for shakes */
 		shakeCamera: null as GameObj<PosComp>,
 		/** The camera object, modify its scale or angle to simulate camera */
@@ -25,6 +24,7 @@ export function createWareApp() {
 		/** Wheter the user has paused */
 		gamePaused: false,
 		inputEnabled: false,
+		// TODO: Don't pause draw events, always let them run but still store them so they can be cancelled when the minigame ends
 		drawEvents: [] as KEventController[],
 		generalEvents: [] as KEventController[],
 		inputEvents: [] as KEventController[],
@@ -110,20 +110,18 @@ export function createWareApp() {
 		},
 	};
 
-	wareApp.shakeCamera = wareApp.WareScene.add([k.pos(), k.rect(0, 0), k.area()]);
+	wareApp.shakeCamera = wareApp.WareScene.add([k.pos()]);
 	wareApp.camera = wareApp.shakeCamera.add([
 		k.pos(k.center()),
 		k.anchor("center"),
 		k.scale(),
 		k.rotate(),
 		k.opacity(0),
-		k.rect(0, 0),
-		k.area(),
 		{
 			shake: 0,
 		},
 	]);
-	wareApp.gameBox = wareApp.camera.add([k.pos(-k.width() / 2, -k.height() / 2), k.area(), k.rect(0, 0)]);
+	wareApp.gameBox = wareApp.camera.add([k.pos(-k.width() / 2, -k.height() / 2)]);
 
 	return wareApp;
 }
@@ -203,14 +201,14 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 			// OBJECT STUFF
 			gameBox.removeAll();
 
-			wareApp.currentContext = createGameCtx(wareApp, minigame) as MinigameCtx;
+			wareApp.currentContext = createGameCtx(wareApp, minigame);
 			const gDuration = typeof minigame.duration == "number" ? minigame.duration : minigame.duration(wareApp.currentContext);
 			const durationEnabled = gDuration != undefined;
 			wareCtx.time = durationEnabled ? (gDuration / wareCtx.speed) : 1;
 			wareApp.currentContext.timeLeft = wareCtx.time;
 			wareApp.currentColor = typeof minigame.rgb == "function" ? minigame.rgb(wareApp.currentContext) : "r" in minigame.rgb ? minigame.rgb : k.Color.fromArray(minigame.rgb);
 			wareApp.currentScene?.destroy();
-			wareApp.currentScene = gameBox.add([k.rect(0, 0), k.area()]);
+			wareApp.currentScene = gameBox.add([k.rect(0, 0), k.area()]); // TODO: When area collisions are fixed remove this area()
 			wareApp.gameRunning = false; // will be set to true onTransitionEnd (in nextGame())
 			wareApp.timeRunning = false;
 			wareApp.canPlaySounds = false;
@@ -268,7 +266,11 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 
 			if (overrideDifficulty) wareCtx.difficulty = overrideDifficulty;
 
+			// TODO: Decide the difficulty based on games played, loop it back to 1 when games played is divisible by 30 (i think)
+			// TODO: This also implies doing the boss system, make the boss minigame (the one with the giant squid)
+
 			const shouldSpeedUp = () => {
+				// There's a chance it might speed up on 3 or 6, else speed on 5
 				// TODO: make this more random and fun
 				return (forceSpeed || (wareCtx.score + 1) % 5 == 0) && wareCtx.speed <= SPEED_LIMIT;
 			};
@@ -286,7 +288,6 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 			games = games.filter((game) => {
 				if (!game.difficulty) return true;
 				else if (game.difficulty != wareCtx.difficulty) {
-					k.debug.log(`game: ` + getGameID(game) + " didn't match current difficulty " + wareCtx.difficulty);
 					return false;
 				}
 			});
