@@ -1,7 +1,7 @@
 import k from "../engine";
 import { AudioPlay, GameObj, KEventController, PosComp, RotateComp, ScaleComp, TimerController } from "kaplay";
 import cursor from "../plugins/cursor";
-import { gameHidesMouse, getGameID, getGameInput } from "./utils";
+import { gameHidesMouse, gameUsesMouse, getGameID, getGameInput } from "./utils";
 import { runTransition, TransitionState } from "./transitions";
 import { KAPLAYwareOpts, Minigame } from "./types";
 import games from "./games";
@@ -202,7 +202,8 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 			gameBox.removeAll();
 
 			wareApp.currentContext = createGameCtx(wareApp, minigame);
-			const gDuration = typeof minigame.duration == "number" ? minigame.duration : minigame.duration(wareApp.currentContext);
+			// TODO: Fix this typing
+			const gDuration = minigame.difficulty != "BOSS" && typeof minigame.duration == "number" ? minigame.duration : minigame.duration(wareApp.currentContext);
 			const durationEnabled = gDuration != undefined;
 			wareCtx.time = durationEnabled ? (gDuration / wareCtx.speed) : 1;
 			wareApp.currentContext.timeLeft = wareCtx.time;
@@ -316,7 +317,9 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 			restartMinigame = false;
 			skipMinigame = false;
 
-			cursor.visible = !gameHidesMouse(choosenGame);
+			// TODO: Figure out what the in the damn hell is wrong with this
+			k.debug.log(`game "${getGameID(choosenGame)}" uses mouse: ${gameUsesMouse(choosenGame)} and hides: ${gameHidesMouse(choosenGame)}`);
+			cursor.visible = gameHidesMouse(choosenGame);
 
 			// ### transition coolness ##
 			// sends prep, if shouldSpeedUp is false and winState is undefinied, then it will only run prep
@@ -381,8 +384,9 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 	k.watch(wareApp, "inputEnabled", "Input enabled");
 
 	for (const game of opts.games) {
+		game.difficulty = game.difficulty ?? undefined;
 		game.urlPrefix = game.urlPrefix ?? "";
-		game.duration = game.duration ?? DEFAULT_DURATION;
+		if (game.difficulty != "BOSS") game.duration = game.duration ?? DEFAULT_DURATION;
 		game.rgb = game.rgb ?? [255, 255, 255];
 		game.input = game.input ?? "keys";
 		if ("r" in game.rgb) game.rgb = [game.rgb.r, game.rgb.g, game.rgb.b];

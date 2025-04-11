@@ -9,12 +9,18 @@ export const getGameID = (g: Minigame) => {
 };
 export const getGameByID = (id: string) => games.find((minigame) => `${minigame.author}:${minigame.prompt}` == id);
 
+export const gameUsesMouse = (g: Minigame) => {
+	return g.difficulty == "BOSS" || g.input == "mouse (hidden)" || g.input == "mouse";
+};
+
 export function getGameInput(g: Minigame): MinigameInput {
 	if (g.difficulty == "BOSS") return "both";
 	if (gameUsesMouse(g)) return "mouse";
 	else return "keys";
 }
 
-export const gameUsesMouse = (g: Minigame) => g.input == "mouse" || g.input == "mouse (hidden)";
-export const gameHidesMouse = (g: Minigame) => gameUsesMouse(g) && g.input != "mouse (hidden)";
+export const gameHidesMouse = (g: Minigame) => {
+	return gameUsesMouse(g) && g.input == "mouse (hidden)";
+};
+
 export const isDefaultAsset = (assetName: any) => typeof assetName == "string" && assetName.includes("@");
