@@ -33,13 +33,15 @@ k.loadSprite("trans1-heart", "sprites/transition/pack1/heart.png");
 k.loadSprite("input-circle", "sprites/transition/input/circle.png");
 k.loadSprite("input-keys", "sprites/transition/input/keys.png");
 k.loadSprite("input-mouse", "sprites/transition/input/mouse.png");
-k.loadSprite("input-keysandmouse", "sprites/transition/input/keysandmouse.png");
+k.loadSprite("input-both", "sprites/transition/input/both.png");
 
 k.loadSound("prepJingle", "sounds/prepJingle.ogg");
 k.loadSound("winJingle", "sounds/winJingle.ogg");
 k.loadSound("loseJingle", "sounds/loseJingle.ogg");
 k.loadSound("speedJingle", "sounds/speedJingle.ogg");
 k.loadSound("gameOverJingle", "sounds/gameOverJingle.ogg");
+k.loadSound("bossJingle", "sounds/bossJingle.ogg");
+k.loadSound("bossWinJingle", "sounds/bossWinJingle.ogg");
 k.loadSound("tick", "sounds/bombtick.mp3");
 k.loadSound("explosion", "sounds/explosion.mp3");
 

@@ -1,8 +1,24 @@
-import { Asset, AudioPlayOpt, Color, DrawSpriteOpt, EaseFunc, KAPLAYCtx, KEventController, Key, SpriteAtlasData, SpriteCompOpt, SpriteData, Uniform, Vec2 } from "kaplay";
+import {
+	Asset,
+	AudioPlay,
+	AudioPlayOpt,
+	Color,
+	DrawSpriteOpt,
+	EaseFunc,
+	KAPLAYCtx,
+	KEventController,
+	Key,
+	SpriteAtlasData,
+	SpriteCompOpt,
+	SpriteData,
+	TimerController,
+	Uniform,
+	Vec2,
+} from "kaplay";
 import k from "../engine";
 import { InputButton, Minigame, MinigameAPI } from "./types";
 import { getGameID, isDefaultAsset } from "./utils";
-import { gameAPIs, generalEventControllers, loadAPIs, pauseAPIs } from "./api";
+import { gameAPIs, generalEventControllers, loadAPIs, pauseAPIs, timerControllers } from "./api";
 import { WareApp } from "./kaplayware";
 
 /** The allowed load functions */
@@ -65,17 +81,38 @@ export function createLoadCtx(game: Minigame) {
 }
 
 /** The functions that can be paused with WareApp.gamePaused */
-export type PauseCtx = Pick<typeof k, typeof pauseAPIs[number]> & { resetContext(): void; };
+export type PauseCtx = Pick<typeof k, typeof pauseAPIs[number]> & {
+	sounds: AudioPlay[];
+	timers: TimerController[];
+	resetContext(): void;
+};
 
 /** Creates a small context that includes tween, wait, loop and play, these will be paused if the WareApp is paused */
-export function createPauseCtx(wareApp: WareApp) {
-	const ctx = {} as PauseCtx;
+export function createPauseCtx() {
+	const ctx = {
+		sounds: [],
+		timers: [],
+		resetContext() {
+			for (let i = this.timers.length - 1; i >= 0; i--) {
+				this.timers[i].cancel();
+				this.timers.pop();
+			}
+
+			for (let i = this.sounds.length - 1; i >= 0; i--) {
+				this.sounds[i].stop();
+				this.sounds.pop();
+			}
+		},
+	} as PauseCtx;
 
 	for (const api of pauseAPIs) {
 		if (api == "play") {
-			ctx[api] = (...args: any[]) => {
-				const sound = k.play(...args as unknown as [any]);
-				wareApp.pausableSounds.push(sound);
+			ctx[api] = (src, opts) => {
+				const sound = k.play(src, opts);
+				ctx.sounds.push(sound);
+				sound.onEnd(() => {
+					ctx.sounds.splice(ctx.sounds.indexOf(sound), 1);
+				});
 				return sound;
 			};
 		}
@@ -83,23 +120,12 @@ export function createPauseCtx(wareApp: WareApp) {
 			ctx[api] = (...args: any[]) => {
 				// @ts-ignore
 				const timer = k[api](...args as unknown as [any]);
-				wareApp.pausableTimers.push(timer);
+				ctx.timers.push(timer);
+				// timer.onEnd(() => ctx.timers.splice(ctx.timers.indexOf(timer), 1));
 				return timer as any;
 			};
 		}
 	}
-
-	ctx.resetContext = () => {
-		for (let i = wareApp.pausableTimers.length - 1; i >= 0; i--) {
-			wareApp.pausableTimers[i].cancel();
-			wareApp.pausableTimers.pop();
-		}
-
-		for (let i = wareApp.pausableSounds.length - 1; i >= 0; i--) {
-			wareApp.pausableSounds[i].stop();
-			wareApp.pausableSounds.pop();
-		}
-	};
 
 	return ctx;
 }
@@ -150,25 +176,16 @@ export function createGameCtx(wareApp: WareApp, game: Minigame) {
 					...areaComp,
 					onClick(action: () => void) {
 						const ev = k.onMousePress("left", () => this.isHovering() ? action() : false);
-						wareApp.inputEvents.push(ev); // doesn't return because onClick returns void here
+						wareApp.inputEvents.push(ev);
+						return ev;
 					},
 				};
 			};
 		}
-		else if (api == "wait") {
-			gameCtx[api] = (...args: any[]) => {
-				return wareApp.addTimer(k.wait(args[0], args[1]));
-			};
-		}
-		else if (api == "loop") {
-			gameCtx[api] = (...args: any[]) => {
-				return wareApp.addTimer(k.loop(args[0], args[1]));
-			};
-		}
-		else if (api == "tween") {
+		else if (timerControllers.includes(api)) {
 			gameCtx[api] = (...args: any[]) => {
 				// @ts-ignore
-				return wareApp.addTimer(k.tween(...args));
+				return wareApp.addTimer(k[api](...args));
 			};
 		}
 		else if (api == "addLevel") {

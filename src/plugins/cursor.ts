@@ -14,10 +14,10 @@ const cursor = k.add([
 	k.fixed(),
 	k.color(),
 	k.stay(),
+	k.timer(),
 	{
-		set visible(param: boolean) {
-			if (param == true) opacity = 1;
-			else opacity = 0;
+		set fadeAway(param: boolean) {
+			opacity = param == true ? 0 : 1;
 		},
 
 		set canPoint(param: boolean) {

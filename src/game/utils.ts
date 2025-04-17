@@ -1,4 +1,5 @@
 import games from "./games";
+import { WareApp } from "./kaplayware";
 import { Minigame, MinigameInput } from "./types";
 
 export const getGameID = (g: Minigame) => {
@@ -9,18 +10,45 @@ export const getGameID = (g: Minigame) => {
 };
 export const getGameByID = (id: string) => games.find((minigame) => `${minigame.author}:${minigame.prompt}` == id);
 
-export const gameUsesMouse = (g: Minigame) => {
-	return g.difficulty == "BOSS" || g.input == "mouse (hidden)" || g.input == "mouse";
+export const getElectibleGame = () => {
+};
+
+export const getInputMessage = (g: Minigame) => {
+	const input = getGameInput(g);
+	let message = "";
+
+	if (input == "both") {
+		message = "both";
+		if (gameHidesMouse(g)) message += " (mouse hidden)";
+		return message;
+	}
+	else if (input == "mouse") {
+		message = "mouse";
+		if (gameHidesMouse(g)) message += " (hidden)";
+		return message;
+	}
+	else if (input == "keys") return input;
 };
 
 export function getGameInput(g: Minigame): MinigameInput {
-	if (g.difficulty == "BOSS") return "both";
-	if (gameUsesMouse(g)) return "mouse";
+	if (g.isBoss) return "both";
+	if (g.isBoss == true || g.input == "mouse (hidden)" || g.input == "mouse") return "mouse";
 	else return "keys";
 }
 
+export const getGameDuration = (g: Minigame, wareApp: WareApp) => {
+	if (g.isBoss == true) return undefined;
+	else if (g.isBoss == false) {
+		let duration = 0;
+		if (typeof g.duration == "function") duration = g.duration(wareApp.currentContext);
+		else if (typeof g.duration == "number") duration = g.duration;
+		return duration;
+	}
+};
+
 export const gameHidesMouse = (g: Minigame) => {
-	return gameUsesMouse(g) && g.input == "mouse (hidden)";
+	if (g.isBoss) return g.hideMouse;
+	else if (g.isBoss == false) return g.input == "mouse (hidden)" || g.input == "keys";
 };
 
 export const isDefaultAsset = (assetName: any) => typeof assetName == "string" && assetName.includes("@");

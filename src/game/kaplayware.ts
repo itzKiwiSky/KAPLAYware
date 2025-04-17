@@ -1,7 +1,7 @@
 import k from "../engine";
 import { AudioPlay, GameObj, KEventController, PosComp, RotateComp, ScaleComp, TimerController } from "kaplay";
 import cursor from "../plugins/cursor";
-import { gameHidesMouse, gameUsesMouse, getGameID, getGameInput } from "./utils";
+import { gameHidesMouse, getGameDuration, getGameID, getGameInput, getInputMessage } from "./utils";
 import { runTransition, TransitionState } from "./transitions";
 import { KAPLAYwareOpts, Minigame } from "./types";
 import games from "./games";
@@ -21,13 +21,17 @@ export function createWareApp() {
 		wareCtx: null as ReturnType<typeof kaplayware>,
 		/** Wheter the current minigame should be running (will be false when the transition hasn't finished) */
 		gameRunning: false,
-		/** Wheter the user has paused */
+		/** Wheter the whole game is paused */
 		gamePaused: false,
+		/** Wheter the user is capable of pressing keys to play */
 		inputEnabled: false,
-		// TODO: Don't pause draw events, always let them run but still store them so they can be cancelled when the minigame ends
+		/** These won't be paused at all */
 		drawEvents: [] as KEventController[],
-		generalEvents: [] as KEventController[],
+		/** These will be paused with `wareApp.gameRunning` */
+		updateEvents: [] as KEventController[],
+		/** These will be paused with `wareApp.gameRunning` && `wareApp.inputEnabled` */
 		inputEvents: [] as KEventController[],
+		/** These will be paused with `wareApp.gameRunning` && `wareApp.gamePaused` */
 		timerEvents: [] as TimerController[],
 		sounds: [] as AudioPlay[],
 		queuedSounds: [] as AudioPlay[],
@@ -38,10 +42,7 @@ export function createWareApp() {
 		currentColor: k.rgb(),
 		currentScene: null as GameObj,
 		pausableCtx: null as PauseCtx,
-		pausableTimers: [] as TimerController[],
-		pausableSounds: [] as AudioPlay[],
 		currentContext: null as MinigameCtx,
-		// bomb
 		timeRunning: false, // will turn true when transition is over (not same as gameRunning)
 		currentBomb: null as WareBomb,
 		conductor: k.conductor(140),
@@ -49,13 +50,13 @@ export function createWareApp() {
 		winState: undefined as boolean | undefined,
 
 		addGeneralEvent(ev: KEventController) {
-			this.generalEvents.push(ev);
+			this.updateEvents.push(ev);
 			return ev;
 		},
 		clearGeneralEvents() {
-			for (let i = this.generalEvents.length - 1; i >= 0; i--) {
-				this.generalEvents[i].cancel();
-				this.generalEvents.pop();
+			for (let i = this.updateEvents.length - 1; i >= 0; i--) {
+				this.updateEvents[i].cancel();
+				this.updateEvents.pop();
 			}
 		},
 		addDrawEvent(ev: KEventController) {
@@ -122,6 +123,7 @@ export function createWareApp() {
 		},
 	]);
 	wareApp.gameBox = wareApp.camera.add([k.pos(-k.width() / 2, -k.height() / 2)]);
+	wareApp.pausableCtx = createPauseCtx();
 
 	return wareApp;
 }
@@ -135,17 +137,9 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 
 	opts = opts ?? {};
 	opts.games = opts.games ?? games;
-	opts.debug = opts.debug ?? false;
 	opts.inOrder = opts.inOrder ?? false;
 
 	const wareApp = createWareApp();
-	wareApp.pausableCtx = createPauseCtx(wareApp);
-
-	// debug variables
-	let skipMinigame = false;
-	let forceSpeed = false;
-	let restartMinigame = false;
-	let overrideDifficulty = null as 1 | 2 | 3;
 
 	const shakeCamera = wareApp.shakeCamera;
 	const camera = wareApp.camera;
@@ -202,10 +196,9 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 			gameBox.removeAll();
 
 			wareApp.currentContext = createGameCtx(wareApp, minigame);
-			// TODO: Fix this typing
-			const gDuration = minigame.difficulty != "BOSS" && typeof minigame.duration == "number" ? minigame.duration : minigame.duration(wareApp.currentContext);
-			const durationEnabled = gDuration != undefined;
-			wareCtx.time = durationEnabled ? (gDuration / wareCtx.speed) : 1;
+
+			const gameDuration = getGameDuration(minigame, wareApp);
+			wareCtx.time = gameDuration;
 			wareApp.currentContext.timeLeft = wareCtx.time;
 			wareApp.currentColor = typeof minigame.rgb == "function" ? minigame.rgb(wareApp.currentContext) : "r" in minigame.rgb ? minigame.rgb : k.Color.fromArray(minigame.rgb);
 			wareApp.currentScene?.destroy();
@@ -227,7 +220,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 				}
 
 				if (!wareApp.timeRunning) return;
-				if (!durationEnabled) return;
+				if (!gameDuration) return;
 
 				if (wareCtx.time > 0) wareCtx.time -= k.dt();
 				wareCtx.time = k.clamp(wareCtx.time, 0, 20);
@@ -258,26 +251,33 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 		 * MOST IMPORTANTLY!! Manages the transitions and the prompt (and input prompt) adding
 		 */
 		nextGame() {
-			if (wareCtx.score < 10) wareCtx.difficulty = 1;
-			else if (wareCtx.score >= 10 && wareCtx.score < 20) wareCtx.difficulty = 2;
-			else if (wareCtx.score >= 20) wareCtx.difficulty = 3;
+			const previousGame = wareCtx.curGame;
+			let games = [...opts.games];
 			wareApp.gameRunning = false;
 
-			let games = [...opts.games];
+			// decide new difficulty
+			if (previousGame?.isBoss) wareCtx.difficulty = 1 + wareCtx.difficulty % 3 as 1 | 2 | 3;
 
-			if (overrideDifficulty) wareCtx.difficulty = overrideDifficulty;
-
-			// TODO: Decide the difficulty based on games played, loop it back to 1 when games played is divisible by 30 (i think)
-			// TODO: This also implies doing the boss system, make the boss minigame (the one with the giant squid)
+			const howFrequentBoss = 10;
+			const shouldBoss = () => {
+				if (wareCtx.score % howFrequentBoss == 0) return true;
+			};
 
 			const shouldSpeedUp = () => {
 				// There's a chance it might speed up on 3 or 6, else speed on 5
 				// TODO: make this more random and fun
-				return (forceSpeed || (wareCtx.score + 1) % 5 == 0) && wareCtx.speed <= SPEED_LIMIT;
+				// return (wareCtx.score + 1) % 5 == 0 && wareCtx.speed <= SPEED_LIMIT && !shouldBoss();
+				return false;
 			};
 
 			const copyOfWinState = wareApp.winState; // when isGameOver() is called winState will be undefined because it was resetted, when the order of this is reversed, it will be fixed
 			const isGameOver = () => copyOfWinState == false && wareCtx.lives == 0;
+
+			if (!shouldBoss()) {
+				games = games.filter((game) => {
+					return game.isBoss == false;
+				});
+			}
 
 			// remove the ones that don't match the input
 			games = games.filter((game) => {
@@ -285,18 +285,9 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 				else return getGameInput(game) == opts.input;
 			});
 
-			// remove the ones that don't match the difficulty
-			games = games.filter((game) => {
-				if (!game.difficulty) return true;
-				else if (game.difficulty != wareCtx.difficulty) {
-					return false;
-				}
-			});
-
 			// now remove the previous one so we can get a new one
 			games = games.filter((game) => {
 				if (wareApp.minigameHistory.length == 0 || games.length == 1) return true;
-				else if (restartMinigame && !skipMinigame) return game == wareCtx.curGame;
 				else {
 					const previousPreviousID = wareApp.minigameHistory[wareCtx.score - 3];
 					const previousPreviousGame = games.find((game) => getGameID(game) == previousPreviousID);
@@ -305,21 +296,21 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 				}
 			});
 
+			if (shouldBoss()) {
+				games = games.filter((game) => {
+					return game.isBoss == true;
+				});
+			}
+
 			const choosenGame = opts.inOrder ? games[wareCtx.score % games.length] : k.choose(games);
 
 			let transitionStates: TransitionState[] = ["prep"];
-			if (wareApp.winState != undefined) transitionStates.splice(0, 0, wareApp.winState == true ? "win" : "lose");
+			if (wareApp.winState != undefined) transitionStates.splice(0, 0, wareApp.winState == true ? previousGame.isBoss ? "bosswin" : "win" : "lose");
 			if (shouldSpeedUp()) transitionStates.splice(1, 0, "speed");
 			if (isGameOver()) transitionStates = ["lose"];
-
+			if (shouldBoss()) transitionStates.splice(1, 0, "boss");
 			wareApp.minigameHistory[wareCtx.score - 1] = getGameID(choosenGame);
 			wareApp.winState = undefined;
-			restartMinigame = false;
-			skipMinigame = false;
-
-			// TODO: Figure out what the in the damn hell is wrong with this
-			k.debug.log(`game "${getGameID(choosenGame)}" uses mouse: ${gameUsesMouse(choosenGame)} and hides: ${gameHidesMouse(choosenGame)}`);
-			cursor.visible = gameHidesMouse(choosenGame);
 
 			// ### transition coolness ##
 			// sends prep, if shouldSpeedUp is false and winState is undefinied, then it will only run prep
@@ -339,7 +330,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 				prompt.parent = wareApp.WareScene;
 
 				wareApp.pausableCtx.wait(0.15 / wareCtx.speed, () => {
-					cursor.visible = gameHidesMouse(choosenGame);
+					cursor.fadeAway = gameHidesMouse(choosenGame);
 					prompt.end();
 				});
 			});
@@ -349,7 +340,6 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 					wareCtx.runGame(choosenGame);
 				}
 				else if (state == "speed") {
-					if (forceSpeed == true) forceSpeed = false;
 					wareCtx.timesSpeed++;
 					wareCtx.speedUp();
 				}
@@ -376,19 +366,18 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 
 	wareApp.wareCtx = wareCtx;
 
-	k.watch(wareCtx, "time", "Time left");
-	k.watch(wareCtx, "score", "Score");
-	k.watch(wareCtx, "lives", "Lives");
-	k.watch(wareCtx, "difficulty", "Difficulty");
-	k.watch(wareCtx, "speed", "Speed");
-	k.watch(wareApp, "inputEnabled", "Input enabled");
-
 	for (const game of opts.games) {
-		game.difficulty = game.difficulty ?? undefined;
 		game.urlPrefix = game.urlPrefix ?? "";
-		if (game.difficulty != "BOSS") game.duration = game.duration ?? DEFAULT_DURATION;
+		game.isBoss = game.isBoss ?? false;
+		if (game.isBoss == false) {
+			game.duration = game.duration ?? DEFAULT_DURATION;
+			game.input = game.input ?? "keys";
+		}
+		else {
+			game.hideMouse = game.hideMouse ?? false;
+		}
+
 		game.rgb = game.rgb ?? [255, 255, 255];
-		game.input = game.input ?? "keys";
 		if ("r" in game.rgb) game.rgb = [game.rgb.r, game.rgb.g, game.rgb.b];
 	}
 
@@ -401,43 +390,14 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 
 		wareApp.inputEvents.forEach((ev) => ev.paused = !wareApp.inputEnabled || !wareApp.gameRunning);
 		wareApp.timerEvents.forEach((ev) => ev.paused = !wareApp.gameRunning || wareApp.gamePaused);
-		wareApp.generalEvents.forEach((ev) => ev.paused = !wareApp.gameRunning || wareApp.gamePaused);
+		wareApp.updateEvents.forEach((ev) => ev.paused = !wareApp.gameRunning || wareApp.gamePaused);
 		wareApp.pausedSounds.forEach((sound) => sound.paused = true);
-		wareApp.pausableSounds.forEach((sound) => sound.paused = wareApp.gamePaused);
-		wareApp.pausableTimers.forEach((timer) => timer.paused = wareApp.gamePaused);
+		wareApp.pausableCtx.sounds.forEach((sound) => sound.paused = wareApp.gamePaused);
+		wareApp.pausableCtx.timers.forEach((timer) => timer.paused = wareApp.gamePaused);
 
-		if (opts.debug) {
-			if (k.isKeyPressed("q")) {
-				restartMinigame = true;
-				if (k.isKeyDown("shift")) {
-					skipMinigame = true;
-					k.debug.log("SKIPPED: " + getGameID(wareCtx.curGame));
-				}
-				else k.debug.log("RESTARTED: " + getGameID(wareCtx.curGame));
-			}
-
-			if (k.isKeyDown("shift") && k.isKeyPressed("w")) {
-				restartMinigame = true;
-				forceSpeed = true;
-				k.debug.log("RESTARTED + SPEED UP: " + getGameID(wareCtx.curGame));
-			}
-
-			if (k.isKeyPressed("1")) {
-				overrideDifficulty = 1;
-				restartMinigame = true;
-				k.debug.log("NEW DIFFICULTY: " + overrideDifficulty);
-			}
-			else if (k.isKeyPressed("2")) {
-				overrideDifficulty = 2;
-				restartMinigame = true;
-				k.debug.log("NEW DIFFICULTY: " + overrideDifficulty);
-			}
-			else if (k.isKeyPressed("3")) {
-				overrideDifficulty = 3;
-				restartMinigame = true;
-				k.debug.log("NEW DIFFICULTY: " + overrideDifficulty);
-			}
-		}
+		k.quickWatch("game", getGameID(wareApp.wareCtx.curGame));
+		k.quickWatch("input", getInputMessage(wareApp.wareCtx.curGame));
+		k.quickWatch("time", wareApp.wareCtx.time);
 	});
 
 	wareApp.WareScene.onDraw(() => {

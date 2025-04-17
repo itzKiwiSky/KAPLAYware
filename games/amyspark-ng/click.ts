@@ -1,5 +1,6 @@
 import { GameObj, Vec2 } from "kaplay";
-import { Minigame, MinigameCtx } from "../../src/game/types.ts";
+import { Minigame } from "../../src/game/types.ts";
+import { MinigameCtx } from "../../src/game/context.ts";
 
 function getHexagonShape(ctx: MinigameCtx) {
 	// some cool math
@@ -19,25 +20,14 @@ function addBackground(ctx: MinigameCtx) {
 		ColorSecondary: ctx.Color.fromHex("#36213f"),
 	};
 
-	const parent = ctx.add([
-		ctx.rotate(5),
-		ctx.anchor("center"),
-		ctx.scale(),
-	]);
-
 	const bg = ctx.add([
 		ctx.rect(ctx.width(), ctx.height()),
+		ctx.rotate(5),
 		{
 			offsetX: 0,
 			offsetY: 0,
 			cellSize: 148,
-			speed: 64 * ctx.speed,
-			set angle(val: number) {
-				parent.angle = val;
-			},
-			get angle() {
-				return parent.angle;
-			},
+			speed: 32 * ctx.speed,
 		},
 	]);
 

@@ -1,17 +1,16 @@
-import { AudioPlay, TimerController } from "kaplay";
-import { createWareApp, WareApp } from "./kaplayware";
+import { WareApp } from "./kaplayware";
 import k from "../engine";
 
-export type TransitionState = "win" | "lose" | "prep" | "speed";
+export type TransitionState = "win" | "lose" | "prep" | "speed" | "boss" | "bosswin";
 
 export function runTransition(wareApp: WareApp, states: TransitionState[]) {
 	const ware = wareApp.wareCtx;
 	const WareScene = wareApp.WareScene;
 	const conductor = k.conductor(140 * wareApp.wareCtx.speed);
 
-	const stateStartEvent = new k.KEvent();
-	const stateEndEvent = new k.KEvent();
-	const transitionEndEvent = new k.KEvent();
+	const stateStartEvent = new k.KEvent<TransitionState[]>();
+	const stateEndEvent = new k.KEvent<TransitionState[]>();
+	const transitionEndEvent = new k.KEvent<TransitionState[]>();
 	const inputPromptEvent = new k.KEvent();
 	const promptEvent = new k.KEvent();
 
@@ -314,6 +313,24 @@ export function runTransition(wareApp: WareApp, states: TransitionState[]) {
 		pausableCtx.wait(sound.duration() / ware.speed, () => {
 			overlay.destroy();
 			stateEndEvent.trigger("speed");
+		});
+	});
+
+	// TODO: Do these
+	trans.onStateEnter("boss", () => {
+		stateStartEvent.trigger("boss");
+		const sound = pausableCtx.play("bossJingle", { speed: ware.speed });
+
+		pausableCtx.wait(sound.duration() / ware.speed, () => {
+			stateEndEvent.trigger("boss");
+		});
+	});
+
+	trans.onStateEnter("bosswin", () => {
+		stateStartEvent.trigger("bosswin");
+		const sound = pausableCtx.play("bossWinJingle", { speed: ware.speed });
+		pausableCtx.wait(sound.duration() / ware.speed, () => {
+			stateEndEvent.trigger("bosswin");
 		});
 	});
 

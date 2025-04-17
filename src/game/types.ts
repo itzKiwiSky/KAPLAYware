@@ -218,8 +218,6 @@ export type Minigame =
 		start: (ctx: MinigameCtx) => void;
 	}
 	& ({
-		/** Wheter the minigame should appear on an specific difficulty */
-		difficulty?: 1 | 2 | 3;
 		/** The input the minigame uses, if both are empty will assume keys
 		 *
 		 * @cursor You can configure your game's cursor this way
@@ -255,16 +253,16 @@ export type Minigame =
 		 * ```
 		 */
 		duration?: number | ((ctx: MinigameCtx) => number | undefined);
+		isBoss?: false | undefined;
 	} | {
 		/** BOSS DIFFICULTY, duration() and input() are disabled, as boss minigames are infinite and input is always mouse and keyboard  */
-		difficulty: "BOSS";
+		isBoss: true;
 		/** Wheter to hide the mouse for the BOSS minigame */
-		input?: "mouse (hidden)";
+		hideMouse?: boolean;
 	});
 
 export type KAPLAYwareOpts = {
 	games?: Minigame[];
-	debug?: boolean;
 	input?: MinigameInput;
 	inOrder?: boolean;
 };

@@ -16,7 +16,7 @@ export const k = kaplay({
 	focus: false,
 	plugins: [
 		dragCompPlugin,
-		watchPlugin,
+		watchPlugin(),
 		conductorPlug,
 		wareObjectsPlugin,
 		setterPlug,
