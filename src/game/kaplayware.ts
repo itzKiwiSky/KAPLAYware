@@ -209,6 +209,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 			wareApp.currentBomb?.destroy();
 			wareApp.currentBomb = null;
 			wareCtx.curGame = minigame;
+			k.setGravity(0);
 			minigame.start(wareApp.currentContext);
 
 			gameBox.onUpdate(() => {
@@ -252,22 +253,23 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 		 */
 		nextGame() {
 			const previousGame = wareCtx.curGame;
+			const howFrequentBoss = 10;
 			let games = [...opts.games];
 			wareApp.gameRunning = false;
 
 			// decide new difficulty
-			if (previousGame?.isBoss) wareCtx.difficulty = 1 + wareCtx.difficulty % 3 as 1 | 2 | 3;
+			if (previousGame?.isBoss || games.filter((g) => g.isBoss).length == 0 && wareCtx.score % howFrequentBoss == 0) {
+				wareCtx.difficulty = 1 + wareCtx.difficulty % 3 as 1 | 2 | 3;
+			}
 
-			const howFrequentBoss = 10;
 			const shouldBoss = () => {
-				if (wareCtx.score % howFrequentBoss == 0) return true;
+				if (wareCtx.score % howFrequentBoss == 0 && games.some((g) => g.isBoss)) return true;
 			};
 
 			const shouldSpeedUp = () => {
 				// There's a chance it might speed up on 3 or 6, else speed on 5
 				// TODO: make this more random and fun
-				// return (wareCtx.score + 1) % 5 == 0 && wareCtx.speed <= SPEED_LIMIT && !shouldBoss();
-				return false;
+				return (wareCtx.score + 1) % 5 == 0 && wareCtx.speed <= SPEED_LIMIT && !shouldBoss();
 			};
 
 			const copyOfWinState = wareApp.winState; // when isGameOver() is called winState will be undefined because it was resetted, when the order of this is reversed, it will be fixed
@@ -356,7 +358,8 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 			});
 
 			transition.onTransitionEnd(() => {
-				if (!isGameOver()) transition.destroy(); // don't remove it on game over, serves as background
+				// don't remove it on game over, serves as background
+				if (!isGameOver()) transition.destroy();
 				wareApp.gameRunning = true;
 				wareApp.timeRunning = true;
 				wareApp.inputEnabled = true;
@@ -395,6 +398,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 		wareApp.pausableCtx.sounds.forEach((sound) => sound.paused = wareApp.gamePaused);
 		wareApp.pausableCtx.timers.forEach((timer) => timer.paused = wareApp.gamePaused);
 
+		k.quickWatch("games.length", opts.games.length);
 		k.quickWatch("game", getGameID(wareApp.wareCtx.curGame));
 		k.quickWatch("input", getInputMessage(wareApp.wareCtx.curGame));
 		k.quickWatch("time", wareApp.wareCtx.time);

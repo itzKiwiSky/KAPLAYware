@@ -3,7 +3,7 @@ import { getGameID } from "./utils";
 
 const gameModules = import.meta.glob("../../games/*/*.ts", { eager: true });
 
-const exclude = new Set([]);
+const exclude = new Set(["amyspark-ng:kill"]);
 
 /** The imported games */
 const games = Object.values(gameModules)

@@ -109,7 +109,6 @@ const clickGame: Minigame = {
 	input: "mouse",
 	playsOwnMusic: true,
 	urlPrefix: "games/amyspark-ng/assets/",
-	duration: (ctx) => ctx.difficulty == 3 ? 6 : 4,
 	load(ctx) {
 		ctx.loadSprite("hexagon", "sprites/click/hexagon.png");
 		ctx.loadSprite("background", "sprites/click/background.png");

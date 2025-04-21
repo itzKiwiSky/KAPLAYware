@@ -191,16 +191,22 @@ const newGame: Minigame = {
 			karat.destroy();
 			ctx.win();
 			ctx.burp().onEnd(() => {
-				ctx.wait(0.1, () => {
-					ctx.finish();
-				});
+				if (ctx.winState() == undefined) {
+					ctx.wait(0.1 / ctx.speed, () => {
+						ctx.finish();
+					});
+				}
 			});
 		});
 
 		ctx.onTimeout(() => {
 			if (karat.exists()) {
 				ctx.lose();
-				ctx.wait(0.5, () => ctx.finish());
+				ctx.wait(0.5 / ctx.speed, () => ctx.finish());
+			}
+			else {
+				ctx.win();
+				ctx.wait(0.5 / ctx.speed, () => ctx.finish());
 			}
 		});
 	},

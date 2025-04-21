@@ -1,4 +1,3 @@
-import { assets } from "@kaplayjs/crew";
 import { Vec2 } from "kaplay";
 import { Minigame } from "../../src/game/types";
 
