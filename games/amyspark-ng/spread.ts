@@ -4,6 +4,7 @@ import { Minigame } from "../../src/game/types";
 const spreadGame: Minigame = {
 	prompt: "SPREAD!",
 	author: "amyspark-ng",
+	duration: 4,
 	rgb: (ctx) => ctx.mulfok.PINK,
 	input: "mouse (hidden)",
 	urlPrefix: "games/amyspark-ng/assets/",

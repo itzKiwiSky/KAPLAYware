@@ -190,12 +190,9 @@ const newGame: Minigame = {
 			karatMoveLoop.cancel();
 			karat.destroy();
 			ctx.win();
-			ctx.burp().onEnd(() => {
-				if (ctx.winState() == undefined) {
-					ctx.wait(0.1 / ctx.speed, () => {
-						ctx.finish();
-					});
-				}
+			ctx.burp();
+			ctx.wait(0.75 / ctx.speed, () => {
+				ctx.finish();
 			});
 		});
 

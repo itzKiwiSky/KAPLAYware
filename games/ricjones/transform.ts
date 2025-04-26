@@ -5,7 +5,7 @@ const transformGame: Minigame = {
 	author: "ricjones",
 	rgb: [74, 48, 82], // rgb for #4a3052 from mulfok32 palette
 	urlPrefix: "games/ricjones/assets/",
-	duration: () => undefined,
+	duration: undefined,
 	load(ctx) {
 		ctx.loadSound("jump", "jump_37.wav");
 		ctx.loadSprite("chad", "chadbean-amy.png");
@@ -139,7 +139,6 @@ const transformGame: Minigame = {
 					ctx.scale(2.5),
 				]);
 				ctx.wait(1.0 / ctx.speed, () => {
-					ctx.lose();
 					ctx.wait(0.5 / ctx.speed, () => ctx.finish());
 				});
 				return;
@@ -168,12 +167,16 @@ const transformGame: Minigame = {
 					ctx.play("hellothere");
 				});
 
-				ctx.win();
 				ctx.wait(1.5 / ctx.speed, () => ctx.finish());
 			});
 		}
 
 		function goToGameOver(isWin: boolean = true) {
+			if (ctx.winState() != undefined) return;
+
+			if (isWin) ctx.win();
+			else ctx.lose();
+
 			// clear all previous objects
 			clearPrevCanvas();
 			createGameOverScreen(isWin);
@@ -232,6 +235,7 @@ const transformGame: Minigame = {
 		}
 
 		function onInputValid() {
+			if (ctx.winState() != undefined) return;
 			updateBothCommands();
 			ctx.addKaboom(check.pos);
 			ctx.shakeCam();

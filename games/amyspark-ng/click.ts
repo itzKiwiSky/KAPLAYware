@@ -108,6 +108,7 @@ const clickGame: Minigame = {
 	rgb: [41, 24, 52],
 	input: "mouse",
 	playsOwnMusic: true,
+	duration: 4,
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {
 		ctx.loadSprite("hexagon", "sprites/click/hexagon.png");

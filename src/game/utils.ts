@@ -36,7 +36,7 @@ export function getGameInput(g: Minigame): MinigameInput {
 	else return "keys";
 }
 
-export const getGameDuration = (g: Minigame, wareApp: WareApp) => {
+export const getGameDuration = (g: Minigame, wareApp: WareApp): number | undefined => {
 	if (g.isBoss == true) return undefined;
 	else if (g.isBoss == false) {
 		let duration = 0;

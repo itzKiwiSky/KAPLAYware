@@ -3,7 +3,8 @@ import { getGameID } from "./utils";
 
 const gameModules = import.meta.glob("../../games/*/*.ts", { eager: true });
 
-const exclude = new Set(["amyspark-ng:kill"]);
+const INCLUDE_BOSSES = true;
+const exclude = new Set([]);
 
 /** The imported games */
 const games = Object.values(gameModules)
@@ -13,7 +14,13 @@ const games = Object.values(gameModules)
 const onlyInclude = new Set([
 	DEV_MINIGAME, // Passed arg from npm run dev {yourname}:{gamename}
 	...(import.meta.env?.VITE_ONLY_MINIGAMES ?? "").trim().split("\n").map((s: string) => s.trim()),
-].filter((id) => games.some((game) => getGameID(game) === id)));
+].filter((id) =>
+	games.some((game) => {
+		// TODO: make this work
+		//  && (INCLUDE_BOSSES ? game.isBoss == true : false)
+		return getGameID(game) === id;
+	})
+));
 
 export default onlyInclude.size
 	? games.filter((game) => onlyInclude.has(getGameID(game)))

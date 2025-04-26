@@ -1,7 +1,7 @@
 import { GameObj } from "kaplay";
 import { Minigame } from "../../src/game/types.ts";
 
-const newGame: Minigame = {
+const connectGame: Minigame = {
 	prompt: "CONNECT!",
 	author: "amyspark-ng",
 	input: "mouse",
@@ -81,6 +81,7 @@ const newGame: Minigame = {
 				sourceX += sourceGap + source.width;
 			});
 
+			// TODO: make it so if you click and drop it it will stay on the floor, also make it so it can plug with other sockets
 			plugObj.onUpdate(() => {
 				if (plugSocketState[plugIndex] == "wiring") {
 					plugObj.pos = ctx.lerp(plugObj.pos, sourceObj.fromWorld(ctx.mousePos()), 0.5);
@@ -147,4 +148,4 @@ const newGame: Minigame = {
 	},
 };
 
-export default newGame;
+export default connectGame;

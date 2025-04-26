@@ -252,7 +252,7 @@ export type Minigame =
 		 * }
 		 * ```
 		 */
-		duration?: number | ((ctx: MinigameCtx) => number | undefined);
+		duration: number | undefined | ((ctx: MinigameCtx) => number);
 		isBoss?: false | undefined;
 	} | {
 		/** BOSS DIFFICULTY, duration() and input() are disabled, as boss minigames are infinite and input is always mouse and keyboard  */

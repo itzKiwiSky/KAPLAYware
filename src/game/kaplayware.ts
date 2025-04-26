@@ -132,8 +132,7 @@ export function createWareApp() {
 export type WareApp = ReturnType<typeof createWareApp>;
 
 export default function kaplayware(opts: KAPLAYwareOpts = {}) {
-	const DEFAULT_DURATION = 4;
-	const SPEED_LIMIT = 1.64;
+	const MAX_SPEED = 1.64;
 
 	opts = opts ?? {};
 	opts.games = opts.games ?? games;
@@ -181,8 +180,8 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 		},
 
 		speedUp() {
-			this.speed += this.speed * 0.07;
-			this.speed = k.clamp(this.speed, 0, SPEED_LIMIT);
+			const increment = k.choose([0.06, 0.07, 0.08]);
+			this.speed = k.clamp(this.speed + this.speed * increment, 0, MAX_SPEED);
 		},
 
 		/** 1. Clears every previous object
@@ -266,10 +265,16 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 				if (wareCtx.score % howFrequentBoss == 0 && games.some((g) => g.isBoss)) return true;
 			};
 
-			const shouldSpeedUp = () => {
-				// There's a chance it might speed up on 3 or 6, else speed on 5
-				// TODO: make this more random and fun
-				return (wareCtx.score + 1) % 5 == 0 && wareCtx.speed <= SPEED_LIMIT && !shouldBoss();
+			const shouldSpeed = () => {
+				const realScore = wareCtx.score + 1;
+				const number = k.randi(4, 6);
+				const division = () => {
+					if (realScore % number == 0) return true;
+					else if (k.chance(0.1) && realScore % 5 == 0) return true;
+					else return false;
+				};
+				const condition = () => wareCtx.speed <= MAX_SPEED && !shouldBoss();
+				return division() && condition();
 			};
 
 			const copyOfWinState = wareApp.winState; // when isGameOver() is called winState will be undefined because it was resetted, when the order of this is reversed, it will be fixed
@@ -308,7 +313,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 
 			let transitionStates: TransitionState[] = ["prep"];
 			if (wareApp.winState != undefined) transitionStates.splice(0, 0, wareApp.winState == true ? previousGame.isBoss ? "bosswin" : "win" : "lose");
-			if (shouldSpeedUp()) transitionStates.splice(1, 0, "speed");
+			if (shouldSpeed()) transitionStates.splice(1, 0, "speed");
 			if (isGameOver()) transitionStates = ["lose"];
 			if (shouldBoss()) transitionStates.splice(1, 0, "boss");
 			wareApp.minigameHistory[wareCtx.score - 1] = getGameID(choosenGame);
@@ -373,7 +378,6 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 		game.urlPrefix = game.urlPrefix ?? "";
 		game.isBoss = game.isBoss ?? false;
 		if (game.isBoss == false) {
-			game.duration = game.duration ?? DEFAULT_DURATION;
 			game.input = game.input ?? "keys";
 		}
 		else {

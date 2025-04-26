@@ -329,6 +329,15 @@ export function runTransition(wareApp: WareApp, states: TransitionState[]) {
 	trans.onStateEnter("bosswin", () => {
 		stateStartEvent.trigger("bosswin");
 		const sound = pausableCtx.play("bossWinJingle", { speed: ware.speed });
+
+		pausableCtx.tween(ZOOM_Y, k.center().y, 0.5 / ware.speed, (p) => trans.pos.y = p, k.easings.easeOutQuint);
+		pausableCtx.tween(ZOOM_SCALE, k.vec2(1), 0.5 / ware.speed, (p) => trans.scale = p, k.easings.easeOutQuint);
+		pausableCtx.tween(0, 1, 0.25 / ware.speed, (p) => screen.opacity = p, k.easings.easeOutQuint);
+		chillguy.frame = 1;
+		screen.frame = 1;
+		chillcat.frame = 1;
+		chillbutterfly.frame = 1;
+
 		pausableCtx.wait(sound.duration() / ware.speed, () => {
 			stateEndEvent.trigger("bosswin");
 		});
