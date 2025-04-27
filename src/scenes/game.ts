@@ -6,6 +6,8 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 	const ware = kaplayware(kaplaywareOpt);
 	ware.nextGame();
 
+	ware.score = 8;
+
 	let transitionOpacity = 0;
 	k.onUpdate(() => {
 		if (k.isKeyPressed("escape")) ware.paused = !ware.paused;

@@ -1,7 +1,7 @@
 import { WareApp } from "./kaplayware";
 import k from "../engine";
 
-export type TransitionState = "win" | "lose" | "prep" | "speed" | "boss" | "bosswin";
+export type TransitionState = "win" | "lose" | "prep" | "speed" | "bossPrep" | "bossWin";
 
 export function runTransition(wareApp: WareApp, states: TransitionState[]) {
 	const ware = wareApp.wareCtx;
@@ -317,17 +317,24 @@ export function runTransition(wareApp: WareApp, states: TransitionState[]) {
 	});
 
 	// TODO: Do these
-	trans.onStateEnter("boss", () => {
-		stateStartEvent.trigger("boss");
+	trans.onStateEnter("bossPrep", () => {
+		stateStartEvent.trigger("bossPrep");
 		const sound = pausableCtx.play("bossJingle", { speed: ware.speed });
 
+		const bossText = objs.add([
+			k.text("BOSS"),
+			k.anchor("center"),
+			k.pos(k.center()),
+		]);
+
 		pausableCtx.wait(sound.duration() / ware.speed, () => {
-			stateEndEvent.trigger("boss");
+			stateEndEvent.trigger("bossPrep");
+			bossText.destroy();
 		});
 	});
 
-	trans.onStateEnter("bosswin", () => {
-		stateStartEvent.trigger("bosswin");
+	trans.onStateEnter("bossWin", () => {
+		stateStartEvent.trigger("bossWin");
 		const sound = pausableCtx.play("bossWinJingle", { speed: ware.speed });
 
 		pausableCtx.tween(ZOOM_Y, k.center().y, 0.5 / ware.speed, (p) => trans.pos.y = p, k.easings.easeOutQuint);
@@ -339,7 +346,7 @@ export function runTransition(wareApp: WareApp, states: TransitionState[]) {
 		chillbutterfly.frame = 1;
 
 		pausableCtx.wait(sound.duration() / ware.speed, () => {
-			stateEndEvent.trigger("bosswin");
+			stateEndEvent.trigger("bossWin");
 		});
 	});
 

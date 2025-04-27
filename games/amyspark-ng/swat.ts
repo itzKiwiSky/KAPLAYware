@@ -108,6 +108,7 @@ const swatGame: Minigame = {
 		let flies = ctx.difficulty;
 
 		ctx.onInputButtonPress("click", () => {
+			// TODO: Removing this line makes the game 1000x more fun i assure you
 			if (ctx.get("shock").length > 0) return;
 
 			ctx.play("slap", { detune: ctx.rand(-50, 50), volume: 0.5 });

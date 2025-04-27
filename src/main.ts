@@ -10,7 +10,7 @@ import "../src/scenes/game";
 import "../src/scenes/gameover";
 import goGame from "../src/scenes/game";
 
-k.setVolume(0.1);
+k.setVolume(0.5);
 k.setCursor("none");
 k.loadRoot("./");
 

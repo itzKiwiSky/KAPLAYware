@@ -101,7 +101,7 @@ const getGame: Minigame = {
 			movement.x = ctx.isInputButtonDown("left") ? -1 : ctx.isInputButtonDown("right") ? 1 : 0;
 			movement.y = ctx.isInputButtonDown("up") ? -1 : ctx.isInputButtonDown("down") ? 1 : 0;
 
-			// this just lerps a movement to the unit, which rounds that 1.4 to 1 :thumbsup:
+			// this just lerps a movement to the unit, which rounds the magnitude of 1.4 to 1 :thumbsup:
 			lerpMovement = ctx.lerp(lerpMovement, movement.unit().scale(SPEED), 0.75);
 			bean.move(lerpMovement);
 			if (!movement.isZero()) bean.angle = ctx.lerp(bean.angle, ctx.wave(-25, 25, ctx.time() * 12 * ctx.speed), 0.25);

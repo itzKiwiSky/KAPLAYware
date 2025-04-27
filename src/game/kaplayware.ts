@@ -262,7 +262,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 			}
 
 			const shouldBoss = () => {
-				if (wareCtx.score % howFrequentBoss == 0 && games.some((g) => g.isBoss)) return true;
+				if (wareCtx.score % howFrequentBoss == 0 && games.some((g) => g.isBoss) || (games.length == 1 && games[0].isBoss)) return true;
 			};
 
 			const shouldSpeed = () => {
@@ -312,10 +312,10 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 			const choosenGame = opts.inOrder ? games[wareCtx.score % games.length] : k.choose(games);
 
 			let transitionStates: TransitionState[] = ["prep"];
-			if (wareApp.winState != undefined) transitionStates.splice(0, 0, wareApp.winState == true ? previousGame.isBoss ? "bosswin" : "win" : "lose");
+			if (wareApp.winState != undefined) transitionStates.splice(0, 0, wareApp.winState == true ? previousGame.isBoss ? "bossWin" : "win" : "lose");
 			if (shouldSpeed()) transitionStates.splice(1, 0, "speed");
 			if (isGameOver()) transitionStates = ["lose"];
-			if (shouldBoss()) transitionStates.splice(1, 0, "boss");
+			if (shouldBoss()) transitionStates.splice(1, 0, "bossPrep");
 			wareApp.minigameHistory[wareCtx.score - 1] = getGameID(choosenGame);
 			wareApp.winState = undefined;
 
