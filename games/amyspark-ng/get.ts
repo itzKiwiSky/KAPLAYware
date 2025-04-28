@@ -6,6 +6,7 @@ const getGame: Minigame = {
 	author: "amyspark-ng",
 	rgb: (ctx) => ctx.mulfok.GREEN,
 	duration: (ctx) => ctx.difficulty == 3 ? 3.5 : 4,
+	input: "keys",
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {
 		ctx.loadSprite("grass", "sprites/get/grass.png");

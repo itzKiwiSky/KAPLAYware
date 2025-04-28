@@ -6,6 +6,7 @@ const pickGame: Minigame = {
 	author: "amyspark-ng",
 	rgb: k.WHITE,
 	duration: 6,
+	input: "keys",
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {
 		ctx.loadSprite("hand", "sprites/pick/hand.png", { sliceY: 1, sliceX: 3 });

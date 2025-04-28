@@ -3,6 +3,7 @@ import { Minigame } from "../../src/game/types";
 const dodgeGame: Minigame = {
 	prompt: "DODGE!",
 	author: "amyspark-ng",
+	input: "keys",
 	duration: (ctx) => ctx.difficulty == 1 || ctx.difficulty == 2 ? 6 : 8,
 	rgb: [255, 255, 255],
 	urlPrefix: "games/amyspark-ng/assets/",

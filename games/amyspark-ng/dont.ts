@@ -5,6 +5,7 @@ const dontGame: Minigame = {
 	author: "amyspark-ng",
 	rgb: (ctx) => ctx.mulfok.VOID_VIOLET,
 	duration: 3,
+	input: "keys",
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {
 		ctx.loadSprite("explosion", "sprites/dont/explosion.png", { sliceX: 7, sliceY: 1, anims: { "a": { from: 0, to: 6 } } });

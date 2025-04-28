@@ -231,7 +231,7 @@ export type Minigame =
 		 * cursor: false // the game will not use cursor in any way
 		 * ```
 		 */
-		input?: "keys" | "mouse" | "mouse (hidden)";
+		input: "keys" | "mouse" | "mouse (hidden)";
 		/** How long the minigames goes for (choose a reasonable number)
 		 *
 		 * You can also use a callback, to change it based on difficulty
@@ -258,7 +258,7 @@ export type Minigame =
 		/** BOSS DIFFICULTY, duration() and input() are disabled, as boss minigames are infinite and input is always mouse and keyboard  */
 		isBoss: true;
 		/** Wheter to hide the mouse for the BOSS minigame */
-		hideMouse?: boolean;
+		hideMouse: boolean;
 	});
 
 export type KAPLAYwareOpts = {

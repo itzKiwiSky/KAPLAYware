@@ -5,6 +5,7 @@ import { GameObj, Vec2 } from "kaplay";
 const newGame: Minigame = {
 	prompt: "CHASE!",
 	author: "nanopoison",
+	input: "keys",
 	rgb: [133, 97, 97],
 	duration: (ctx) => ctx.difficulty == 3 ? 5 : 4,
 	urlPrefix: "games/nanopoison/assets",

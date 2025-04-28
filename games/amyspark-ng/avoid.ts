@@ -5,6 +5,7 @@ const avoidGame: Minigame = {
 	author: "amyspark-ng",
 	rgb: (ctx) => ctx.mulfok.BLUE,
 	duration: 6,
+	input: "keys",
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {
 		ctx.loadSound("squash", "sounds/squash.mp3");
@@ -52,14 +53,13 @@ const avoidGame: Minigame = {
 			},
 		});
 	},
-	// TODO: Do PR #18
 	start(ctx) {
 		ctx.setGravity(1300);
 
 		const crawl = ctx.play("crawl", { loop: true, paused: true, detune: ctx.rand(0, 50) });
 		const floor = ctx.add([
 			ctx.sprite("floor"),
-			ctx.area(),
+			ctx.area({ scale: ctx.vec2(2, 1) }),
 			ctx.pos(ctx.center().x, ctx.center().y + ctx.height() / 2 - 15),
 			ctx.anchor("center"),
 			ctx.body({ isStatic: true }),
@@ -71,6 +71,7 @@ const avoidGame: Minigame = {
 			ctx.area({ scale: ctx.vec2(0.5, 0.75), offset: ctx.vec2(0, -2) }),
 			ctx.anchor("center"),
 			ctx.body(),
+			ctx.z(1),
 			ctx.pos(floor.pos.x, floor.pos.y - 60),
 			{
 				adjusting: false,
@@ -80,6 +81,7 @@ const avoidGame: Minigame = {
 		const cloudsBack = ctx.add([
 			ctx.sprite("cloudsBack"),
 			ctx.pos(),
+			ctx.z(0),
 		]);
 
 		const foot = ctx.add([
@@ -87,7 +89,7 @@ const avoidGame: Minigame = {
 			ctx.pos(),
 			ctx.area({ scale: ctx.vec2(0.5, 1) }),
 			ctx.anchor("bot"),
-			ctx.z(0),
+			ctx.z(1),
 			ctx.pos(ctx.center()),
 			"foot",
 		]);
@@ -95,7 +97,7 @@ const avoidGame: Minigame = {
 		const cloudsFront = ctx.add([
 			ctx.sprite("cloudsFront"),
 			ctx.pos(),
-			ctx.z(1),
+			ctx.z(2),
 		]);
 
 		function stomp() {
@@ -162,6 +164,7 @@ const avoidGame: Minigame = {
 		const SPEED = 350 * ctx.speed;
 		let mov = ctx.vec2(0);
 		let lerpMov = ctx.vec2(0);
+		let inScreen = true;
 		mark.onUpdate(() => {
 			// foot
 			if (ctx.timeLeft > 0) foot.pos.x = ctx.lerp(foot.pos.x, ctx.wave(20, ctx.width() - 20, ctx.time() / ctx.speed), 0.05 * ctx.speed);
@@ -173,6 +176,7 @@ const avoidGame: Minigame = {
 			cloudsBack.pos.y = ctx.wave(0, 10, ctx.time() / 2);
 			cloudsFront.pos.y = ctx.wave(0, 10, ctx.time());
 
+			// mark
 			if (ctx.winState() == false) return;
 			const walking = ctx.isInputButtonDown("left") || ctx.isInputButtonDown("right");
 
@@ -186,6 +190,10 @@ const avoidGame: Minigame = {
 			mov.x = ctx.isInputButtonDown("left") ? -1 : ctx.isInputButtonDown("right") ? 1 : 0;
 			lerpMov = ctx.lerp(lerpMov, mov, 0.5);
 			mark.move(lerpMov.scale(SPEED));
+
+			// wrap around the screen
+			if (mark.pos.x <= -mark.width / 2 - 10) mark.pos.x = ctx.width() + mark.width / 2;
+			if (mark.pos.x >= ctx.width() + mark.width / 2 + 10) mark.pos.x = -mark.width / 2;
 		});
 
 		ctx.wait(0.75 / ctx.speed, () => {

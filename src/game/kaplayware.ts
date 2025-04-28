@@ -377,13 +377,6 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 	for (const game of opts.games) {
 		game.urlPrefix = game.urlPrefix ?? "";
 		game.isBoss = game.isBoss ?? false;
-		if (game.isBoss == false) {
-			game.input = game.input ?? "keys";
-		}
-		else {
-			game.hideMouse = game.hideMouse ?? false;
-		}
-
 		game.rgb = game.rgb ?? [255, 255, 255];
 		if ("r" in game.rgb) game.rgb = [game.rgb.r, game.rgb.g, game.rgb.b];
 	}
