@@ -5,22 +5,6 @@ import { gameAPIs } from "./api";
 import { LoadCtx, MinigameCtx } from "./context";
 import { assets } from "@kaplayjs/crew";
 
-type Friend = keyof typeof assets | `${keyof typeof assets}-o`;
-type AtFriend = `@${Friend}`;
-type CustomSprite<T extends string> = T extends AtFriend | string & {} ? AtFriend | string & {} : string;
-
-/**
- * A modified {@link sprite `sprite()`} component to fit KAPLAYware.
- *
- * @group Component Types
- */
-interface WareSpriteComp extends Omit<SpriteComp, "sprite"> {
-	/**
-	 * Name of the sprite.
-	 */
-	sprite: CustomSprite<string>;
-}
-
 /** The type of input a minigame does */
 export type MinigameInput = "mouse" | "keys" | "both";
 
@@ -73,41 +57,6 @@ export type MinigameAPI = {
 	getRGB(): Color;
 	/** Sets the RGB to the background of your minigame */
 	setRGB(val: Color): void;
-	/** ### Custom sprite component for KAPLAYware that holds default assets
-	 *
-	 * Attach and render a sprite to a Game Object.
-	 *
-	 * @param spr - The sprite to render.
-	 * @param opt - Options for the sprite component. See {@link SpriteCompOpt `SpriteCompOpt`}.
-	 *
-	 * @example
-	 * ```js
-	 * // minimal setup
-	 * add([
-	 *     sprite("bean"),
-	 * ])
-	 *
-	 * // with options
-	 * const bean = add([
-	 *     sprite("bean", {
-	 *         // start with animation "idle"
-	 *         anim: "idle",
-	 *     }),
-	 * ])
-	 *
-	 * // play / stop an anim
-	 * bean.play("jump")
-	 * bean.stop()
-	 *
-	 * // manually setting a frame
-	 * bean.frame = 3
-	 * ```
-	 *
-	 * @returns The sprite comp.
-	 * @since v2000.0
-	 * @group Components
-	 */
-	sprite(spr: CustomSprite<string> | SpriteData | Asset<SpriteData>, opt?: SpriteCompOpt): WareSpriteComp;
 	/** Register an event that runs once when timer runs out. */
 	onTimeout: (action: () => void) => KEventController;
 	/** Run this when player succeeded in completing the game. */

@@ -13,6 +13,19 @@ export const getGameByID = (id: string) => games.find((minigame) => `${minigame.
 export const getElectibleGame = () => {
 };
 
+/**
+ * Returns a copy of the object where it'll only have the keys you pass as param
+ * @param obj The object
+ * @param keys The keys you want to maintain in the object
+ * @returns The new object with only those keys
+ */
+export function pickKeysInObj<T extends any, R extends keyof T>(obj: T, keys: R[]) {
+	return keys.reduce((result: Pick<T, R>, prop) => {
+		result[prop] = obj[prop];
+		return result;
+	}, {} as Pick<T, R>);
+}
+
 export const getInputMessage = (g: Minigame) => {
 	const input = getGameInput(g);
 	let message = "";

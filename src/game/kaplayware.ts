@@ -78,7 +78,10 @@ export function createGameContainer() {
 	};
 }
 
-export function createWareApp() {
+/** Creates an app that contains manages general ware behaviour
+ * @param preview Wheter
+ */
+export function createWareApp(preview?: boolean) {
 	const gameContainer = createGameContainer();
 
 	const wareApp = {
