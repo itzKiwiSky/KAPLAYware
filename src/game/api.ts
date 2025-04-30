@@ -5,8 +5,6 @@ export const loadAPIs = [
 	"loadSprite",
 	"loadSpriteAtlas",
 	"loadAseprite",
-	"loadPedit",
-	"loadBean",
 	"loadJSON",
 	"loadSound",
 	"loadFont",
@@ -14,7 +12,6 @@ export const loadAPIs = [
 	"loadShader",
 	"loadShaderURL",
 	"load",
-	"loadProgress",
 ] as const;
 
 export const gameAPIs = [
