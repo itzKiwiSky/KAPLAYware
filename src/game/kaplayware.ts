@@ -1,5 +1,5 @@
 import k from "../engine";
-import { AudioPlay, GameObj, KEventController, PosComp, RotateComp, ScaleComp, TimerController } from "kaplay";
+import { AnchorComp, AudioPlay, GameObj, KEventController, MaskComp, PosComp, RectComp, RotateComp, ScaleComp, TimerController, Vec2, Vec2Args } from "kaplay";
 import cursor from "../plugins/cursor";
 import { gameHidesMouse, getGameDuration, getGameID, getGameInput, getInputMessage } from "./utils";
 import { runTransition, TransitionState } from "./transitions";
@@ -8,16 +8,92 @@ import games from "./games";
 import { createGameCtx, createPauseCtx, MinigameCtx, PauseCtx } from "./context";
 import { WareBomb } from "../plugins/wareobjects";
 
+export function createGameContainer() {
+	const root = k.add([]);
+
+	const gameBox = root.add([
+		k.rect(k.width(), k.height()),
+		k.color(k.BLUE.lighten(100)),
+		k.scale(1),
+		k.pos(k.center()),
+		k.anchor("center"),
+	]);
+
+	const maskObj = gameBox.add([
+		k.rect(gameBox.width, gameBox.height),
+		k.pos(-gameBox.width / 2, -gameBox.height / 2),
+		k.mask("intersect"),
+	]);
+
+	const shakeCameraObject = maskObj.add([
+		k.pos(),
+	]);
+
+	const cameraObject = shakeCameraObject.add([
+		k.rect(k.width(), k.height(), { fill: false }),
+		k.pos(k.center()),
+		k.rotate(0),
+		k.anchor("center"),
+		k.scale(1),
+		{
+			shake: 0,
+		},
+	]);
+
+	const sceneObject = cameraObject.add([
+		k.pos(-cameraObject.width / 2, -cameraObject.height / 2),
+	]);
+
+	cameraObject.onUpdate(() => {
+		cameraObject.shake = k.lerp(cameraObject.shake, 0, 5 * k.dt());
+		let posShake = k.Vec2.fromAngle(k.rand(0, 360)).scale(cameraObject.shake);
+		shakeCameraObject.pos = k.vec2().add(posShake);
+	});
+
+	return {
+		/** The root of all evil */
+		root: root,
+		/** Is the background and "window" of everything */
+		box: gameBox,
+		/** Masking object so things inside don't go out */
+		mask: maskObj,
+		/** Is the offset for the camera shaking */
+		shakeCam: shakeCameraObject,
+		/** Is the camera */
+		camera: cameraObject,
+		/** Is the real scene where minigame objects can be added with no problem, should have 0 children */
+		scene: sceneObject,
+		set scale(val: Vec2) {
+			gameBox.scale = val;
+		},
+		get scale() {
+			return gameBox.scale;
+		},
+		set pos(val: Vec2) {
+			gameBox.pos = val;
+		},
+		get pos() {
+			return gameBox.pos;
+		},
+	};
+}
+
 export function createWareApp() {
+	const gameContainer = createGameContainer();
+
 	const wareApp = {
-		/** Main object, if you want to pause every object, pause this */
-		WareScene: k.add([]),
-		/** The parent of the camera, gets its position offsetted for shakes */
-		shakeCamera: null as GameObj<PosComp>,
-		/** The camera object, modify its scale or angle to simulate camera */
-		camera: null as GameObj<PosComp | ScaleComp | RotateComp | { shake: number; }>,
-		/** The container for minigames, if you want to pause the minigame you should pause this */
-		gameBox: null as GameObj<PosComp>,
+		get rootObj() {
+			return gameContainer.root;
+		},
+		get boxObj() {
+			return gameContainer.box;
+		},
+		get sceneObj() {
+			return gameContainer.scene;
+		},
+		get cameraObj() {
+			return gameContainer.camera;
+		},
 		wareCtx: null as ReturnType<typeof kaplayware>,
 		/** Wheter the current minigame should be running (will be false when the transition hasn't finished) */
 		gameRunning: false,
@@ -40,7 +116,6 @@ export function createWareApp() {
 		canPlaySounds: false,
 		onTimeOutEvents: new k.KEvent(),
 		currentColor: k.rgb(),
-		currentScene: null as GameObj,
 		pausableCtx: null as PauseCtx,
 		currentContext: null as MinigameCtx,
 		timeRunning: false, // will turn true when transition is over (not same as gameRunning)
@@ -111,18 +186,6 @@ export function createWareApp() {
 		},
 	};
 
-	wareApp.shakeCamera = wareApp.WareScene.add([k.pos()]);
-	wareApp.camera = wareApp.shakeCamera.add([
-		k.pos(k.center()),
-		k.anchor("center"),
-		k.scale(),
-		k.rotate(),
-		k.opacity(0),
-		{
-			shake: 0,
-		},
-	]);
-	wareApp.gameBox = wareApp.camera.add([k.pos(-k.width() / 2, -k.height() / 2)]);
 	wareApp.pausableCtx = createPauseCtx();
 
 	return wareApp;
@@ -140,16 +203,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 
 	const wareApp = createWareApp();
 
-	const shakeCamera = wareApp.shakeCamera;
-	const camera = wareApp.camera;
-
-	camera.onUpdate(() => {
-		camera.shake = k.lerp(camera.shake, 0, 5 * k.dt());
-		let posShake = k.Vec2.fromAngle(k.rand(0, 360)).scale(camera.shake);
-		shakeCamera.pos = k.vec2().add(posShake);
-	});
-
-	const gameBox = wareApp.gameBox;
+	const gameBox = wareApp.sceneObj;
 
 	const wareCtx = {
 		score: 1, // will transition from 0 to 1 on first prep
@@ -200,8 +254,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 			wareCtx.time = gameDuration;
 			wareApp.currentContext.timeLeft = wareCtx.time;
 			wareApp.currentColor = typeof minigame.rgb == "function" ? minigame.rgb(wareApp.currentContext) : "r" in minigame.rgb ? minigame.rgb : k.Color.fromArray(minigame.rgb);
-			wareApp.currentScene?.destroy();
-			wareApp.currentScene = gameBox.add([k.rect(0, 0), k.area()]); // TODO: When area collisions are fixed remove this area()
+			wareApp.sceneObj.removeAll();
 			wareApp.gameRunning = false; // will be set to true onTransitionEnd (in nextGame())
 			wareApp.timeRunning = false;
 			wareApp.canPlaySounds = false;
@@ -334,7 +387,7 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 					prompt = k.addPrompt(wareApp, "");
 					choosenGame.prompt(wareApp.currentContext, prompt);
 				}
-				prompt.parent = wareApp.WareScene;
+				prompt.parent = wareApp.rootObj;
 
 				wareApp.pausableCtx.wait(0.15 / wareCtx.speed, () => {
 					cursor.fadeAway = gameHidesMouse(choosenGame);
@@ -382,11 +435,12 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 	}
 
 	k.onUpdate(() => {
-		wareApp.WareScene.paused = wareApp.gamePaused;
+		wareApp.rootObj.paused = wareApp.gamePaused;
+		wareApp.boxObj.color = wareApp.currentColor;
 		cursor.canPoint = wareApp.gameRunning;
 		wareApp.conductor.bpm = 140 * wareCtx.speed;
 		wareApp.conductor.paused = wareApp.gamePaused;
-		if (wareApp.currentScene) wareApp.currentScene.paused = !wareApp.gameRunning;
+		wareApp.sceneObj.paused = !wareApp.gameRunning;
 
 		wareApp.inputEvents.forEach((ev) => ev.paused = !wareApp.inputEnabled || !wareApp.gameRunning);
 		wareApp.timerEvents.forEach((ev) => ev.paused = !wareApp.gameRunning || wareApp.gamePaused);
@@ -399,16 +453,6 @@ export default function kaplayware(opts: KAPLAYwareOpts = {}) {
 		k.quickWatch("game", getGameID(wareApp.wareCtx.curGame));
 		k.quickWatch("input", getInputMessage(wareApp.wareCtx.curGame));
 		k.quickWatch("time", wareApp.wareCtx.time);
-	});
-
-	wareApp.WareScene.onDraw(() => {
-		// draws the background
-		k.drawRect({
-			width: k.width(),
-			height: k.height(),
-			fixed: true,
-			color: wareApp.currentColor,
-		});
 	});
 
 	return wareCtx;

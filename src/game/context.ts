@@ -141,7 +141,7 @@ export function createGameCtx(wareApp: WareApp, game: Minigame) {
 
 		if (api == "add") {
 			gameCtx[api] = (...args: any[]) => {
-				return wareApp.currentScene.add(...args);
+				return wareApp.sceneObj.add(...args);
 			};
 		}
 		// @ts-ignore
@@ -153,12 +153,12 @@ export function createGameCtx(wareApp: WareApp, game: Minigame) {
 		}
 		else if (api == "onDraw") {
 			gameCtx[api] = (...args: any[]) => {
-				return wareApp.addDrawEvent(wareApp.currentScene.onDraw(...args as [any]));
+				return wareApp.addDrawEvent(wareApp.sceneObj.onDraw(...args as [any]));
 			};
 		}
 		else if (api == "get") {
 			gameCtx[api] = (...args: any[]) => {
-				return wareApp.currentScene.get(...args as [any]);
+				return wareApp.sceneObj.get(...args as [any]);
 			};
 		}
 
@@ -192,7 +192,7 @@ export function createGameCtx(wareApp: WareApp, game: Minigame) {
 			gameCtx[api] = (...args: any[]) => {
 				// @ts-ignore
 				const level = k.addLevel(...args);
-				level.parent = wareApp.currentScene;
+				level.parent = wareApp.sceneObj;
 				return level;
 			};
 		}
@@ -267,12 +267,12 @@ export function createGameCtx(wareApp: WareApp, game: Minigame) {
 				return {
 					id: "fixed",
 					add() {
-						this.parent = wareApp.WareScene;
+						this.parent = wareApp.rootObj;
 					},
 					set fixed(val: boolean) {
 						fixed = val;
-						if (fixed == true) this.parent = wareApp.WareScene;
-						else this.parent = wareApp.currentScene;
+						if (fixed == true) this.parent = wareApp.rootObj;
+						else this.parent = wareApp.sceneObj;
 					},
 					get fixed() {
 						return fixed;
@@ -317,15 +317,15 @@ export function createGameCtx(wareApp: WareApp, game: Minigame) {
 	}
 
 	const gameAPI: MinigameAPI = {
-		getCamAngle: () => wareApp.camera.angle,
-		setCamAngle: (val: number) => wareApp.camera.angle = val,
-		getCamPos: () => wareApp.camera.pos,
-		setCamPos: (val: Vec2) => wareApp.camera.pos = val,
-		getCamScale: () => wareApp.camera.scale,
-		setCamScale: (val: Vec2) => wareApp.camera.scale = val,
-		shakeCam: (val: number = 12) => wareApp.camera.shake += val,
+		getCamAngle: () => wareApp.cameraObj.angle,
+		setCamAngle: (val: number) => wareApp.cameraObj.angle = val,
+		getCamPos: () => wareApp.cameraObj.pos,
+		setCamPos: (val: Vec2) => wareApp.cameraObj.pos = val,
+		getCamScale: () => wareApp.cameraObj.scale,
+		setCamScale: (val: Vec2) => wareApp.cameraObj.scale = val,
+		shakeCam: (val: number = 12) => wareApp.cameraObj.shake += val,
 		flashCam: (flashColor: Color = k.WHITE, timeOut: number = 1, opacity: number) => {
-			const r = wareApp.shakeCamera.add([
+			const r = wareApp.cameraObj.add([
 				k.pos(k.center()),
 				k.rect(k.width() * 2, k.height() * 2),
 				k.color(flashColor),
@@ -409,19 +409,19 @@ export function createGameCtx(wareApp: WareApp, game: Minigame) {
 			wareApp.gameRunning = false;
 			wareApp.canPlaySounds = false;
 			wareApp.currentBomb?.destroy();
-			wareApp.gameBox.clearEvents(); // this clears the time running update, not the onUpdate events of the minigame
+			wareApp.sceneObj.clearEvents(); // this clears the time running update, not the onUpdate events of the minigame
 			// removes the scene
 			k.wait(0.2 / wareApp.wareCtx.speed, () => {
 				wareApp.clearDrawEvents(); // clears them after you can't see them anymore
-				wareApp.currentScene.destroy();
+				wareApp.sceneObj.removeAll();
 				// removes fixed objects too (they aren't attached to the gamebox)
-				wareApp.WareScene.get("fixed").forEach((obj) => obj.destroy());
+				wareApp.rootObj.get("fixed").forEach((obj) => obj.destroy());
 				// reset camera
 				this.setCamPos(k.center());
 				this.setCamAngle(0);
 				this.setCamScale(k.vec2(1));
-				wareApp.camera.get("flash").forEach((f) => f.destroy());
-				wareApp.camera.shake = 0;
+				wareApp.cameraObj.get("flash").forEach((f) => f.destroy());
+				wareApp.cameraObj.shake = 0;
 			});
 			wareApp.wareCtx.nextGame();
 		},
@@ -445,7 +445,7 @@ export function createGameCtx(wareApp: WareApp, game: Minigame) {
 		winState: () => wareApp.winState,
 		addConfetti(opts) {
 			const confetti = k.addConfetti(opts);
-			confetti.parent = wareApp.gameBox;
+			confetti.parent = wareApp.sceneObj;
 			return confetti;
 		},
 		difficulty: wareApp.wareCtx.difficulty,

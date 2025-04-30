@@ -23,8 +23,6 @@ const colorGame: Minigame = {
 		const qty = Math.min(4, ctx.difficulty + 1);
 		const hasLabels = ctx.difficulty >= 2;
 
-		let done = false;
-
 		// pick 3 random colors
 		const gameColors: string[] = ctx.chooseMultiple(Object.keys(possibleColors), qty);
 
@@ -76,7 +74,7 @@ const colorGame: Minigame = {
 			}
 
 			option.onClick(() => {
-				if (done) return;
+				if (ctx.winState() != undefined) return;
 				option.pos.x += 25;
 				end(option.colorName === correctColor);
 			});
@@ -89,13 +87,14 @@ const colorGame: Minigame = {
 			ctx.pos(20, 20),
 		]);
 
+		// TODO: this isn't working
 		ctx.onTimeout(() => {
-			if (!done) return;
+			if (ctx.winState() != undefined) return;
 			end(false);
 		});
 
 		function end(victory = true) {
-			done = true;
+			victory == true ? ctx.win() : ctx.lose();
 			for (const wrong of ctx.get("wrong")) {
 				wrong.color = ctx.mulfok.WHITE;
 				wrong.opacity = 0.5;

@@ -4,7 +4,7 @@ import { getGameInput } from "../game/utils";
 import { WareApp } from "../game/kaplayware";
 
 function addPrompt(wareApp: WareApp, promptText: string) {
-	const promptObj = wareApp.WareScene.add([
+	const promptObj = wareApp.rootObj.add([
 		k.color(k.WHITE),
 		k.fixed(),
 		k.text(`[a]${promptText}[/a]`, {
@@ -58,7 +58,7 @@ function addPrompt(wareApp: WareApp, promptText: string) {
 }
 
 function addInputPrompt(wareApp: WareApp, input: ReturnType<typeof getGameInput>) {
-	const prompt = wareApp.WareScene.add([{
+	const prompt = wareApp.rootObj.add([{
 		end() {},
 	}]);
 
@@ -99,7 +99,7 @@ function addBomb(wareApp: WareApp): WareBomb {
 	const BOMB_POS = k.vec2(40, k.height() - 40);
 	let beatsLeft = 3;
 
-	const bomb = wareApp.WareScene.add([{
+	const bomb = wareApp.rootObj.add([{
 		tick,
 		get hasExploded() {
 			return hasExploded;
@@ -174,7 +174,7 @@ function addBomb(wareApp: WareApp): WareBomb {
 	function explode() {
 		destroy();
 		const kaboom = k.addKaboom(bombSpr.pos);
-		kaboom.parent = wareApp.WareScene;
+		kaboom.parent = wareApp.rootObj;
 		wareApp.pausableCtx.play("explosion");
 		hasExploded = true;
 	}

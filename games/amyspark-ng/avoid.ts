@@ -56,6 +56,8 @@ const avoidGame: Minigame = {
 	start(ctx) {
 		ctx.setGravity(1300);
 
+		// TODO: you can still move after the minigame is done
+		// TODO: this keeps playing when the minigame is done, WHAT THE HELL IS HAPPENING
 		const crawl = ctx.play("crawl", { loop: true, paused: true, detune: ctx.rand(0, 50) });
 		const floor = ctx.add([
 			ctx.sprite("floor"),

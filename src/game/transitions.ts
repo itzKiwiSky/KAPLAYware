@@ -5,7 +5,6 @@ export type TransitionState = "win" | "lose" | "prep" | "speed" | "bossPrep" | "
 
 export function runTransition(wareApp: WareApp, states: TransitionState[]) {
 	const ware = wareApp.wareCtx;
-	const WareScene = wareApp.WareScene;
 	const conductor = k.conductor(140 * wareApp.wareCtx.speed);
 
 	const stateStartEvent = new k.KEvent<TransitionState[]>();
@@ -18,15 +17,18 @@ export function runTransition(wareApp: WareApp, states: TransitionState[]) {
 
 	// woke agenda
 	// "trans" controls scale and position of the transitions, obj is just to attach, don't remove this
-	const trans = WareScene.add([k.scale(), k.pos(k.center()), k.anchor("center"), k.state(states[0], states)]);
+	const trans = wareApp.rootObj.add([k.scale(), k.pos(k.center()), k.anchor("center"), k.state(states[0], states)]);
 	const objs = trans.add([k.pos(-k.width() / 2, -k.height() / 2)]);
 	objs.add([k.sprite("trans1-bg")]);
 	objs.add([k.sprite("trans1-grass")]);
 	objs.add([k.sprite("trans1-table")]);
 
 	trans.onUpdate(() => {
-		conductor.paused = wareApp.gamePaused;
+		conductor.paused = true;
 	});
+
+	// const GAME_ZOOM = k.vec2(0.5, 0.25);
+	const GAME_ZOOM_POS = k.vec2(397, 226);
 
 	const ZOOM_SCALE = k.vec2(5.9);
 	const ZOOM_Y = 827;
@@ -102,10 +104,12 @@ export function runTransition(wareApp: WareApp, states: TransitionState[]) {
 		};
 	}
 
+	// TODO: Fix all the screen stuff when the new screen aspect ratio comes out
 	const screen = objs.add([
 		k.sprite("trans1-screen"),
-		k.pos(288, 147),
+		k.pos(396, 214),
 		k.opacity(),
+		k.anchor("center"),
 	]);
 
 	const computer = objs.add([
@@ -198,6 +202,16 @@ export function runTransition(wareApp: WareApp, states: TransitionState[]) {
 		});
 	});
 
+	function zoomOut() {
+		pausableCtx.tween(ZOOM_Y, k.center().y, 0.5 / ware.speed, (p) => trans.pos.y = p, k.easings.easeOutQuint);
+		pausableCtx.tween(ZOOM_SCALE, k.vec2(1), 0.5 / ware.speed, (p) => trans.scale = p, k.easings.easeOutQuint);
+	}
+
+	function zoomIn() {
+		pausableCtx.tween(trans.pos.y, ZOOM_Y, 1 / ware.speed, (p) => trans.pos.y = p, k.easings.easeOutQuint);
+		pausableCtx.tween(trans.scale, ZOOM_SCALE, 1 / ware.speed, (p) => trans.scale = p, k.easings.easeOutQuint);
+	}
+
 	trans.onStateEnter("prep", () => {
 		stateStartEvent.trigger("prep");
 		pausableCtx.play("prepJingle", { speed: ware.speed });
@@ -210,6 +224,7 @@ export function runTransition(wareApp: WareApp, states: TransitionState[]) {
 		const prepConductor = k.conductor(140 * wareApp.wareCtx.speed);
 		trans.onUpdate(() => prepConductor.paused = wareApp.gamePaused);
 
+		// page funny
 		pausableCtx.tween(fallingPage.scale.y, 1.8, 0.35 / ware.speed, (p) => fallingPage.scale.y = p, k.easings.easeOutExpo).onEnd(() => {
 			fallingPage.scale.y = 0.5;
 			fallingPage.pos.y += calendar.height;
@@ -234,6 +249,11 @@ export function runTransition(wareApp: WareApp, states: TransitionState[]) {
 			}
 			else if (beat == 2) {
 				promptEvent.trigger();
+				// set gamebox
+				wareApp.boxObj.width = screen.width;
+				wareApp.boxObj.height = screen.height;
+				wareApp.boxObj.pos = screen.pos;
+				pausableCtx.tween(1, 0, 0.5 / ware.speed, (p) => screen.opacity = p, k.easings.easeOutQuint);
 			}
 
 			const heartIdx = beat % (hearts.length);
@@ -241,9 +261,15 @@ export function runTransition(wareApp: WareApp, states: TransitionState[]) {
 			pausableCtx.tween(k.vec2(1.5), k.vec2(1), 0.35 / ware.speed, (p) => heartToBeat.scale = p, k.easings.easeOutQuint);
 
 			if (beat == 3) {
-				pausableCtx.tween(trans.pos.y, ZOOM_Y, 1 / ware.speed, (p) => trans.pos.y = p, k.easings.easeOutQuint);
-				pausableCtx.tween(trans.scale, ZOOM_SCALE, 1 / ware.speed, (p) => trans.scale = p, k.easings.easeOutQuint);
-				pausableCtx.tween(1, 0, 0.5 / ware.speed, (p) => screen.opacity = p, k.easings.easeOutQuint).onEnd(() => {
+				zoomIn();
+				pausableCtx.tween(
+					k.vec2(wareApp.boxObj.width, wareApp.boxObj.height),
+					k.vec2(k.width(), k.height()),
+					0.5 / ware.speed,
+					(p) => [wareApp.boxObj.width, wareApp.boxObj.height] = [p.x, p.y],
+					k.easings.easeOutQuint,
+				);
+				pausableCtx.tween(wareApp.boxObj.pos, k.center(), 0.5 / ware.speed, (p) => wareApp.boxObj.pos = p, k.easings.easeOutQuint).onEnd(() => {
 					stateEndEvent.trigger("prep");
 					prepConductor.destroy();
 				});
@@ -253,9 +279,17 @@ export function runTransition(wareApp: WareApp, states: TransitionState[]) {
 
 	trans.onStateEnter("win", () => {
 		stateStartEvent.trigger("win");
-		pausableCtx.tween(ZOOM_Y, k.center().y, 0.5 / ware.speed, (p) => trans.pos.y = p, k.easings.easeOutQuint);
-		pausableCtx.tween(ZOOM_SCALE, k.vec2(1), 0.5 / ware.speed, (p) => trans.scale = p, k.easings.easeOutQuint);
-		pausableCtx.tween(0, 1, 0.25 / ware.speed, (p) => screen.opacity = p, k.easings.easeOutQuint);
+		screen.opacity = 0;
+		zoomOut();
+		pausableCtx.tween(0, 1, 0.5 / ware.speed, (p) => screen.opacity = p, k.easings.easeOutQuint);
+		pausableCtx.tween(wareApp.boxObj.pos, screen.pos, 0.5 / ware.speed, (p) => screen.pos = p, k.easings.easeOutQuint);
+		pausableCtx.tween(
+			k.vec2(wareApp.boxObj.width, wareApp.boxObj.height),
+			k.vec2(screen.width, screen.height),
+			0.5 / ware.speed,
+			(p) => [wareApp.boxObj.width, wareApp.boxObj.height] = [p.x, p.y],
+			k.easings.easeOutQuint,
+		);
 
 		const winConductor = k.conductor(140 * wareApp.wareCtx.speed);
 		const hearts = objs.get("heart");
