@@ -15,6 +15,10 @@ const game_dir = `games/${author}`;
 const file_path = `games/${author}/${gamePrompt}.ts`;
 const assets_dir = `${author_dir}/assets/`;
 
+const randomNum = (max = 255) => {
+	return Math.floor(Math.random() * max + 1);
+};
+
 const template = `
 import { Minigame } from "../../src/game/types";
 
@@ -22,6 +26,7 @@ const ${gamePrompt}Game: Minigame = {
 	author: "${author}",
 	prompt: "${gamePrompt.toUpperCase() + "!"}",
 	input: "keys",
+	rgb: [${randomNum()}, ${randomNum()}, ${randomNum()}],
 	duration: 4,
 	urlPrefix: "${assets_dir}",
 	load(ctx) {},

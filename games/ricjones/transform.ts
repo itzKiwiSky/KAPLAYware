@@ -3,7 +3,8 @@ import { Minigame } from "../../src/game/types.ts";
 const transformGame: Minigame = {
 	prompt: "TRANSFORM!",
 	author: "ricjones",
-	rgb: [74, 48, 82], // rgb for #4a3052 from mulfok32 palette
+	input: "keys",
+	rgb: (ctx) => ctx.mulfok.DARK_VIOLET,
 	urlPrefix: "games/ricjones/assets/",
 	duration: undefined,
 	load(ctx) {

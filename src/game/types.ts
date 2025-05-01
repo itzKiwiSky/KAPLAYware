@@ -54,8 +54,7 @@ export type Minigame =
 		 * rgb: (ctx) => ctx.difficulty == 3 ? ctx.Color.fromArray(237, 24, 63) : ctx.Color.fromArray(235, 38, 202)
 		 * ```
 		 */
-		// TODO: make this not optional
-		rgb?: [number, number, number] | Color | ((ctx: MinigameCtx) => Color);
+		rgb: [number, number, number] | Color | ((ctx: MinigameCtx) => Color);
 		/**
 		 * Assets URL prefix.
 		 */

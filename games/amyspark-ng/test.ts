@@ -4,6 +4,7 @@ const testGame: Minigame = {
 	author: "amyspark-ng",
 	prompt: "TEST!",
 	input: "keys",
+	rgb: [255, 255, 255],
 	duration: 4,
 	urlPrefix: "games/amyspark-ng/assets/",
 	load(ctx) {},
