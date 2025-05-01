@@ -7,7 +7,7 @@ import { Kaplayware } from "./kaplayware";
 /** The many animations a transition can do */
 export type TransitionState = "win" | "lose" | "prep" | "speed" | "bossPrep" | "bossWin";
 
-export function runTransition(wareApp: WareApp, wareEngine: Kaplayware, states: TransitionState[]) {
+export function runTransition(states: TransitionState[], wareApp: WareApp, wareEngine: Kaplayware) {
 	const speed = wareEngine.speed;
 	const difficulty = wareEngine.difficulty;
 	const lives = wareEngine.lives;
@@ -34,9 +34,6 @@ export function runTransition(wareApp: WareApp, wareEngine: Kaplayware, states: 
 	trans.onUpdate(() => {
 		conductor.paused = true;
 	});
-
-	// const GAME_ZOOM = k.vec2(0.5, 0.25);
-	const GAME_ZOOM_POS = k.vec2(397, 226);
 
 	const ZOOM_SCALE = k.vec2(5.9);
 	const ZOOM_Y = 827;
@@ -400,14 +397,19 @@ export function runTransition(wareApp: WareApp, wareEngine: Kaplayware, states: 
 	return {
 		destroy,
 
-		onStateStart(action: (state: TransitionState) => void) {
-			return stateStartEvent.add(action);
+		onStateStart(stateName: TransitionState, action: () => void) {
+			return stateStartEvent.add((state) => {
+				if (stateName == state) action();
+			});
 		},
 
-		onStateEnd(action: (state: TransitionState) => void) {
-			return stateEndEvent.add(action);
+		onStateEnd(stateName: TransitionState, action: () => void) {
+			return stateStartEvent.add((state) => {
+				if (stateName == state) action();
+			});
 		},
 
+		/** Runs when all the states passed end */
 		onTransitionEnd(action: () => void) {
 			return transitionEndEvent.add(action);
 		},

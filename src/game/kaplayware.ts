@@ -4,8 +4,11 @@ import { createWareApp } from "./app";
 import { Minigame } from "./types";
 import { createGameCtx } from "./context/game";
 import games from "./games";
-import { createDumbEventThing, getGameColor } from "./utils";
+import { createDumbEventThing, gameHidesMouse, getGameColor, getGameDuration } from "./utils";
 import cursor from "../plugins/cursor";
+import { runTransition } from "./transitions";
+import { MinigameCtx } from "./context/types";
+import { addBomb } from "./objects/bomb";
 
 /** Certain options to instantiate kaplayware (ware-engine) */
 export type KAPLAYwareOpts = {
@@ -26,13 +29,18 @@ export type Kaplayware = {
 	minigameHistory: string[];
 	queuedSounds: KEventController[];
 	onTimeOutEvents: KEvent;
-	events: ReturnType<typeof createDumbEventThing<"win" | "lose" | "finish">>;
 	winState: boolean | undefined;
+	clearPrevious(): void;
+	winGame(): void;
+	loseGame(): void;
+	finishGame(): void;
+	runGame(): void;
 	nextGame(): void;
 };
 
 // TODO: add conductor here? would that be fine?
 // Should just add it here and create an event that pauses it on everythingPaused
+
 // remember that big on update event that paused everything on everythingPaused? create it here too, makes the most sense
 // Add it here and not on wareApp, because wareApp doesn't require a BPM or anything, that's exclusive of transitions and bomb timing
 
@@ -41,9 +49,13 @@ export function kaplayware(opt: KAPLAYwareOpts): Kaplayware {
 	opt = opt ?? {};
 	opt.games = opt.games ?? games;
 	opt.inOrder = opt.inOrder ?? false;
+	for (const game of opt.games) {
+		game.isBoss = game.isBoss ?? false;
+	}
 
 	const wareApp = createWareApp();
 	const wareEngine = {} as unknown as Kaplayware;
+	wareEngine.timeLeft = 4;
 	wareEngine.lives = 4;
 	wareEngine.score = 0;
 	wareEngine.speed = 1;
@@ -54,7 +66,6 @@ export function kaplayware(opt: KAPLAYwareOpts): Kaplayware {
 	wareEngine.queuedSounds = [];
 	wareEngine.winState = undefined;
 	wareEngine.curGame = undefined;
-	wareEngine.events = createDumbEventThing(["win", "lose", "finish"]);
 	wareEngine.onTimeOutEvents = new k.KEvent();
 
 	const getElectibleGame = () => {
@@ -64,66 +75,123 @@ export function kaplayware(opt: KAPLAYwareOpts): Kaplayware {
 	const calculateDifficulty = () => {
 	};
 
-	wareEngine.nextGame = () => {
-		wareEngine.score++;
-		wareEngine.curGame = getElectibleGame();
-		const ctx = createGameCtx(wareEngine.curGame, wareApp, wareEngine);
-		ctx.setRGB(getGameColor(wareEngine.curGame, ctx));
-		cursor.fadeAway = false;
-		wareEngine.curGame.start(ctx);
+	const shouldsSpeedUp = () => {
 	};
 
-	wareEngine.events.on("win", () => {
+	// TODO: See what needs to be cleared
+	wareEngine.clearPrevious = () => {
+		wareApp.sceneObj.removeAll();
+		wareApp.clearAll();
+	};
+
+	wareEngine.winGame = () => {
 		k.debug.log("ran win");
 		wareEngine.timeRunning = false;
 		wareEngine.winState = true;
 		// TODO: Turn off bomb here
-	});
+	};
 
-	wareEngine.events.on("lose", () => {
+	wareEngine.loseGame = () => {
 		k.debug.log("ran lose");
 		wareEngine.lives--;
 		wareEngine.timeRunning = false;
 		wareEngine.winState = false;
-	});
+	};
 
-	wareEngine.events.on("finish", () => {
-		k.debug.log("ran finish");
+	wareEngine.finishGame = () => {
 		if (wareEngine.winState == undefined) {
 			throw new Error("Finished minigame without setting the win condition!! Please call ctx.win() or ctx.lose() before calling ctx.finish()");
 		}
-		// TODO: Do a function that clears everything
 
-		wareApp.clearAll();
-		wareApp.canPlaySounds = false;
-		wareEngine.onTimeOutEvents.clear();
-		wareEngine.gameRunning = false;
-		// TODO: bomb should be destroyed here
-		wareApp.sceneObj.clearEvents(); // what is the purpose of this
-		wareApp.sceneObj.removeAll(); // removes all objs
+		wareEngine.nextGame();
+	};
 
-		// wareApp.onTimeOutEvents.clear();
-		// wareApp.gameRunning = false;
-		// wareApp.canPlaySounds = false;
-		// wareApp.currentBomb?.destroy();
-		// wareApp.sceneObj.clearEvents(); // this clears the time running update, not the onUpdate events of the minigame
-		// // removes the scene
-		// TODO: why are objects cleared just here? make it according to transition, so when state.win() ends, they're destroyed
-		// k.wait(0.2 / wareApp.wareCtx.speed, () => {
-		// 	wareApp.clearDrawEvents(); // clears them after you can't see them anymore
-		// 	wareApp.sceneObj.removeAll();
-		// 	// removes fixed objects too (they aren't attached to the gamebox)
-		// 	wareApp.rootObj.get("fixed").forEach((obj) => obj.destroy());
-		// 	// reset camera
-		// 	this.setCamPos(k.center());
-		// 	this.setCamAngle(0);
-		// 	this.setCamScale(k.vec2(1));
-		// TODO: would say just remove children but you can't! because scene is children of camera afaik3
-		// 	wareApp.cameraObj.get("flash").forEach((f) => f.destroy());
-		// 	wareApp.cameraObj.shake = 0;
-		// });
-		// wareApp.wareCtx.nextGame();
+	wareEngine.nextGame = () => {
+		wareEngine.score++;
+
+		let transition: ReturnType<typeof runTransition> = null;
+		// TODO: this should accoutn for boss, speed up and suhc
+		if (wareEngine.winState == undefined) transition = runTransition(["prep"], wareApp, wareEngine);
+		else if (wareEngine.winState == true) transition = runTransition(["win", "prep"], wareApp, wareEngine);
+		else if (wareEngine.winState == false) transition = runTransition(["lose", "prep"], wareApp, wareEngine);
+
+		transition.onStateStart("prep", () => {
+			wareEngine.clearPrevious();
+			wareEngine.curGame = getElectibleGame();
+
+			const ctx = createGameCtx(wareEngine.curGame, wareApp, wareEngine);
+			ctx.setRGB(getGameColor(wareEngine.curGame, ctx));
+
+			cursor.fadeAway = gameHidesMouse(wareEngine.curGame);
+			wareEngine.curGame.start(ctx);
+			wareEngine.timeLeft = getGameDuration(wareEngine.curGame, ctx);
+
+			let addedBomb = false;
+
+			// behaviour that manages minigame
+			ctx.onUpdate(() => {
+				if (wareEngine.timeLeft > 0) wareEngine.timeLeft -= k.dt();
+				wareEngine.timeLeft = k.clamp(wareEngine.timeLeft, 0, 20);
+
+				// When there's 4 beats left
+				const beatInterval = 60 / (140 * wareEngine.speed);
+				if (wareEngine.timeLeft <= beatInterval * 4 && !addedBomb) {
+					addedBomb = true;
+					const bomb = addBomb(wareApp);
+					bomb.lit(140 * wareEngine.speed);
+				}
+
+				if (wareEngine.timeLeft <= 0 && wareEngine.timeRunning) {
+					wareEngine.timeRunning = false;
+					wareEngine.onTimeOutEvents.trigger();
+					// manage the thing here to explode the bomb
+					// if (!wareApp.currentBomb.hasExploded) wareApp.currentBomb.explode();
+				}
+			});
+		});
+
+		transition.onTransitionEnd(() => {
+			wareEngine.gameRunning = true;
+		});
+	};
+
+	wareEngine.onTimeOutEvents.add(() => {
+		wareApp.inputEnabled = false;
 	});
+
+	wareApp.rootObj.onUpdate(() => {
+		wareApp.sceneObj.paused = !wareEngine.gameRunning;
+	});
+
+	// wareApp.clearAll();
+	// wareApp.canPlaySounds = false;
+	// wareEngine.onTimeOutEvents.clear();
+	// wareEngine.gameRunning = false;
+	// wareApp.sceneObj.clearEvents(); // what is the purpose of this
+	// wareApp.sceneObj.removeAll(); // removes all objs
+
+	// wareApp.onTimeOutEvents.clear();
+	// wareApp.gameRunning = false;
+	// wareApp.canPlaySounds = false;
+	// wareApp.currentBomb?.destroy();
+	// wareApp.sceneObj.clearEvents(); // this clears the time running update, not the onUpdate events of the minigame
+	// // removes the scene
+	// TODO: why are objects cleared just here? make it according to transition, so when state.win() ends, they're destroyed
+	// k.wait(0.2 / wareApp.wareCtx.speed, () => {
+	// 	wareApp.clearDrawEvents(); // clears them after you can't see them anymore
+	// 	wareApp.sceneObj.removeAll();
+	// 	// removes fixed objects too (they aren't attached to the gamebox)
+	// 	wareApp.rootObj.get("fixed").forEach((obj) => obj.destroy());
+	// 	// reset camera
+	// 	this.setCamPos(k.center());
+	// 	this.setCamAngle(0);
+	// 	this.setCamScale(k.vec2(1));
+	// TODO: would say just remove children but you can't! because scene is children of camera afaik3
+	// 	wareApp.cameraObj.get("flash").forEach((f) => f.destroy());
+	// 	wareApp.cameraObj.shake = 0;
+	// });
+	// wareApp.wareCtx.nextGame();
+	// });
 
 	return wareEngine;
 }

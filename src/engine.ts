@@ -2,11 +2,11 @@ import kaplay from "kaplay";
 import conductorPlug from "./plugins/conductor";
 import dragCompPlugin from "./plugins/drag";
 import setterPlug from "./plugins/setter";
-import wareObjectsPlugin from "./plugins/wareobjects";
 import watchPlugin from "./plugins/watch";
 import plainBackgroundPlug from "./plugins/plainbackground";
 import mulfokPalettePlug from "./plugins/colors";
 
+// TODO: could be renamed, kaplay and kaengine both cause problems, why?
 export const k = kaplay({
 	width: 800,
 	height: 600,
@@ -18,7 +18,6 @@ export const k = kaplay({
 		dragCompPlugin,
 		watchPlugin(),
 		conductorPlug,
-		wareObjectsPlugin,
 		setterPlug,
 		plainBackgroundPlug,
 		mulfokPalettePlug,

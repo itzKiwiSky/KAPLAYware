@@ -81,11 +81,14 @@ type GameContainer = ReturnType<typeof createGameContainer>;
 /** Object that contains all the properties that a bare-bones instance should have */
 export type WareApp = {
 	readonly rootObj: GameContainer["root"];
+	/** Is attached to root */
 	readonly boxObj: GameContainer["box"];
+	/** Is attached to camera */
 	readonly sceneObj: GameContainer["scene"];
+	/** Is attached to mask */
 	readonly cameraObj: GameContainer["camera"];
 	readonly pauseCtx: PauseCtx;
-	currentColor: Color;
+	backgroundColor: Color;
 	everythingPaused: boolean;
 	updateEvents: KEventController[];
 	drawEvents: KEventController[];
@@ -93,7 +96,8 @@ export type WareApp = {
 	timerEvents: KEventController[];
 	sounds: AudioPlay[];
 	pausedSounds: AudioPlay[];
-	canPlaySounds: boolean;
+	soundsEnabled: boolean;
+	inputEnabled: boolean;
 	clearAll(): void;
 	handleQuickWatch(): void;
 };
@@ -118,23 +122,26 @@ export function createWareApp(): WareApp {
 		get pauseCtx() {
 			return pauseCtx;
 		},
-		currentColor: k.rgb(),
+		backgroundColor: k.rgb(),
 		everythingPaused: false,
 		updateEvents: [],
 		drawEvents: [],
+		inputEnabled: true,
 		inputEvents: [],
 		timerEvents: [],
+		soundsEnabled: false,
 		sounds: [],
-		canPlaySounds: false,
 		pausedSounds: [],
-		clearAll() {
+		clearAll(this: WareApp) {
 			this.updateEvents.forEach((ev) => ev.cancel());
+			this.drawEvents.forEach((ev) => ev.cancel());
 			this.inputEvents.forEach((ev) => ev.cancel());
 			this.timerEvents.forEach((ev) => ev.cancel());
 			this.sounds.forEach((ev) => ev.stop());
-			this.pausedSounds.forEach((ev) => ev.cancel());
+			this.pausedSounds.forEach((ev) => ev.stop());
 
 			this.updateEvents = [];
+			this.drawEvents = [];
 			this.inputEvents = [];
 			this.timerEvents = [];
 			this.sounds = [];
@@ -143,11 +150,15 @@ export function createWareApp(): WareApp {
 		handleQuickWatch() {
 			k.quickWatch("updateEvents", this.updateEvents.length);
 		},
-	};
+	} as WareApp;
 
 	gameContainer.root.onUpdate(() => {
-		gameContainer.box.color = app.currentColor;
-		gameContainer.root.paused = app.everythingPaused = true;
+		gameContainer.box.color = app.backgroundColor;
+		gameContainer.root.paused = app.everythingPaused;
+
+		// TODO: Figure out a way to pause all events on everything paused and inside of wareEngine also add the gameRunning condition for pausing
+		// TODO: maybe would be as easy as attaching them to sceneObj when the input game obj thing gets fixed
+		app.inputEvents.forEach((ev) => ev.paused = app.everythingPaused || app.inputEnabled);
 	});
 
 	return app;

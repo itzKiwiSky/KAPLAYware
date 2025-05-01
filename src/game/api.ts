@@ -129,8 +129,6 @@ export const gameAPIs = [
 	"onCollide",
 	"onCollideEnd",
 	"onCollideUpdate",
-	"conductor",
-	"addPrompt",
 	"evaluateQuadratic",
 	"toWorld",
 	"toScreen",

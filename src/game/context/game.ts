@@ -6,13 +6,14 @@ import { getGameID, isDefaultAsset, pickKeysInObj } from "../utils";
 import { WareApp } from "../app";
 import { Kaplayware } from "../kaplayware";
 import { InputButton, MinigameAPI, MinigameCtx, StartCtx } from "./types";
+import { addConfetti } from "../objects/confetti";
 
 export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 	const pickedCtx = pickKeysInObj(k, [...gameAPIs]);
 
 	const startCtx: StartCtx = {
 		...pickedCtx,
-		add: (comps) => k.add(comps),
+		add: (comps) => wareApp.sceneObj.add(comps),
 		sprite(spr, opt) {
 			const hasAt = (t: any) => typeof t == "string" && t.startsWith("@");
 			const getSpriteThing = (t: any) => hasAt(t) ? t : `${getGameID(game)}-${t}`;
@@ -37,7 +38,7 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 			const newSound = {
 				...sound,
 				set paused(param: boolean) {
-					if (wareApp.canPlaySounds) {
+					if (wareApp.soundsEnabled) {
 						sound.paused = param;
 						return;
 					}
@@ -62,7 +63,7 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 			};
 
 			// if can't play sounds and the user intended to play it at start, pause it
-			if (!wareApp.canPlaySounds) {
+			if (!wareApp.soundsEnabled) {
 				if (!sound.paused) {
 					// wareApp.queuedSounds.push(sound);
 					sound.paused = true;
@@ -154,10 +155,17 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 		},
 	};
 
+	// TODO: figure out the overload issue
+	startCtx["onDraw"] = (...args: any[]) => {
+		const ev = wareApp.sceneObj.on("draw", ...args as [any]);
+		wareApp.drawEvents.push(ev);
+		return ev;
+	};
+
 	generalEventControllers.forEach((api) => {
 		startCtx[api] = (...args: any[]) => {
 			// @ts-ignore
-			const ev = k[api](...args);
+			const ev = wareApp.sceneObj[api](...args);
 			wareApp.updateEvents.push(ev);
 			return ev;
 		};
@@ -207,8 +215,8 @@ export function createMinigameAPI(wareApp: WareApp, wareEngine?: Kaplayware): Mi
 			f.onEnd(() => k.destroy(r));
 			return f;
 		},
-		getRGB: () => wareApp.currentColor,
-		setRGB: (val) => wareApp.currentColor = val,
+		getRGB: () => wareApp.backgroundColor,
+		setRGB: (val) => wareApp.backgroundColor = val,
 
 		onInputButtonPress: (btn, action) => {
 			let ev: KEventController = null;
@@ -247,29 +255,37 @@ export function createMinigameAPI(wareApp: WareApp, wareEngine?: Kaplayware): Mi
 		onTimeout: (action) => wareEngine.onTimeOutEvents.add(action),
 		win() {
 			if (!wareEngine) return;
-			wareEngine.events.trigger("win");
+			wareEngine.winGame();
 		},
 		lose() {
 			if (!wareEngine) return;
-			wareEngine.events.trigger("lose");
+			wareEngine.loseGame();
 		},
 		finish() {
 			if (!wareEngine) return;
-			wareEngine.events.trigger("finish");
+			wareEngine.finishGame();
 		},
 		winState: () => {
 			if (!wareEngine) return;
 			return wareEngine.winState;
 		},
 		addConfetti(opts) {
-			const confetti = k.addConfetti(opts);
+			const confetti = addConfetti(opts);
 			confetti.parent = wareApp.sceneObj;
 			return confetti;
 		},
-		difficulty: wareEngine.difficulty ?? 1,
-		lives: wareEngine.lives ?? 3,
-		speed: wareEngine.speed ?? 1,
-		timeLeft: wareEngine.timeLeft ?? 4,
+		get difficulty() {
+			return wareEngine.difficulty ?? 1;
+		},
+		get lives() {
+			return wareEngine.lives ?? 3;
+		},
+		get speed() {
+			return wareEngine.lives ?? 1;
+		},
+		get timeLeft() {
+			return wareEngine.timeLeft ?? 10;
+		},
 	};
 }
 

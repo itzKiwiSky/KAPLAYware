@@ -119,6 +119,9 @@ const connectGame: Minigame = {
 					color,
 				});
 			});
+
+			// ctx.onDraw("tag", () => {
+			// });
 		});
 
 		let hasWon = false;

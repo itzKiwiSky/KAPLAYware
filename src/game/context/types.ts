@@ -127,13 +127,13 @@ export type MinigameAPI = {
 	 */
 	winState(): boolean | undefined;
 	/** The current difficulty of the game */
-	difficulty: 1 | 2 | 3;
+	readonly difficulty: 1 | 2 | 3;
 	/** The speed multiplier */
-	speed: number;
+	readonly speed: number;
 	/** The lives the player has left */
-	lives: number;
+	readonly lives: number;
 	/** The time left for the minigame to finish */
-	timeLeft: number;
+	readonly timeLeft: number;
 };
 
 /** The context for the allowed functions in a minigame */

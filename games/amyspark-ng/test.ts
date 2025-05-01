@@ -14,6 +14,14 @@ const testGame: Minigame = {
 			ctx.pos(),
 		]);
 
+		ctx.onUpdate(() => {
+			ctx.debug.log(ctx.timeLeft);
+		});
+
+		// bean.onUpdate(() => {
+		// 	ctx.debug.log("i'm alive!!!")
+		// })
+
 		ctx.onClick(() => {
 			ctx.win();
 		});
