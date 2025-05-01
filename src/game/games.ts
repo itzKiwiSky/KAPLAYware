@@ -3,6 +3,7 @@ import { getGameID } from "./utils";
 
 const gameModules = import.meta.glob("../../games/*/*.ts", { eager: true });
 
+// TODO: make this work
 const INCLUDE_BOSSES = true;
 const exclude = new Set([]);
 
@@ -16,7 +17,6 @@ const onlyInclude = new Set([
 	...(import.meta.env?.VITE_ONLY_MINIGAMES ?? "").trim().split("\n").map((s: string) => s.trim()),
 ].filter((id) =>
 	games.some((game) => {
-		// TODO: make this work
 		//  && (INCLUDE_BOSSES ? game.isBoss == true : false)
 		return getGameID(game) === id;
 	})

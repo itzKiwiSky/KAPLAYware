@@ -1,6 +1,10 @@
+import { Color } from "kaplay";
+import k from "../engine";
+import { MinigameCtx, MinigameInput } from "./context/types";
 import games from "./games";
-import { WareApp } from "./kaplayware";
-import { Minigame, MinigameInput } from "./types";
+import { Minigame } from "./types";
+
+// TODO: organize this a bit, what should go here and what shouldn't?
 
 export const getGameID = (g: Minigame) => {
 	const modules = import.meta.glob("../../games/*/*.ts", { eager: true });
@@ -10,8 +14,21 @@ export const getGameID = (g: Minigame) => {
 };
 export const getGameByID = (id: string) => games.find((minigame) => `${minigame.author}:${minigame.prompt}` == id);
 
-export const getElectibleGame = () => {
-};
+export function createDumbEventThing<T extends string>(events: T[]) {
+	const eventHandler = new k.KEvent<T[]>();
+
+	return {
+		KEvent: eventHandler,
+		on(eventName: T, action: () => void) {
+			return eventHandler.add((arg) => {
+				if (arg == eventName) action();
+			});
+		},
+		trigger(eventName: T) {
+			return eventHandler.trigger(eventName);
+		},
+	};
+}
 
 /**
  * Returns a copy of the object where it'll only have the keys you pass as param
@@ -43,20 +60,38 @@ export const getInputMessage = (g: Minigame) => {
 	else if (input == "keys") return input;
 };
 
+/** Gets the input of the minigame
+ * @param g The minigame
+ * @returns A {@link MinigameInput `MinigameInput`}
+ */
 export function getGameInput(g: Minigame): MinigameInput {
 	if (g.isBoss) return "both";
 	if (g.isBoss == true || g.input == "mouse (hidden)" || g.input == "mouse") return "mouse";
 	else return "keys";
 }
 
-export const getGameDuration = (g: Minigame, wareApp: WareApp): number | undefined => {
+/** Gets the duration of the minigame
+ * @param g The minigame
+ * @param context The context of the minigame
+ */
+export const getGameDuration = (g: Minigame, context: MinigameCtx): number | undefined => {
 	if (g.isBoss == true) return undefined;
 	else if (g.isBoss == false) {
 		let duration = 0;
-		if (typeof g.duration == "function") duration = g.duration(wareApp.currentContext);
+		if (typeof g.duration == "function") duration = g.duration(context);
 		else if (typeof g.duration == "number") duration = g.duration;
 		return duration;
 	}
+};
+
+/** Gets the color of the minigame
+ * @param g The minigame
+ * @param context The context of the minigame
+ */
+export const getGameColor = (g: Minigame, context: MinigameCtx): Color => {
+	if (typeof g.rgb == "function") return g.rgb(context);
+	else if ("r" in g.rgb) return g.rgb;
+	else if (g.rgb[0]) return k.Color.fromArray(g.rgb);
 };
 
 export const gameHidesMouse = (g: Minigame) => {

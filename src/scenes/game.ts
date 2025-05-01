@@ -1,16 +1,9 @@
 import k from "../engine";
-import { createGameCtx } from "../game/context";
-import games from "../game/games";
-import kaplayware, { createWareApp } from "../game/kaplayware";
-import { createPreviewWare } from "../game/preview";
-import { KAPLAYwareOpts } from "../game/types";
+import { kaplayware, KAPLAYwareOpts } from "../game/kaplayware";
 
 k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
-	// const preview = createPreviewWare();
-	// preview.runGame(games[0]);
-
-	const ware = kaplayware(kaplaywareOpt);
-	ware.nextGame();
+	const wareEngine = kaplayware(kaplaywareOpt);
+	wareEngine.nextGame();
 
 	// let transitionOpacity = 0;
 	// k.onUpdate(() => {

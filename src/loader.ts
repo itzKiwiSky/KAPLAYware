@@ -1,9 +1,7 @@
 import { assets } from "@kaplayjs/crew";
-import { SpriteAtlasData } from "kaplay";
 import k from "./engine";
 import games from "./game/games";
-import { getGameID } from "./game/utils";
-import { createLoadCtx } from "./game/context";
+import { createLoadCtx } from "./game/context/load";
 
 k.loadSprite("logo", "sprites/logo.png");
 k.loadSprite("menu-buttons", "sprites/menu/buttons.png", { sliceX: 2, sliceY: 3 });

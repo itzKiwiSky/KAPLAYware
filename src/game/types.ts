@@ -1,87 +1,9 @@
-import { Asset, Color, GameObj, KAPLAYCtx, KEventController, SpriteComp, SpriteCompOpt, SpriteData, TweenController, Vec2 } from "kaplay";
+import { Color, Vec2 } from "kaplay";
 import k from "../engine";
-import { ConfettiOpt } from "../plugins/wareobjects";
-import { gameAPIs } from "./api";
-import { LoadCtx, MinigameCtx } from "./context";
-import { assets } from "@kaplayjs/crew";
+import { LoadCtx } from "./context/load";
+import { MinigameCtx } from "./context/types";
 
-/** The type of input a minigame does */
-export type MinigameInput = "mouse" | "keys" | "both";
-
-/** A button */
-export type InputButton =
-	| "action"
-	| "left"
-	| "right"
-	| "up"
-	| "down"
-	| "click";
-
-/** The specific API for minigames */
-export type MinigameAPI = {
-	/**
-	 * Register an event that runs once when a button is pressed.
-	 */
-	onInputButtonPress(btn: InputButton, action: () => void): KEventController;
-	/**
-	 * Register an event that runs once when a button is released.
-	 */
-	onInputButtonRelease(btn: InputButton, action: () => void): KEventController;
-	/**
-	 * Register an event that runs every frame when a button is held down.
-	 */
-	onInputButtonDown(btn: InputButton, action: () => void): KEventController;
-	isInputButtonPressed(btn: InputButton): boolean;
-	isInputButtonDown(btn: InputButton): boolean;
-	isInputButtonReleased(btn: InputButton): boolean;
-
-	onMouseMove(action: (pos: Vec2, delta: Vec2) => void): KEventController;
-	onMouseRelease(action: () => void): KEventController;
-
-	/** Adds a buncha confetti!!! */
-	addConfetti(opts?: ConfettiOpt): void;
-
-	setCamScale(val: Vec2): Vec2;
-	getCamScale(): Vec2;
-	setCamAngle(val: number): number;
-	getCamAngle(): number;
-	setCamPos(val: Vec2): Vec2;
-	getCamPos(): Vec2;
-	shakeCam(val?: number): void;
-	/** Flashes the screen
-	 * @param flashColor The color the flash will be
-	 * @param time How long the flash will be on screen
-	 */
-	flashCam(flashColor?: Color, time?: number, opacity?: number): TweenController;
-	/** Gets the current RGB of the background of your minigame */
-	getRGB(): Color;
-	/** Sets the RGB to the background of your minigame */
-	setRGB(val: Color): void;
-	/** Register an event that runs once when timer runs out. */
-	onTimeout: (action: () => void) => KEventController;
-	/** Run this when player succeeded in completing the game. */
-	win: () => void;
-	/** Run this when player failed. */
-	lose: () => void;
-	/** Run this when your minigame has 100% finished all win/lose animations etc */
-	finish: () => void;
-	/** The win/lose state of the current minigame
-	 * If ctx.win() has been called, it will return true
-	 *
-	 * If ctx.lose() was called, it will return false
-	 *
-	 * If nor ctx.win() or ctx.lose() has been called, it will return undefined
-	 */
-	winState(): boolean | undefined;
-	/** The current difficulty of the game */
-	difficulty: 1 | 2 | 3;
-	/** The speed multiplier */
-	speed: number;
-	/** The lives the player has left */
-	lives: number;
-	/** The time left for the minigame to finish */
-	timeLeft: number;
-};
+// TODO: move this somewhere better, it's only to contain the Minigame type since it's very very long
 
 /** The type for a minigame */
 export type Minigame =
@@ -132,6 +54,7 @@ export type Minigame =
 		 * rgb: (ctx) => ctx.difficulty == 3 ? ctx.Color.fromArray(237, 24, 63) : ctx.Color.fromArray(235, 38, 202)
 		 * ```
 		 */
+		// TODO: make this not optional
 		rgb?: [number, number, number] | Color | ((ctx: MinigameCtx) => Color);
 		/**
 		 * Assets URL prefix.
@@ -209,9 +132,3 @@ export type Minigame =
 		/** Wheter to hide the mouse for the BOSS minigame */
 		hideMouse: boolean;
 	});
-
-export type KAPLAYwareOpts = {
-	games?: Minigame[];
-	input?: MinigameInput;
-	inOrder?: boolean;
-};

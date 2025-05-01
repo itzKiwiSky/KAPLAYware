@@ -139,6 +139,7 @@ export const gameAPIs = [
 	"onUpdate",
 	"get",
 	"mulfok",
+	"onMouseMove",
 ] as const;
 
 export const timerControllers = ["wait", "loop", "tween"];
