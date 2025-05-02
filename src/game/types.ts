@@ -31,6 +31,7 @@ export type Minigame =
 		 *
 		 * Please keep the prompt text in the cool format (All uppercase, single exclamation mark at the end)
 		 */
+		// TODO: fix this typing here
 		prompt: string | ((ctx: MinigameCtx, prompt: ReturnType<typeof k.addPrompt>) => void);
 		/** The author of the game */
 		author: string;

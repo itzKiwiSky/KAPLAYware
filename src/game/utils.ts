@@ -14,22 +14,6 @@ export const getGameID = (g: Minigame) => {
 };
 export const getGameByID = (id: string) => games.find((minigame) => `${minigame.author}:${minigame.prompt}` == id);
 
-export function createDumbEventThing<T extends string>(events: T[]) {
-	const eventHandler = new k.KEvent<T[]>();
-
-	return {
-		KEvent: eventHandler,
-		on(eventName: T, action: () => void) {
-			return eventHandler.add((arg) => {
-				if (arg == eventName) action();
-			});
-		},
-		trigger(eventName: T) {
-			return eventHandler.trigger(eventName);
-		},
-	};
-}
-
 /**
  * Returns a copy of the object where it'll only have the keys you pass as param
  * @param obj The object

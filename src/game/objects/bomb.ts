@@ -2,12 +2,14 @@ import k from "../../engine";
 import { WareApp } from "../app";
 import { Kaplayware } from "../kaplayware";
 
-/** Add the bomb for the wareEngine */
+/** Add the bomb for the wareEngine
+ * @param wareApp The app
+ */
 export function addBomb(wareApp: WareApp) {
 	const BOMB_POS = k.vec2(40, k.height() - 40);
 	let beatsLeft = 3;
 
-	const bomb = wareApp.boxObj.add([{
+	const bomb = wareApp.rootObj.add([{
 		tick,
 		get hasExploded() {
 			return hasExploded;
@@ -15,7 +17,7 @@ export function addBomb(wareApp: WareApp) {
 		get beatsLeft() {
 			return beatsLeft;
 		},
-		turnOff,
+		extinguish: extinguish,
 		lit,
 		explode,
 	}]);
@@ -111,7 +113,8 @@ export function addBomb(wareApp: WareApp) {
 		});
 	}
 
-	function turnOff() {
+	/** Turns off the bomb */
+	function extinguish() {
 		conductor.destroy();
 		fuse.fadeOut(0.5 / 3).onEnd(() => fuse.destroy());
 	}

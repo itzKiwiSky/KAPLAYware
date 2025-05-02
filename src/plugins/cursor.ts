@@ -1,5 +1,7 @@
 import k from "../engine";
 
+// TODO: make this better, it sucks!
+
 let opacity = 0;
 let canPoint = true;
 

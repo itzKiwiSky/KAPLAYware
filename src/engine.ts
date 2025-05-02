@@ -1,7 +1,7 @@
 import kaplay from "kaplay";
 import conductorPlug from "./plugins/conductor";
 import dragCompPlugin from "./plugins/drag";
-import setterPlug from "./plugins/setter";
+import posSetterPlug from "./plugins/setter";
 import watchPlugin from "./plugins/watch";
 import plainBackgroundPlug from "./plugins/plainbackground";
 import mulfokPalettePlug from "./plugins/colors";
@@ -16,9 +16,9 @@ export const k = kaplay({
 	focus: false,
 	plugins: [
 		dragCompPlugin,
-		watchPlugin(),
+		watchPlugin,
 		conductorPlug,
-		setterPlug,
+		posSetterPlug,
 		plainBackgroundPlug,
 		mulfokPalettePlug,
 	],

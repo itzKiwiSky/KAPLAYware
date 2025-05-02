@@ -1,6 +1,6 @@
 import { KAPLAYCtx } from "kaplay";
 
-export default function watchPlugin() {
+export default function watchPlugin(k: KAPLAYCtx) {
 	/** An entry in the watch window */
 	type WatchEntry = {
 		/** The object being watched */
@@ -182,5 +182,5 @@ export default function watchPlugin() {
 			},
 		};
 	};
-	return (k: KAPLAYCtx) => createPlugin(k);
+	return createPlugin(k);
 }

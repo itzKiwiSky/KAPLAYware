@@ -2,6 +2,7 @@
 // import k from "../engine";
 // import { getGameInput } from "../game/utils";
 
+// TODO: get rid of this entirely
 // function addPrompt(wareApp: WareApp, promptText: string) {
 // 	const promptObj = wareApp.rootObj.add([
 // 		k.color(k.WHITE),

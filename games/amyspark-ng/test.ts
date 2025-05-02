@@ -15,15 +15,30 @@ const testGame: Minigame = {
 		]);
 
 		ctx.onUpdate(() => {
-			ctx.debug.log(ctx.timeLeft);
+			// ctx.debug.log(ctx.timeLeft);
+			ctx.debug.log(ctx.winState);
 		});
 
+		// TODO: add more things to test, music, timeLeft, input, onDraw overloads, winState, etc
+
 		// bean.onUpdate(() => {
-		// 	ctx.debug.log("i'm alive!!!")
+		ctx.debug.log("i'm alive!!!"); // This will run the moment you do game.start(ctx)
 		// })
 
-		ctx.onClick(() => {
+		ctx.onTimeout(() => {
 			ctx.win();
+			ctx.wait(1, () => {
+				ctx.finish();
+			});
+		});
+
+		ctx.onClick(() => {
+			ctx.flashCam(ctx.GREEN, 0.5);
+			if (ctx.winState != undefined) return;
+			ctx.win();
+			ctx.wait(1, () => {
+				ctx.finish();
+			});
 		});
 	},
 };

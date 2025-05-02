@@ -8,6 +8,7 @@ import "./scenes/menu/menu";
 import "./scenes/menu/select";
 import "../src/scenes/game";
 import "../src/scenes/gameover";
+
 import goGame from "../src/scenes/game";
 
 k.setVolume(0.5);

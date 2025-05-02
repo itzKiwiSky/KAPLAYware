@@ -4,16 +4,16 @@ import { createWareApp } from "./app";
 import { Minigame } from "./types";
 import { createGameCtx } from "./context/game";
 import games from "./games";
-import { createDumbEventThing, gameHidesMouse, getGameColor, getGameDuration } from "./utils";
+import { gameHidesMouse, getGameColor, getGameDuration, getGameID } from "./utils";
 import cursor from "../plugins/cursor";
-import { runTransition } from "./transitions";
-import { MinigameCtx } from "./context/types";
-import { addBomb } from "./objects/bomb";
+import { runTransition, TransitionState } from "./transitions";
+import { MinigameInput } from "./context/types";
+import { addBomb, WareBomb } from "./objects/bomb";
 
 /** Certain options to instantiate kaplayware (ware-engine) */
 export type KAPLAYwareOpts = {
 	games?: Minigame[];
-	inOrder?: boolean;
+	filters: { input: MinigameInput; }; // TODO: do this eventually, be able to filter by input, by boss and such idk
 	// mods here
 };
 
@@ -39,6 +39,7 @@ export type Kaplayware = {
 };
 
 // TODO: add conductor here? would that be fine?
+// TODO: why do you even need a global conductor??
 // Should just add it here and create an event that pauses it on everythingPaused
 
 // remember that big on update event that paused everything on everythingPaused? create it here too, makes the most sense
@@ -46,9 +47,11 @@ export type Kaplayware = {
 
 /** Instantiates and runs KAPLAYWARE (aka ware-engine), to start it, run nextGame() */
 export function kaplayware(opt: KAPLAYwareOpts): Kaplayware {
-	opt = opt ?? {};
+	const HOW_FREQUENT_BOSS = 10;
+	const MAX_SPEED = 1.6;
+
+	opt = opt ?? {} as unknown as any;
 	opt.games = opt.games ?? games;
-	opt.inOrder = opt.inOrder ?? false;
 	for (const game of opt.games) {
 		game.isBoss = game.isBoss ?? false;
 	}
@@ -68,14 +71,70 @@ export function kaplayware(opt: KAPLAYwareOpts): Kaplayware {
 	wareEngine.curGame = undefined;
 	wareEngine.onTimeOutEvents = new k.KEvent();
 
-	const getElectibleGame = () => {
+	let currentBomb: WareBomb = null;
+	let previousGame: Minigame = null;
+
+	// TODO: find a better way to organize all these functions
+	const getRandomGame = () => {
+		let possibleGames: Minigame[] = opt.games;
+
+		if (shouldBoss()) {
+			possibleGames = possibleGames.filter((game) => game.isBoss == true);
+		}
+
+		// now check for history and repeatedness and get a new one
+		possibleGames = possibleGames.filter((game) => {
+			if (wareEngine.minigameHistory.length == 0 || opt.games.length == 1) return true;
+			else {
+				const previousPreviousID = wareEngine.minigameHistory[wareEngine.score - 3];
+				const previousPreviousGame = games.find((game) => getGameID(game) == previousPreviousID);
+				if (previousPreviousGame) return game != wareEngine.curGame && game != previousPreviousGame;
+				else return game != wareEngine.curGame;
+			}
+		});
+
 		return k.choose(opt.games);
 	};
 
-	const calculateDifficulty = () => {
+	const calculateDifficulty = (): 1 | 2 | 3 => {
+		let diff = 1;
+		if (previousGame?.isBoss || opt.games.filter((g) => g.isBoss).length == 0 && wareEngine.score % HOW_FREQUENT_BOSS == 0) {
+			diff = 1 + wareEngine.difficulty % 3;
+		}
+		return diff as 1 | 2 | 3;
 	};
 
-	const shouldsSpeedUp = () => {
+	const shouldSpeedUp = () => {
+		const realScore = wareEngine.score + 1;
+		const number = k.randi(4, 6);
+		const division = () => {
+			if (realScore % number == 0) return true;
+			else if (k.chance(0.1) && realScore % 5 == 0) return true;
+			else return false;
+		};
+		const condition = () => wareEngine.speed <= MAX_SPEED && !shouldBoss();
+		return division() && condition();
+	};
+
+	const isGameOver = (winState = wareEngine.winState) => {
+		return winState && wareEngine.lives == 0;
+	};
+
+	const shouldBoss = () => {
+		if (wareEngine.score % HOW_FREQUENT_BOSS == 0 && opt.games.some((g) => g.isBoss) || (opt.games.length == 1 && opt.games[0].isBoss)) return true;
+	};
+
+	const getTransitionStates = (winState: boolean | undefined = wareEngine.winState): TransitionState[] => {
+		let transitionStates: TransitionState[] = ["prep"];
+
+		// TODO: if there's a boss loss put it here too
+		const winThing: TransitionState = previousGame?.isBoss ? (winState == true ? "bossWin" : "lose") : winState == true ? "win" : "lose";
+		if (winState != undefined) transitionStates.splice(0, 0, winThing);
+		if (shouldSpeedUp()) transitionStates.splice(1, 0, "speed");
+		if (isGameOver(winState)) transitionStates = ["lose"];
+		if (shouldBoss()) transitionStates.splice(1, 0, "bossPrep");
+
+		return transitionStates;
 	};
 
 	// TODO: See what needs to be cleared
@@ -85,14 +144,12 @@ export function kaplayware(opt: KAPLAYwareOpts): Kaplayware {
 	};
 
 	wareEngine.winGame = () => {
-		k.debug.log("ran win");
 		wareEngine.timeRunning = false;
 		wareEngine.winState = true;
-		// TODO: Turn off bomb here
+		currentBomb?.extinguish();
 	};
 
 	wareEngine.loseGame = () => {
-		k.debug.log("ran lose");
 		wareEngine.lives--;
 		wareEngine.timeRunning = false;
 		wareEngine.winState = false;
@@ -109,51 +166,78 @@ export function kaplayware(opt: KAPLAYwareOpts): Kaplayware {
 	wareEngine.nextGame = () => {
 		wareEngine.score++;
 
-		let transition: ReturnType<typeof runTransition> = null;
-		// TODO: this should accoutn for boss, speed up and suhc
-		if (wareEngine.winState == undefined) transition = runTransition(["prep"], wareApp, wareEngine);
-		else if (wareEngine.winState == true) transition = runTransition(["win", "prep"], wareApp, wareEngine);
-		else if (wareEngine.winState == false) transition = runTransition(["lose", "prep"], wareApp, wareEngine);
+		// pauses the current one and the next one
+		wareEngine.timeRunning = false;
+		wareEngine.gameRunning = false;
+		wareApp.soundsEnabled = false;
+		previousGame = wareEngine.curGame;
 
+		const transition = runTransition(getTransitionStates(), wareApp, wareEngine);
+		wareEngine.winState = undefined; // reset it after transition so it does the win and lose
+
+		transition.onStateStart("speed", () => {
+			// do the speed up function or just keep this like that
+			const increment = k.choose([0.06, 0.07, 0.08]);
+			wareEngine.speed = k.clamp(wareEngine.speed + wareEngine.speed * increment, 0, MAX_SPEED);
+		});
+
+		// runs on prep so the previous game isn't seen anymore
+		// thus can be cleared and the new one can be prepped
 		transition.onStateStart("prep", () => {
 			wareEngine.clearPrevious();
-			wareEngine.curGame = getElectibleGame();
-
+			wareEngine.curGame = getRandomGame();
 			const ctx = createGameCtx(wareEngine.curGame, wareApp, wareEngine);
-			ctx.setRGB(getGameColor(wareEngine.curGame, ctx));
 
+			ctx.setRGB(getGameColor(wareEngine.curGame, ctx));
 			cursor.fadeAway = gameHidesMouse(wareEngine.curGame);
+			wareEngine.minigameHistory[wareEngine.score - 1] = getGameID(wareEngine.curGame);
 			wareEngine.curGame.start(ctx);
 			wareEngine.timeLeft = getGameDuration(wareEngine.curGame, ctx);
-
-			let addedBomb = false;
+			wareEngine.difficulty = calculateDifficulty();
+			currentBomb = null;
 
 			// behaviour that manages minigame
 			ctx.onUpdate(() => {
+				if (!wareEngine.timeRunning) return;
+				// bomb and such is not necessary bcause time is undefined
+				if (wareEngine.timeLeft == undefined) return;
 				if (wareEngine.timeLeft > 0) wareEngine.timeLeft -= k.dt();
 				wareEngine.timeLeft = k.clamp(wareEngine.timeLeft, 0, 20);
 
 				// When there's 4 beats left
 				const beatInterval = 60 / (140 * wareEngine.speed);
-				if (wareEngine.timeLeft <= beatInterval * 4 && !addedBomb) {
-					addedBomb = true;
-					const bomb = addBomb(wareApp);
-					bomb.lit(140 * wareEngine.speed);
+				if (wareEngine.timeLeft <= beatInterval * 4 && currentBomb == null) {
+					currentBomb = addBomb(wareApp);
+					currentBomb.lit(140 * wareEngine.speed);
 				}
 
-				if (wareEngine.timeLeft <= 0 && wareEngine.timeRunning) {
+				if (wareEngine.timeLeft <= 0 && wareEngine.timeRunning == true) {
 					wareEngine.timeRunning = false;
 					wareEngine.onTimeOutEvents.trigger();
-					// manage the thing here to explode the bomb
-					// if (!wareApp.currentBomb.hasExploded) wareApp.currentBomb.explode();
+					if (!currentBomb.hasExploded) currentBomb.explode();
 				}
 			});
 		});
 
+		// don't remove this, very crucial
 		transition.onTransitionEnd(() => {
+			wareApp.soundsEnabled = true;
+			wareApp.inputEnabled = true;
 			wareEngine.gameRunning = true;
+			wareEngine.timeRunning = true;
 		});
 	};
+
+	// TODO: do sound stuff where the sounds need to be unpaused and such
+	// TODO: do all the add prompt and input prompt stuff
+	// TODO: check things like transitions, bombs and conductors are destroyed when they stop being used
+	// TODO: figure out where things like FixedComp do, re-figure it out
+	/*
+	TODO: Things to clear on clearPrevious()
+	sceneObjs
+	all on wareApp (wareApp.clearAll())
+	camera (wareApp.resetCamera())
+	*/
 
 	wareEngine.onTimeOutEvents.add(() => {
 		wareApp.inputEnabled = false;
@@ -176,7 +260,6 @@ export function kaplayware(opt: KAPLAYwareOpts): Kaplayware {
 	// wareApp.currentBomb?.destroy();
 	// wareApp.sceneObj.clearEvents(); // this clears the time running update, not the onUpdate events of the minigame
 	// // removes the scene
-	// TODO: why are objects cleared just here? make it according to transition, so when state.win() ends, they're destroyed
 	// k.wait(0.2 / wareApp.wareCtx.speed, () => {
 	// 	wareApp.clearDrawEvents(); // clears them after you can't see them anymore
 	// 	wareApp.sceneObj.removeAll();
@@ -186,7 +269,6 @@ export function kaplayware(opt: KAPLAYwareOpts): Kaplayware {
 	// 	this.setCamPos(k.center());
 	// 	this.setCamAngle(0);
 	// 	this.setCamScale(k.vec2(1));
-	// TODO: would say just remove children but you can't! because scene is children of camera afaik3
 	// 	wareApp.cameraObj.get("flash").forEach((f) => f.destroy());
 	// 	wareApp.cameraObj.shake = 0;
 	// });
@@ -352,7 +434,6 @@ export function kaplayware(opt: KAPLAYwareOpts): Kaplayware {
 // 		};
 
 // 		const copyOfWinState = wareApp.winState; // when isGameOver() is called winState will be undefined because it was resetted, when the order of this is reversed, it will be fixed
-// 		const isGameOver = () => copyOfWinState == false && wareCtx.lives == 0;
 
 // 		if (!shouldBoss()) {
 // 			games = games.filter((game) => {

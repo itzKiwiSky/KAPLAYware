@@ -5,6 +5,9 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 	const wareEngine = kaplayware(kaplaywareOpt);
 	wareEngine.nextGame();
 
+	// TODO: find a way to get paused and set paused from wareEngine
+	// TODO: also somthing like wareEngine.onGameOver() so i can do that screen here instead of there
+
 	// let transitionOpacity = 0;
 	// k.onUpdate(() => {
 	// 	if (k.isKeyPressed("escape")) ware.paused = !ware.paused;

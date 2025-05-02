@@ -1,5 +1,6 @@
 import { AudioPlay, KAPLAYCtx } from "kaplay";
 
+// TODO: clean this up a bit, feels dirty
 export function conductorPlug(k: KAPLAYCtx) {
 	return {
 		/** Small conductor class for managing beat hit behaviour

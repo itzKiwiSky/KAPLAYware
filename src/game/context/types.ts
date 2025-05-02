@@ -2,7 +2,7 @@ import { assets } from "@kaplayjs/crew";
 import { Asset, Color, CompList, GameObj, KEventController, SpriteComp, SpriteCompOpt, SpriteData, TweenController, Vec2 } from "kaplay";
 import k from "../../engine";
 import { gameAPIs } from "../api";
-import { ConfettiOpt } from "../../plugins/wareobjects";
+import { ConfettiOpt } from "../objects/confetti";
 
 type Friend = keyof typeof assets | `${keyof typeof assets}-o`;
 type AtFriend = `@${Friend}`;
@@ -23,6 +23,7 @@ interface WareSpriteComp extends Omit<SpriteComp, "sprite"> {
 export type StartCtx = Pick<typeof k, typeof gameAPIs[number]> & {
 	/** ### Modified add() for KAPLAYware */
 	add<T>(comps?: CompList<T> | GameObj<T>): GameObj<T>;
+	// TODO: what is this modified add for?
 
 	/** ### Custom sprite component for KAPLAYware that holds default assets
 	 *
@@ -90,6 +91,8 @@ export type MinigameAPI = {
 	isInputButtonPressed(btn: InputButton): boolean;
 	isInputButtonDown(btn: InputButton): boolean;
 	isInputButtonReleased(btn: InputButton): boolean;
+	// TODO: maybe rename these to only onInputPress and onInputDown, weren't these name that before?
+	// I think they were called onButtonPress, that's why they were confusing
 
 	/** Adds a buncha confetti!!! */
 	addConfetti(opts?: ConfettiOpt): void;
@@ -125,7 +128,7 @@ export type MinigameAPI = {
 	 *
 	 * If nor ctx.win() or ctx.lose() has been called, it will return undefined
 	 */
-	winState(): boolean | undefined;
+	readonly winState: boolean | undefined;
 	/** The current difficulty of the game */
 	readonly difficulty: 1 | 2 | 3;
 	/** The speed multiplier */

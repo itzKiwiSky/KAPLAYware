@@ -99,6 +99,7 @@ export type WareApp = {
 	soundsEnabled: boolean;
 	inputEnabled: boolean;
 	clearAll(): void;
+	resetCamera(): void;
 	handleQuickWatch(): void;
 };
 
@@ -147,6 +148,12 @@ export function createWareApp(): WareApp {
 			this.sounds = [];
 			this.pausedSounds = [];
 		},
+		resetCamera(this: WareApp) {
+			this.cameraObj.pos = k.center();
+			this.cameraObj.scale = k.vec2(1);
+			this.cameraObj.angle = 0;
+			this.cameraObj.shake = 0;
+		},
 		handleQuickWatch() {
 			k.quickWatch("updateEvents", this.updateEvents.length);
 		},
@@ -158,7 +165,7 @@ export function createWareApp(): WareApp {
 
 		// TODO: Figure out a way to pause all events on everything paused and inside of wareEngine also add the gameRunning condition for pausing
 		// TODO: maybe would be as easy as attaching them to sceneObj when the input game obj thing gets fixed
-		app.inputEvents.forEach((ev) => ev.paused = app.everythingPaused || app.inputEnabled);
+		app.inputEvents.forEach((ev) => ev.paused = app.everythingPaused || !app.inputEnabled);
 	});
 
 	return app;

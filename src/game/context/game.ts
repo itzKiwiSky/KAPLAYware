@@ -8,6 +8,10 @@ import { Kaplayware } from "../kaplayware";
 import { InputButton, MinigameAPI, MinigameCtx, StartCtx } from "./types";
 import { addConfetti } from "../objects/confetti";
 
+/** Create the basic context, is a modified kaplay context
+ * @param game Needs game for things like sprite() and play()
+ * @param wareApp Needs wareApp to access hierarchy and props
+ */
 export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 	const pickedCtx = pickKeysInObj(k, [...gameAPIs]);
 
@@ -157,6 +161,22 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 
 	// TODO: figure out the overload issue
 	startCtx["onDraw"] = (...args: any[]) => {
+		// let ev: KEventController = null;
+		// if (typeof args[0] == "string") {
+		// 	const taggedChild = wareApp.sceneObj.get(args[0]);
+		// 	taggedChild.forEach((child) => child.onDraw(args[1]));
+		// 	wareApp.sceneObj.children.forEach((child) => {
+		// 		if (child.is(args[0])) child.onDraw(args[1]);
+		// 	});
+		// 	// how to push to drawEvents? how to return ev?
+		// }
+		// else if (typeof args[0] == "function") {
+		// 	const ev = wareApp.sceneObj.onDraw(args[0]);
+		// 	wareApp.drawEvents.push(ev);
+		// 	return ev;
+		// }
+
+		// return ev;
 		const ev = wareApp.sceneObj.on("draw", ...args as [any]);
 		wareApp.drawEvents.push(ev);
 		return ev;
@@ -183,6 +203,10 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 	return startCtx;
 }
 
+/** Create the minigame API, minigame exclusive functions
+ * @param wareApp Needs wareApp to access the object hierarchy
+ * @param wareEngine Is optional for "preview" mode, if not wareEngine will skip win() lose() and finish() calls
+ */
 export function createMinigameAPI(wareApp: WareApp, wareEngine?: Kaplayware): MinigameAPI {
 	function dirToKeys(button: InputButton): Key[] {
 		if (button == "left") return ["left", "a"];
@@ -201,15 +225,13 @@ export function createMinigameAPI(wareApp: WareApp, wareEngine?: Kaplayware): Mi
 		setCamScale: (val) => wareApp.cameraObj.scale = val,
 		shakeCam: (val: number = 12) => wareApp.cameraObj.shake += val,
 		flashCam: (flashColor: Color = k.WHITE, timeOut: number = 1, opacity: number) => {
-			const r = wareApp.cameraObj.add([
+			const r = wareApp.boxObj.add([
 				k.pos(k.center()),
 				k.rect(k.width() * 2, k.height() * 2),
 				k.color(flashColor),
 				k.anchor("center"),
 				k.opacity(opacity),
 				k.fixed(),
-				k.z(999), // HACK: make sure is at front of everyone :skull: //
-				"flash",
 			]);
 			const f = r.fadeOut(timeOut);
 			f.onEnd(() => k.destroy(r));
@@ -252,7 +274,9 @@ export function createMinigameAPI(wareApp: WareApp, wareEngine?: Kaplayware): Mi
 			else return k.isKeyDown(dirToKeys(btn));
 		},
 		// TODO: Make this in a way that nothing happens if runs on wareEngine
-		onTimeout: (action) => wareEngine.onTimeOutEvents.add(action),
+		onTimeout: (action) => {
+			return wareEngine.onTimeOutEvents.add(action);
+		},
 		win() {
 			if (!wareEngine) return;
 			wareEngine.winGame();
@@ -265,14 +289,13 @@ export function createMinigameAPI(wareApp: WareApp, wareEngine?: Kaplayware): Mi
 			if (!wareEngine) return;
 			wareEngine.finishGame();
 		},
-		winState: () => {
-			if (!wareEngine) return;
-			return wareEngine.winState;
-		},
 		addConfetti(opts) {
 			const confetti = addConfetti(opts);
 			confetti.parent = wareApp.sceneObj;
 			return confetti;
+		},
+		get winState() {
+			return wareEngine.winState ?? undefined;
 		},
 		get difficulty() {
 			return wareEngine.difficulty ?? 1;
@@ -289,6 +312,22 @@ export function createMinigameAPI(wareApp: WareApp, wareEngine?: Kaplayware): Mi
 	};
 }
 
+/** Creates the final, merged and usable context for a minigame
+ * @param game The minigame to create the context for
+ * @param wareApp The ware-app
+ * @param wareEngine The ware engine, is optional for "preview" mode
+ */
 export function createGameCtx(game: Minigame, wareApp: WareApp, wareEngine?: Kaplayware): MinigameCtx {
-	return { ...createStartCtx(game, wareApp), ...createMinigameAPI(wareApp, wareEngine) };
+	const startCtx = createStartCtx(game, wareApp);
+	const api = createMinigameAPI(wareApp, wareEngine);
+
+	// some crazy code to merge them together
+	const result = {} as StartCtx & MinigameAPI;
+
+	Object.defineProperties(result, {
+		...Object.getOwnPropertyDescriptors(startCtx),
+		...Object.getOwnPropertyDescriptors(api),
+	});
+
+	return result;
 }
