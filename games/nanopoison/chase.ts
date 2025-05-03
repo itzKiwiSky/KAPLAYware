@@ -1,5 +1,5 @@
 import { assets } from "@kaplayjs/crew";
-import { Minigame } from "../../src/game/types";
+import Minigame from "../../src/scenes/game/minigameType";
 import { GameObj, Vec2 } from "kaplay";
 
 const newGame: Minigame = {

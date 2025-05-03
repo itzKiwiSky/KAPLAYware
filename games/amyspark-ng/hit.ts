@@ -1,4 +1,4 @@
-import { Minigame } from "../../src/game/types.ts";
+import Minigame from "../../src/scenes/game/minigameType";
 
 const hitGame: Minigame = {
 	prompt: "HIT!",

@@ -1,5 +1,5 @@
 import { Outline, Vec2 } from "kaplay";
-import { Minigame } from "../../src/game/types";
+import Minigame from "../../src/scenes/game/minigameType";
 
 const spreadGame: Minigame = {
 	prompt: "SPREAD!",

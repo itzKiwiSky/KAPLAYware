@@ -1,4 +1,4 @@
-import { Minigame } from "../../src/game/types";
+import Minigame from "../../src/scenes/game/minigameType";
 
 const avoidGame: Minigame = {
 	prompt: "AVOID!",
@@ -115,7 +115,7 @@ const avoidGame: Minigame = {
 
 				ctx.play("stomp");
 				ctx.shakeCam(ctx.rand(13, 15));
-				if (ctx.winState() == undefined) {
+				if (ctx.winState == undefined) {
 					ctx.tween(foot.pos.y, highFeet, 0.35 / ctx.speed, (p) => foot.pos.y = p, ctx.easings.easeOutExpo);
 					jump();
 				}
@@ -179,7 +179,7 @@ const avoidGame: Minigame = {
 			cloudsFront.pos.y = ctx.wave(0, 10, ctx.time());
 
 			// mark
-			if (ctx.winState() == false) return;
+			if (ctx.winState == false) return;
 			const walking = ctx.isInputButtonDown("left") || ctx.isInputButtonDown("right");
 
 			if (mark.isGrounded() && mark.adjusting == false) {
@@ -187,7 +187,7 @@ const avoidGame: Minigame = {
 				else if (!walking && mark.getCurAnim()?.name != "idle" && mark.isGrounded()) mark.play("idle");
 			}
 
-			crawl.paused = !(walking && mark.isGrounded() && ctx.winState() == undefined);
+			crawl.paused = !(walking && mark.isGrounded() && ctx.winState == undefined);
 			mark.flipX = ctx.isInputButtonDown("left");
 			mov.x = ctx.isInputButtonDown("left") ? -1 : ctx.isInputButtonDown("right") ? 1 : 0;
 			lerpMov = ctx.lerp(lerpMov, mov, 0.5);
@@ -200,14 +200,14 @@ const avoidGame: Minigame = {
 
 		ctx.wait(0.75 / ctx.speed, () => {
 			ctx.loop(2 / ctx.speed, () => {
-				if (mark.isGrounded() && ctx.timeLeft > 0 && ctx.winState() == undefined) {
+				if (mark.isGrounded() && ctx.timeLeft > 0 && ctx.winState == undefined) {
 					stomp();
 				}
 			});
 		});
 
 		ctx.onTimeout(() => {
-			if (ctx.winState() != undefined) return;
+			if (ctx.winState != undefined) return;
 			ctx.win();
 			ctx.wait(0.5 / ctx.speed, () => {
 				ctx.finish();

@@ -1,5 +1,5 @@
 import kaplay, { GameObj, Vec2 } from "kaplay";
-import { Minigame } from "../../src/game/types.ts";
+import Minigame from "../../src/scenes/game/minigameType";
 
 const aimGame: Minigame = {
 	prompt: "AIM!",
@@ -167,7 +167,7 @@ const aimGame: Minigame = {
 		});
 
 		ctx.onInputButtonPress("click", () => {
-			if (ctx.winState() == true) return;
+			if (ctx.winState == true) return;
 			for (const bln of ctx.get("balloon").reverse()) {
 				if (bln.isHovering()) {
 					if (!mngr.hasLost) {
@@ -177,7 +177,7 @@ const aimGame: Minigame = {
 						hittedBalloons.push(bln);
 						bln.destroy();
 
-						if (ctx.winState() == undefined && hittedBalloons.length >= mngr.balloonCount) {
+						if (ctx.winState == undefined && hittedBalloons.length >= mngr.balloonCount) {
 							ctx.win();
 							ctx.wait(0.9, () => {
 								ctx.get("*").forEach((obj, i, a) => {

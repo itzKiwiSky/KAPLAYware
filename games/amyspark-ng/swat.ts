@@ -1,4 +1,4 @@
-import { Minigame } from "../../src/game/types";
+import Minigame from "../../src/scenes/game/minigameType";
 
 const swatGame: Minigame = {
 	prompt: "SWAT!",
@@ -131,14 +131,14 @@ const swatGame: Minigame = {
 
 			shock.onCollide("fly", (fly) => {
 				flies--;
-				if (flies <= 0 && !ctx.winState()) ctx.win();
+				if (flies <= 0 && !ctx.winState) ctx.win();
 				fly.tag("dead");
 				ctx.play("bzz", { volume: 3, speed: 3 });
 				ctx.tween(ctx.vec2(2), ctx.vec2(1), 0.15 / ctx.speed, (p) => fly.scale = p, ctx.easings.easeOutQuint);
 				ctx.tween(ctx.RED, ctx.WHITE, 0.15 / ctx.speed, (p) => fly.color = p, ctx.easings.easeOutQuint);
 				ctx.tween(fly.angle, 90, 0.15 / ctx.speed, (p) => fly.angle = p, ctx.easings.easeOutQuint);
 				ctx.tween(fly.pos.y, ctx.height() + 10, 1 / ctx.speed, (p) => fly.pos.y = p, ctx.easings.easeOutQuint).onEnd(() => {
-					if (ctx.winState() == true) ctx.finish();
+					if (ctx.winState == true) ctx.finish();
 				});
 			});
 

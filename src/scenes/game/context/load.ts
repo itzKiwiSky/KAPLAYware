@@ -1,6 +1,6 @@
 import { KAPLAYCtx, SpriteAtlasData } from "kaplay";
 import { getGameID } from "../utils";
-import { Minigame } from "../types";
+import { Minigame } from "../minigameType";
 import { loadAPIs } from "../api";
 import k from "../../../engine";
 

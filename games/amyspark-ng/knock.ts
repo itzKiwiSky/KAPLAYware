@@ -1,4 +1,4 @@
-import { Minigame } from "../../src/game/types";
+import Minigame from "../../src/scenes/game/minigameType";
 
 const knockGame: Minigame = {
 	prompt: "KNOCK!",
@@ -78,7 +78,7 @@ const knockGame: Minigame = {
 		door.onClick(() => {
 			if (!door.isHovering()) return;
 
-			if (!ctx.winState()) {
+			if (!ctx.winState) {
 				ctx.tween(ctx.vec2(DOOR_SCALE - 0.05 * totalKnocks - knocksLeft), ctx.vec2(DOOR_SCALE), 0.15 / ctx.speed, (p) => door.scale = p, ctx.easings.easeOutQuint);
 			}
 
@@ -123,7 +123,7 @@ const knockGame: Minigame = {
 		});
 
 		ctx.onTimeout(() => {
-			if (ctx.winState() == undefined) return;
+			if (ctx.winState == undefined) return;
 
 			if (knocksLeft > 0) {
 				ctx.lose();

@@ -1,14 +1,14 @@
-import { Minigame } from "./types";
+import Minigame from "./minigameType";
 import { getGameID } from "./utils";
 
-const gameModules = import.meta.glob("../../games/*/*.ts", { eager: true });
+export const modules = import.meta.glob("../../../games/*/*.ts", { eager: true });
 
 // TODO: make this work
 const INCLUDE_BOSSES = true;
 const exclude = new Set([]);
 
 /** The imported games */
-const games = Object.values(gameModules)
+const games = Object.values(modules)
 	.map((module: any) => module.default)
 	.filter((game) => !exclude.has(getGameID(game))) as Minigame[];
 

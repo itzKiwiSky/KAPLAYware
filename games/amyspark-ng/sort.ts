@@ -1,5 +1,5 @@
 import { GameObj, Vec2 } from "kaplay";
-import { Minigame } from "../../src/game/types.ts";
+import Minigame from "../../src/scenes/game/minigameType";
 
 // almost 300 lines of pure unadultered pain that took me a whole day to write
 const sortGame: Minigame = {

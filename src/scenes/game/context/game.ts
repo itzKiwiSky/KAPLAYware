@@ -1,12 +1,12 @@
 import { Color, KEventController, Key } from "kaplay";
 import { gameAPIs, generalEventControllers, timerControllers } from "../api";
-import { Minigame } from "../types";
 import { getGameID, isDefaultAsset, pickKeysInObj } from "../utils";
 import { WareApp } from "../app";
 import { Kaplayware } from "../kaplayware";
 import { InputButton, MinigameAPI, MinigameCtx, StartCtx } from "./types";
 import { addConfetti } from "../objects/confetti";
 import k from "../../../engine";
+import Minigame from "../minigameType";
 
 /** Create the basic context, is a modified kaplay context
  * @param game Needs game for things like sprite() and play()
@@ -304,7 +304,7 @@ export function createMinigameAPI(wareApp: WareApp, wareEngine?: Kaplayware): Mi
 			return wareEngine.lives ?? 3;
 		},
 		get speed() {
-			return wareEngine.lives ?? 1;
+			return wareEngine.speed ?? 1;
 		},
 		get timeLeft() {
 			return wareEngine.timeLeft ?? 10;

@@ -1,5 +1,6 @@
 import { GameObj, Vec2 } from "kaplay";
-import { Minigame } from "../../src/game/types.ts";
+import Minigame from "../../src/scenes/game/minigameType";
+
 import { MinigameCtx } from "../../src/game/context/types.ts";
 
 function getHexagonShape(ctx: MinigameCtx) {

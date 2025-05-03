@@ -1,5 +1,5 @@
 import { LoadSpriteOpt, Vec2 } from "kaplay";
-import { Minigame } from "../../src/game/types";
+import Minigame from "../../src/scenes/game/minigameType";
 
 // TODO: Do the whole squid cool game
 const killGame: Minigame = {

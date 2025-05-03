@@ -1,5 +1,5 @@
 import { AreaComp, Color } from "kaplay";
-import { Minigame } from "../../src/game/types.ts";
+import Minigame from "../../src/scenes/game/minigameType";
 
 // all art made by me (amyspark-ng) hehe
 const colorGame: Minigame = {
@@ -37,7 +37,6 @@ const colorGame: Minigame = {
 		ctx.loadSound("splash", "sounds/splash.ogg");
 	},
 	start(ctx) {
-		ctx.difficulty = 3;
 		const possibleColors = {
 			"RED": ctx.mulfok.RED,
 			"GREEN": ctx.mulfok.BEAN_GREEN,
@@ -105,7 +104,7 @@ const colorGame: Minigame = {
 
 		function callGameplay() {
 			ctx.setRGB(ctx.mulfok.GRAY);
-			const getHoveredBucket = () => ctx.get<AreaComp | { paintColor: Color; }>("bucket").find((bucket) => bucket.isHovering());
+			const getHoveredBucket = () => ctx.get("bucket").find((bucket) => bucket.isHovering());
 			let hasClicked = false;
 
 			const gameplayBg = ctx.add([ctx.sprite("gamebg")]);
@@ -230,7 +229,7 @@ const colorGame: Minigame = {
 			ctx.add([ctx.sprite("bushes")]);
 
 			const bean = ctx.add([
-				ctx.sprite(ctx.winState() == false ? "@beant" : "@bean"),
+				ctx.sprite(ctx.winState == false ? "@beant" : "@bean"),
 				ctx.pos(590, 515),
 				ctx.anchor("center"),
 				ctx.scale(1.25),
@@ -257,7 +256,7 @@ const colorGame: Minigame = {
 					ctx.pos(0, -15),
 				]);
 
-				if (ctx.winState() == false) {
+				if (ctx.winState == false) {
 					smaller.flipY = true;
 				}
 

@@ -200,7 +200,7 @@ To set the win condition, you'll have to call the `ctx.win()` function.
 
 To set a lose condition, you'll have to call the `ctx.lose()` function, we could call this if the time has ran out and bean didn't eat the apple.
 
-**PROTIP:** You can check wheter you've already called the `win()` or `lose()` function by calling `ctx.winState()`, if the return value is true, that means you called `win()`, if it's false you've called `lose()`, if it's undefined you haven't called either.
+**PROTIP:** You can check wheter you've already called the `win()` or `lose()` function by calling `ctx.winState`, if the return value is true, that means you called `win()`, if it's false you've called `lose()`, if it's undefined you haven't called either.
 
 Now how would all of this look in our minigame? Let's check...
 ```ts

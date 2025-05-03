@@ -1,4 +1,4 @@
-import { Minigame } from "../../src/game/types";
+import Minigame from "../../src/scenes/game/minigameType";
 
 const dontGame: Minigame = {
 	prompt: "DONT'T!",
@@ -51,7 +51,7 @@ const dontGame: Minigame = {
 		}
 
 		ctx.onTimeout(() => {
-			if (ctx.winState() != undefined) return;
+			if (ctx.winState != undefined) return;
 			ctx.win();
 			ctx.wait(0.5, () => ctx.finish());
 		});
@@ -73,7 +73,7 @@ const dontGame: Minigame = {
 
 					shooting.onUpdate(() => {
 						shooting.move(-100, 0);
-						if (ctx.winState() == false) shooting.destroy();
+						if (ctx.winState == false) shooting.destroy();
 					});
 				});
 			}
@@ -88,7 +88,7 @@ const dontGame: Minigame = {
 				let vel = ctx.vec2(-50, 0).scale(ctx.speed);
 				let angle = 0.5 * ctx.speed;
 				marky.onUpdate(() => {
-					if (ctx.winState() == false) {
+					if (ctx.winState == false) {
 						vel = ctx.lerp(vel, ctx.vec2(-200, -350).scale(ctx.speed), 0.75);
 						angle = ctx.lerp(angle, 10 * ctx.speed, 0.75);
 					}

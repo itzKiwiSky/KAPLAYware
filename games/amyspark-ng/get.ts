@@ -1,5 +1,5 @@
 import { Vec2 } from "kaplay";
-import { Minigame } from "../../src/game/types";
+import Minigame from "../../src/scenes/game/minigameType";
 
 const getGame: Minigame = {
 	prompt: "GET!",
@@ -128,7 +128,7 @@ const getGame: Minigame = {
 		});
 
 		ctx.onDraw(() => {
-			if (appleOnFloor && !ctx.winState()) {
+			if (appleOnFloor && !ctx.winState) {
 				ctx.drawCircle({
 					radius: 10,
 					scale: ctx.vec2(2, 1),

@@ -1,14 +1,14 @@
 import { KEvent, KEventController } from "kaplay";
 import { createWareApp } from "./app";
-import { Minigame } from "./types";
 import { createGameCtx } from "./context/game";
 import games from "./games";
-import { gameHidesMouse, getGameColor, getGameDuration, getGameID } from "./utils";
+import { gameHidesMouse, getGameByID, getGameColor, getGameDuration, getGameID } from "./utils";
 import { runTransition, TransitionState } from "./transitions";
 import { MinigameInput } from "./context/types";
 import { addBomb, WareBomb } from "./objects/bomb";
 import k from "../../engine";
 import cursor from "../../plugins/cursor";
+import Minigame from "./minigameType";
 
 /** Certain options to instantiate kaplayware (ware-engine) */
 export type KAPLAYwareOpts = {
@@ -46,12 +46,12 @@ export type Kaplayware = {
 // Add it here and not on wareApp, because wareApp doesn't require a BPM or anything, that's exclusive of transitions and bomb timing
 
 /** Instantiates and runs KAPLAYWARE (aka ware-engine), to start it, run nextGame() */
-export function kaplayware(opt: KAPLAYwareOpts): Kaplayware {
+export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 	const HOW_FREQUENT_BOSS = 10;
 	const MAX_SPEED = 1.6;
 
-	opt = opt ?? {} as unknown as any;
-	opt.games = opt.games ?? games;
+	console.log(opt.games);
+
 	for (const game of opt.games) {
 		game.isBoss = game.isBoss ?? false;
 	}
@@ -76,24 +76,25 @@ export function kaplayware(opt: KAPLAYwareOpts): Kaplayware {
 
 	// TODO: find a better way to organize all these functions
 	const getRandomGame = () => {
-		let possibleGames: Minigame[] = opt.games;
+		let possibleGames: Minigame[] = [...opt.games];
 
-		if (shouldBoss()) {
-			possibleGames = possibleGames.filter((game) => game.isBoss == true);
-		}
+		// if (shouldBoss()) {
+		// 	possibleGames = possibleGames.filter((game) => game.isBoss == true);
+		// }
 
-		// now check for history and repeatedness and get a new one
-		possibleGames = possibleGames.filter((game) => {
-			if (wareEngine.minigameHistory.length == 0 || opt.games.length == 1) return true;
-			else {
-				const previousPreviousID = wareEngine.minigameHistory[wareEngine.score - 3];
-				const previousPreviousGame = games.find((game) => getGameID(game) == previousPreviousID);
-				if (previousPreviousGame) return game != wareEngine.curGame && game != previousPreviousGame;
-				else return game != wareEngine.curGame;
-			}
-		});
+		// // now check for history and repeatedness and get a new one
+		// possibleGames = possibleGames.filter((game) => {
+		// 	if (wareEngine.minigameHistory.length == 0 || opt.games.length == 1 || possibleGames.length == 1) return true;
+		// 	else {
+		// 		const previousPreviousID = wareEngine.minigameHistory[wareEngine.score - 3];
+		// 		const previousPreviousGame = getGameByID(previousPreviousID);
 
-		return k.choose(opt.games);
+		// 		if (previousPreviousGame) return game != wareEngine.curGame && game != previousPreviousGame;
+		// 		else return game != wareEngine.curGame;
+		// 	}
+		// });
+
+		return k.choose(possibleGames);
 	};
 
 	const calculateDifficulty = (): 1 | 2 | 3 => {
@@ -192,7 +193,7 @@ export function kaplayware(opt: KAPLAYwareOpts): Kaplayware {
 			cursor.fadeAway = gameHidesMouse(wareEngine.curGame);
 			wareEngine.minigameHistory[wareEngine.score - 1] = getGameID(wareEngine.curGame);
 			wareEngine.curGame.start(ctx);
-			wareEngine.timeLeft = getGameDuration(wareEngine.curGame, ctx);
+			wareEngine.timeLeft = getGameDuration(wareEngine.curGame, ctx) / wareEngine.speed;
 			wareEngine.difficulty = calculateDifficulty();
 			currentBomb = null;
 
@@ -203,6 +204,8 @@ export function kaplayware(opt: KAPLAYwareOpts): Kaplayware {
 				if (wareEngine.timeLeft == undefined) return;
 				if (wareEngine.timeLeft > 0) wareEngine.timeLeft -= k.dt();
 				wareEngine.timeLeft = k.clamp(wareEngine.timeLeft, 0, 20);
+
+				k.debug.log(wareEngine.speed);
 
 				// When there's 4 beats left
 				const beatInterval = 60 / (140 * wareEngine.speed);

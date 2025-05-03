@@ -20,7 +20,7 @@ const randomNum = (max = 255) => {
 };
 
 const template = `
-import { Minigame } from "../../src/game/types";
+import Minigame from "../../src/scenes/game/minigameType";
 
 const ${gamePrompt}Game: Minigame = {
 	author: "${author}",

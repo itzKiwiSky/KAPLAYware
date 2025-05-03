@@ -1,12 +1,11 @@
 import { Color, Vec2 } from "kaplay";
-import k from "../engine";
 import { LoadCtx } from "./context/load";
 import { MinigameCtx } from "./context/types";
 
 // TODO: move this somewhere better, it's only to contain the Minigame type since it's very very long
 
 /** The type for a minigame */
-export type Minigame =
+type Minigame =
 	& {
 		/** Prompt of the mini game!
 		 *
@@ -132,3 +131,5 @@ export type Minigame =
 		/** Wheter to hide the mouse for the BOSS minigame */
 		hideMouse: boolean;
 	});
+
+export default Minigame;

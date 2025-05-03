@@ -1,13 +1,12 @@
 import { Color } from "kaplay";
 import { MinigameCtx, MinigameInput } from "./context/types";
-import games from "./games";
-import { Minigame } from "./types";
+import games, { modules } from "./games";
 import k from "../../engine";
+import Minigame from "./minigameType";
 
 // TODO: organize this a bit, what should go here and what shouldn't?
 
 export const getGameID = (g: Minigame) => {
-	const modules = import.meta.glob("../../games/*/*.ts", { eager: true });
 	const gamePath = Object.keys(modules).find((pathKey: string) => (modules[pathKey] as any).default == g);
 	const filename = gamePath.split("/")[gamePath.split("/").length - 1].replace(".ts", "");
 	return `${g.author}:${filename}`;

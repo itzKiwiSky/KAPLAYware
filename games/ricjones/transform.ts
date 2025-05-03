@@ -1,4 +1,4 @@
-import { Minigame } from "../../src/game/types.ts";
+import Minigame from "../../src/scenes/game/minigameType";
 
 const transformGame: Minigame = {
 	prompt: "TRANSFORM!",
@@ -173,7 +173,7 @@ const transformGame: Minigame = {
 		}
 
 		function goToGameOver(isWin: boolean = true) {
-			if (ctx.winState() != undefined) return;
+			if (ctx.winState != undefined) return;
 
 			if (isWin) ctx.win();
 			else ctx.lose();
@@ -236,7 +236,7 @@ const transformGame: Minigame = {
 		}
 
 		function onInputValid() {
-			if (ctx.winState() != undefined) return;
+			if (ctx.winState != undefined) return;
 			updateBothCommands();
 			ctx.addKaboom(check.pos);
 			ctx.shakeCam();
