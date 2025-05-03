@@ -1,5 +1,4 @@
 import { Color, KEventController, Key } from "kaplay";
-import k from "../../engine";
 import { gameAPIs, generalEventControllers, timerControllers } from "../api";
 import { Minigame } from "../types";
 import { getGameID, isDefaultAsset, pickKeysInObj } from "../utils";
@@ -7,6 +6,7 @@ import { WareApp } from "../app";
 import { Kaplayware } from "../kaplayware";
 import { InputButton, MinigameAPI, MinigameCtx, StartCtx } from "./types";
 import { addConfetti } from "../objects/confetti";
+import k from "../../../engine";
 
 /** Create the basic context, is a modified kaplay context
  * @param game Needs game for things like sprite() and play()

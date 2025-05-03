@@ -1,5 +1,5 @@
 import { Color, Vec2 } from "kaplay";
-import k from "../../engine";
+import k from "../../../engine";
 
 type Sampler<T> = T | (() => T);
 

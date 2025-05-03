@@ -1,8 +1,7 @@
-import k from "../../engine";
-import games from "../../game/games";
-import { Minigame } from "../../game/types";
-import { getGameByID, getGameID } from "../../game/utils";
-import goGame from "../game";
+import k from "../engine";
+import games from "./game/games";
+import goGame from "./game/GameScene";
+import { getGameByID, getGameID } from "./game/utils";
 
 k.scene("select", () => {
 	k.addPlainBackground(k.BLUE.lighten(100));

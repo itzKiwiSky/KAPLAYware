@@ -1,5 +1,5 @@
-import k from "../engine";
-import { kaplayware, KAPLAYwareOpts } from "../game/kaplayware";
+import k from "../../engine";
+import { kaplayware, KAPLAYwareOpts } from "./kaplayware";
 
 k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 	const wareEngine = kaplayware(kaplaywareOpt);

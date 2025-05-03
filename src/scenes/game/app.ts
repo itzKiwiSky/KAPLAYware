@@ -1,6 +1,6 @@
 import { AudioPlay, Color, GameObj, KEventController, Vec2 } from "kaplay";
-import k from "../engine";
 import { createPauseCtx, PauseCtx } from "./context/pause";
+import k from "../../engine";
 
 /** Creates a cute little object that contains a buncha game objects that can hold, a ware instance
  * @returns An object with a lot of objects

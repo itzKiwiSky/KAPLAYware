@@ -1,8 +1,8 @@
 import { Color } from "kaplay";
-import k from "../engine";
 import { MinigameCtx, MinigameInput } from "./context/types";
 import games from "./games";
 import { Minigame } from "./types";
+import k from "../../engine";
 
 // TODO: organize this a bit, what should go here and what shouldn't?
 

@@ -1,8 +1,8 @@
 import { AudioPlay, TimerController } from "kaplay";
 import { pauseAPIs } from "../api";
-import k from "../../engine";
+import k from "../../../engine";
 
-3; /** The functions that can be paused with WareApp.gamePaused */
+/** The functions that can be paused with WareApp.gamePaused */
 export type PauseCtx = Pick<typeof k, typeof pauseAPIs[number]> & {
 	sounds: AudioPlay[];
 	timers: TimerController[];

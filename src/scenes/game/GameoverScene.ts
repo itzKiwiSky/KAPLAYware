@@ -1,4 +1,4 @@
-import k from "../engine";
+import k from "../../engine";
 
 k.scene("gameover", (score: number) => {
 	k.add([

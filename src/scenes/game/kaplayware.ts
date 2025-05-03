@@ -1,19 +1,19 @@
 import { KEvent, KEventController } from "kaplay";
-import k from "../engine";
 import { createWareApp } from "./app";
 import { Minigame } from "./types";
 import { createGameCtx } from "./context/game";
 import games from "./games";
 import { gameHidesMouse, getGameColor, getGameDuration, getGameID } from "./utils";
-import cursor from "../plugins/cursor";
 import { runTransition, TransitionState } from "./transitions";
 import { MinigameInput } from "./context/types";
 import { addBomb, WareBomb } from "./objects/bomb";
+import k from "../../engine";
+import cursor from "../../plugins/cursor";
 
 /** Certain options to instantiate kaplayware (ware-engine) */
 export type KAPLAYwareOpts = {
 	games?: Minigame[];
-	filters: { input: MinigameInput; }; // TODO: do this eventually, be able to filter by input, by boss and such idk
+	filters?: { input: MinigameInput; }; // TODO: do this eventually, be able to filter by input, by boss and such idk
 	// mods here
 };
 

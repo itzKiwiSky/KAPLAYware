@@ -1,4 +1,4 @@
-import k from "../../engine";
+import k from "../engine";
 
 k.scene("menu", () => {
 	k.addPlainBackground(k.BLUE.lighten(100));
