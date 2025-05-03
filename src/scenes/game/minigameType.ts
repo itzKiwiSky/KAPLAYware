@@ -1,6 +1,7 @@
 import { Color, Vec2 } from "kaplay";
 import { LoadCtx } from "./context/load";
 import { MinigameCtx } from "./context/types";
+import { addTextPrompt } from "./objects/prompts";
 
 // TODO: move this somewhere better, it's only to contain the Minigame type since it's very very long
 
@@ -30,8 +31,7 @@ type Minigame =
 		 *
 		 * Please keep the prompt text in the cool format (All uppercase, single exclamation mark at the end)
 		 */
-		// TODO: fix this typing here
-		prompt: string | ((ctx: MinigameCtx, prompt: ReturnType<typeof k.addPrompt>) => void);
+		prompt: string | ((ctx: MinigameCtx, prompt: ReturnType<typeof addTextPrompt>) => void);
 		/** The author of the game */
 		author: string;
 		/** The RGB (color) code for the game's background

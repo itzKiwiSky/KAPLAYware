@@ -14,16 +14,25 @@ const testGame: Minigame = {
 			ctx.pos(),
 		]);
 
+		const timeText = ctx.add([
+			ctx.text(""),
+			ctx.pos(ctx.center()),
+			ctx.anchor("center"),
+		]);
+
 		ctx.onUpdate(() => {
-			// ctx.debug.log(ctx.timeLeft);
-			ctx.debug.log(ctx.winState);
+			timeText.text = ctx.timeLeft.toFixed(2);
 		});
 
-		// TODO: add more things to test, music, timeLeft, input, onDraw overloads, winState, etc
+		ctx.onUpdate(() => {
+			ctx.setRGB(ctx.lerp(ctx.getRGB(), ctx.winState == true ? ctx.mulfok.GREEN : ctx.winState == false ? ctx.mulfok.RED : ctx.WHITE, 0.5));
 
-		// bean.onUpdate(() => {
-		ctx.debug.log("i'm alive!!!"); // This will run the moment you do game.start(ctx)
-		// })
+			const angle = (ctx.time() * ctx.speed) % 360;
+			const spinCamera = ctx.vec2(40 * Math.cos(angle), 40 * Math.sin(angle));
+			ctx.setCamPos(ctx.center().add(spinCamera));
+		});
+
+		// TODO: add more things to test, camera, fixed, music, timeLeft, input, onDraw overloads, winState, etc
 
 		ctx.onTimeout(() => {
 			ctx.win();

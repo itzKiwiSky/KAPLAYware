@@ -26,6 +26,23 @@ export function pickKeysInObj<T extends any, R extends keyof T>(obj: T, keys: R[
 	}, {} as Pick<T, R>);
 }
 
+/** Merge 2 objects and retrun a proper cool reference to both, also typed
+ * @param obj1
+ * @param obj2
+ * @returns A merged object with proper typing
+ */
+export function mergeWithRef<T extends any, R extends any>(obj1: T, obj2: R) {
+	// some crazy code to merge them together
+	const result = {} as T & R;
+
+	Object.defineProperties(result, {
+		...Object.getOwnPropertyDescriptors(obj1),
+		...Object.getOwnPropertyDescriptors(obj2),
+	});
+
+	return result;
+}
+
 export const getInputMessage = (g: Minigame) => {
 	const input = getGameInput(g);
 	let message = "";

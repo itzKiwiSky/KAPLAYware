@@ -1,6 +1,6 @@
 import { Color, KEventController, Key } from "kaplay";
 import { gameAPIs, generalEventControllers, timerControllers } from "../api";
-import { getGameID, isDefaultAsset, pickKeysInObj } from "../utils";
+import { getGameID, isDefaultAsset, mergeWithRef, pickKeysInObj } from "../utils";
 import { WareApp } from "../app";
 import { Kaplayware } from "../kaplayware";
 import { InputButton, MinigameAPI, MinigameCtx, StartCtx } from "./types";
@@ -320,14 +320,5 @@ export function createMinigameAPI(wareApp: WareApp, wareEngine?: Kaplayware): Mi
 export function createGameCtx(game: Minigame, wareApp: WareApp, wareEngine?: Kaplayware): MinigameCtx {
 	const startCtx = createStartCtx(game, wareApp);
 	const api = createMinigameAPI(wareApp, wareEngine);
-
-	// some crazy code to merge them together
-	const result = {} as StartCtx & MinigameAPI;
-
-	Object.defineProperties(result, {
-		...Object.getOwnPropertyDescriptors(startCtx),
-		...Object.getOwnPropertyDescriptors(api),
-	});
-
-	return result;
+	return mergeWithRef(startCtx, api);
 }

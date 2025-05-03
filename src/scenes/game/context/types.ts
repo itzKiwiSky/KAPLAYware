@@ -1,8 +1,8 @@
 import { assets } from "@kaplayjs/crew";
 import { Asset, Color, CompList, GameObj, KEventController, SpriteComp, SpriteCompOpt, SpriteData, TweenController, Vec2 } from "kaplay";
-import k from "../../engine";
 import { gameAPIs } from "../api";
 import { ConfettiOpt } from "../objects/confetti";
+import k from "../../../engine";
 
 type Friend = keyof typeof assets | `${keyof typeof assets}-o`;
 type AtFriend = `@${Friend}`;

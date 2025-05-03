@@ -4,11 +4,12 @@ import { createGameCtx } from "./context/game";
 import games from "./games";
 import { gameHidesMouse, getGameByID, getGameColor, getGameDuration, getGameID } from "./utils";
 import { runTransition, TransitionState } from "./transitions";
-import { MinigameInput } from "./context/types";
+import { MinigameCtx, MinigameInput } from "./context/types";
 import { addBomb, WareBomb } from "./objects/bomb";
 import k from "../../engine";
 import cursor from "../../plugins/cursor";
 import Minigame from "./minigameType";
+import { addTextPrompt } from "./objects/prompts";
 
 /** Certain options to instantiate kaplayware (ware-engine) */
 export type KAPLAYwareOpts = {
@@ -24,6 +25,7 @@ export type Kaplayware = {
 	speed: number;
 	difficulty: 1 | 2 | 3;
 	curGame: Minigame;
+	curContext: MinigameCtx;
 	timeRunning: boolean;
 	gameRunning: boolean;
 	minigameHistory: string[];
@@ -77,6 +79,8 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 	// TODO: find a better way to organize all these functions
 	const getRandomGame = () => {
 		let possibleGames: Minigame[] = [...opt.games];
+
+		// TODO: figure out why this doesn't work properly
 
 		// if (shouldBoss()) {
 		// 	possibleGames = possibleGames.filter((game) => game.isBoss == true);
@@ -138,10 +142,11 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 		return transitionStates;
 	};
 
-	// TODO: See what needs to be cleared
 	wareEngine.clearPrevious = () => {
-		wareApp.sceneObj.removeAll();
 		wareApp.clearAll();
+		wareApp.resetCamera();
+		wareApp.sceneObj.removeAll();
+		currentBomb?.destroy();
 	};
 
 	wareEngine.winGame = () => {
@@ -187,25 +192,23 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 		transition.onStateStart("prep", () => {
 			wareEngine.clearPrevious();
 			wareEngine.curGame = getRandomGame();
-			const ctx = createGameCtx(wareEngine.curGame, wareApp, wareEngine);
+			wareEngine.curContext = createGameCtx(wareEngine.curGame, wareApp, wareEngine);
 
-			ctx.setRGB(getGameColor(wareEngine.curGame, ctx));
+			wareEngine.curContext.setRGB(getGameColor(wareEngine.curGame, wareEngine.curContext));
 			cursor.fadeAway = gameHidesMouse(wareEngine.curGame);
 			wareEngine.minigameHistory[wareEngine.score - 1] = getGameID(wareEngine.curGame);
-			wareEngine.curGame.start(ctx);
-			wareEngine.timeLeft = getGameDuration(wareEngine.curGame, ctx) / wareEngine.speed;
+			wareEngine.curGame.start(wareEngine.curContext);
+			wareEngine.timeLeft = getGameDuration(wareEngine.curGame, wareEngine.curContext) / wareEngine.speed;
 			wareEngine.difficulty = calculateDifficulty();
 			currentBomb = null;
 
 			// behaviour that manages minigame
-			ctx.onUpdate(() => {
+			wareEngine.curContext.onUpdate(() => {
 				if (!wareEngine.timeRunning) return;
 				// bomb and such is not necessary bcause time is undefined
 				if (wareEngine.timeLeft == undefined) return;
 				if (wareEngine.timeLeft > 0) wareEngine.timeLeft -= k.dt();
 				wareEngine.timeLeft = k.clamp(wareEngine.timeLeft, 0, 20);
-
-				k.debug.log(wareEngine.speed);
 
 				// When there's 4 beats left
 				const beatInterval = 60 / (140 * wareEngine.speed);
@@ -222,8 +225,20 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 			});
 		});
 
+		transition.onPromptTime(() => {
+			const promptObj = addTextPrompt(wareApp, typeof wareEngine.curGame.prompt == "string" ? wareEngine.curGame.prompt : "", wareEngine.speed);
+			if (typeof wareEngine.curGame.prompt == "function") wareEngine.curGame.prompt(wareEngine.curContext, promptObj);
+			promptObj.onEnd(() => {
+				// can't use fade out because it's not paused lol
+				wareApp.pauseCtx.tween(1, 0, 0.25 / wareEngine.speed, (p) => {
+					promptObj.opacity = p;
+				}).onEnd(() => promptObj.destroy());
+			});
+		});
+
 		// don't remove this, very crucial
 		transition.onTransitionEnd(() => {
+			cursor.fadeAway = gameHidesMouse(wareEngine.curGame);
 			wareApp.soundsEnabled = true;
 			wareApp.inputEnabled = true;
 			wareEngine.gameRunning = true;
@@ -235,12 +250,6 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 	// TODO: do all the add prompt and input prompt stuff
 	// TODO: check things like transitions, bombs and conductors are destroyed when they stop being used
 	// TODO: figure out where things like FixedComp do, re-figure it out
-	/*
-	TODO: Things to clear on clearPrevious()
-	sceneObjs
-	all on wareApp (wareApp.clearAll())
-	camera (wareApp.resetCamera())
-	*/
 
 	wareEngine.onTimeOutEvents.add(() => {
 		wareApp.inputEnabled = false;
@@ -280,69 +289,6 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 
 	return wareEngine;
 }
-
-// 	wareApp.pausableCtx = createPauseCtx();
-
-// 	return wareApp;
-// }
-
-// /** Object that holds some a lot of managers for the KAPLAYware engine */
-// export type WareApp = ReturnType<typeof createWareApp>;
-
-// export default function kaplayware(opts: KAPLAYwareOpts = {}) {
-// 	const MAX_SPEED = 1.64;
-
-// 	opts = opts ?? {};
-// 	opts.games = opts.games ?? games;
-// 	opts.inOrder = opts.inOrder ?? false;
-
-// 	const getRandomGame = () => {
-// 		return k.choose(opts.games);
-// 	};
-
-// 	const wareCtx = {
-// 		nextGame() {
-// 			const runningGame = getRandomGame();
-// 			const ctx = createGameCtx();
-// 		},
-// 	};
-
-// const wareApp = createWareApp();
-
-// const gameBox = wareApp.sceneObj;
-
-// const wareCtx = {
-// 	score: 1, // will transition from 0 to 1 on first prep
-// 	lives: 4,
-// 	difficulty: 1 as 1 | 2 | 3,
-// 	speed: 1,
-// 	time: 0,
-// 	/** The amount of times the game has sped up */
-// 	timesSpeed: 0,
-// 	curGame: null as Minigame,
-// 	set paused(val: boolean) {
-// 		wareApp.gamePaused = val;
-// 		if (val) {
-// 			wareApp.sounds.forEach((sound) => {
-// 				if (!sound.paused) wareApp.pausedSounds.push(sound);
-// 			});
-// 		}
-// 		else {
-// 			wareApp.pausedSounds.forEach((sound, index) => {
-// 				wareApp.pausedSounds.splice(index, 1);
-// 				sound.paused = false;
-// 			});
-// 		}
-// 	},
-
-// 	get paused() {
-// 		return wareApp.gamePaused;
-// 	},
-
-// 	speedUp() {
-// 		const increment = k.choose([0.06, 0.07, 0.08]);
-// 		this.speed = k.clamp(this.speed + this.speed * increment, 0, MAX_SPEED);
-// 	},
 
 // 	/** 1. Clears every previous object
 // 	 * 2. Adds the minigame scene, and the new game objects
