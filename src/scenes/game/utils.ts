@@ -1,4 +1,4 @@
-import { Color } from "kaplay";
+import { Color, GameObj, Tag } from "kaplay";
 import { MinigameCtx, MinigameInput } from "./context/types";
 import games, { modules } from "./games";
 import k from "../../engine";
@@ -65,8 +65,8 @@ export const getInputMessage = (g: Minigame) => {
  * @returns A {@link MinigameInput `MinigameInput`}
  */
 export function getGameInput(g: Minigame): MinigameInput {
-	if (g.isBoss) return "both";
-	if (g.isBoss == true || g.input == "mouse (hidden)" || g.input == "mouse") return "mouse";
+	if (g.isBoss == true) return "both";
+	else if (g.isBoss == false && g.input == "mouse" || g.input == "mouse (hidden)") return "mouse";
 	else return "keys";
 }
 
@@ -100,3 +100,33 @@ export const gameHidesMouse = (g: Minigame) => {
 };
 
 export const isDefaultAsset = (assetName: any) => typeof assetName == "string" && assetName.includes("@");
+
+/** Runs something on all current and future objects with a certain tag
+ * @param t The tag
+ * @param action The something to run
+ */
+export function forAllCurrentAndFuture(t: Tag, action: (obj: GameObj) => void) {
+	k._k.game.root.get(t, { recursive: true }).forEach(action);
+	k.onAdd(t, action);
+	k.onTag((obj, tag) => {
+		if (tag === t) {
+			action(obj);
+		}
+	});
+}
+
+type Func = (...args: any[]) => any;
+/** Define an overload of 2 functions
+ * @param fn1 The first function
+ * @param fn2 The second function
+ */
+export function overload2<A extends Func, B extends Func>(
+	fn1: A,
+	fn2: B,
+): A & B {
+	return ((...args) => {
+		const al = args.length;
+		if (al === fn1.length) return fn1(...args);
+		if (al === fn2.length) return fn2(...args);
+	}) as A & B;
+}

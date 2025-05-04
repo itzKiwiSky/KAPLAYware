@@ -72,7 +72,7 @@ export function addBomb(wareApp: WareApp) {
 		cord.width = width;
 		cordtip.pos.x = width;
 
-		if (conductor) conductor.paused = wareApp.everythingPaused;
+		if (conductor) conductor.paused = wareApp.gamePaused;
 		if (beatsLeft == 0 && !movingFuse) {
 			if (cordstart.exists()) cordstart.destroy();
 			cordtip.opacity = 0;

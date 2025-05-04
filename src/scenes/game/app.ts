@@ -1,4 +1,4 @@
-import { AudioPlay, Color, GameObj, KEventController, Vec2 } from "kaplay";
+import { Asset, AudioPlay, AudioPlayOpt, Color, GameObj, KEventController, MusicData, SoundData, Vec2 } from "kaplay";
 import { createPauseCtx, PauseCtx } from "./context/pause";
 import k from "../../engine";
 
@@ -39,6 +39,7 @@ export function createGameContainer() {
 
 	const sceneObject = cameraObject.add([
 		k.pos(-cameraObject.width / 2, -cameraObject.height / 2),
+		k.timer(),
 	]);
 
 	cameraObject.onUpdate(() => {
@@ -89,24 +90,40 @@ export type WareApp = {
 	readonly cameraObj: GameContainer["camera"];
 	readonly pauseCtx: PauseCtx;
 	backgroundColor: Color;
-	everythingPaused: boolean;
+	gamePaused: boolean;
+
 	updateEvents: KEventController[];
 	drawEvents: KEventController[];
+
 	inputEvents: KEventController[];
+	inputPaused: boolean;
+
 	timerEvents: KEventController[];
+	timerPaused: boolean;
+
 	sounds: AudioPlay[];
-	pausedSounds: AudioPlay[];
-	soundsEnabled: boolean;
-	inputEnabled: boolean;
-	clearAll(): void;
+	soundPaused: boolean;
+	clearAllEvs(): void;
+	clearSounds(): void;
 	resetCamera(): void;
 	handleQuickWatch(): void;
+	play(src: string | SoundData | Asset<SoundData> | Asset<string>, options?: AudioPlayOpt): AudioPlay;
 };
 
 /** Function that creates an instance of {@link WareApp `WareApp`} */
 export function createWareApp(): WareApp {
 	const gameContainer = createGameContainer();
 	const pauseCtx = createPauseCtx();
+
+	/** Wheter EVERYTHING should be paused */
+	let gamePaused = false;
+	let soundPaused = true;
+	let inputPaused = true;
+	let timerPaused = true;
+
+	/** Sounds that were disabled by "soundsEnabled" setter */
+	let disabledSounds: AudioPlay[] = [];
+
 	const app = {
 		get rootObj() {
 			return gameContainer.root;
@@ -124,29 +141,81 @@ export function createWareApp(): WareApp {
 			return pauseCtx;
 		},
 		backgroundColor: k.rgb(),
-		everythingPaused: false,
 		updateEvents: [],
 		drawEvents: [],
-		inputEnabled: true,
 		inputEvents: [],
 		timerEvents: [],
-		soundsEnabled: false,
+		get gamePaused() {
+			return gamePaused;
+		},
+		set gamePaused(val: boolean) {
+			gamePaused = val;
+			app.inputPaused = gamePaused;
+			app.soundPaused = gamePaused;
+			app.rootObj.paused = gamePaused;
+		},
+		get timerPaused() {
+			return timerPaused;
+		},
+		set timerPaused(val: boolean) {
+			timerPaused = val;
+			(this as WareApp).timerEvents.forEach((ev) => ev.paused = timerPaused);
+		},
+		get inputPaused() {
+			return inputPaused;
+		},
+		set inputPaused(val: boolean) {
+			inputPaused = val;
+			(this as WareApp).inputEvents.forEach((ev) => ev.paused = inputPaused);
+		},
+		get soundPaused() {
+			return soundPaused;
+		},
+		set soundPaused(val: boolean) {
+			soundPaused = val;
+
+			if (soundPaused == true) {
+				(this as WareApp).sounds.forEach((sound) => {
+					if (sound.paused) return;
+					// sound is intended to play but sounds were disabled
+					disabledSounds.push(sound);
+					sound.paused = true;
+				});
+			}
+			else if (soundPaused == false) {
+				disabledSounds.forEach((sound) => {
+					// re enable the good sounds
+					sound.paused = false;
+					disabledSounds.splice(disabledSounds.indexOf(sound), 1);
+				});
+			}
+		},
 		sounds: [],
-		pausedSounds: [],
-		clearAll(this: WareApp) {
+		play(this: WareApp, src, options) {
+			const sound = k.play(src, options);
+
+			if (this.soundPaused && sound.paused == false) {
+				sound.paused = true;
+				disabledSounds.push(sound);
+			}
+			this.sounds.push(sound);
+
+			sound.onEnd(() => {
+				this.sounds.splice(this.sounds.indexOf(sound), 1);
+				if (disabledSounds.includes(sound)) disabledSounds.splice(disabledSounds.indexOf(sound), 1);
+			});
+			return sound;
+		},
+		clearAllEvs(this: WareApp) {
 			this.updateEvents.forEach((ev) => ev.cancel());
 			this.drawEvents.forEach((ev) => ev.cancel());
 			this.inputEvents.forEach((ev) => ev.cancel());
 			this.timerEvents.forEach((ev) => ev.cancel());
-			this.sounds.forEach((ev) => ev.stop());
-			this.pausedSounds.forEach((ev) => ev.stop());
 
 			this.updateEvents = [];
 			this.drawEvents = [];
 			this.inputEvents = [];
 			this.timerEvents = [];
-			this.sounds = [];
-			this.pausedSounds = [];
 		},
 		resetCamera(this: WareApp) {
 			this.cameraObj.pos = k.center();
@@ -154,18 +223,23 @@ export function createWareApp(): WareApp {
 			this.cameraObj.angle = 0;
 			this.cameraObj.shake = 0;
 		},
-		handleQuickWatch() {
-			k.quickWatch("updateEvents", this.updateEvents.length);
+		handleQuickWatch(this: WareApp) {
+			k.quickWatch("events", `${this.updateEvents.length}`);
+			k.quickWatch("draw", `${this.drawEvents.length}`);
+			k.quickWatch("sound", `${this.sounds.length} (${!this.soundPaused})`);
+			k.quickWatch("input", `${this.inputEvents.length} (${!this.inputPaused})`);
+			k.quickWatch("timers", `${this.timerEvents.length} (${!this.timerPaused})`);
 		},
-	} as WareApp;
+		clearSounds(this: WareApp) {
+			this.sounds.forEach((sound) => sound.stop());
+			this.sounds = [];
+			disabledSounds.forEach((sound) => sound.stop());
+			disabledSounds = [];
+		},
+	} satisfies WareApp;
 
 	gameContainer.root.onUpdate(() => {
 		gameContainer.box.color = app.backgroundColor;
-		gameContainer.root.paused = app.everythingPaused;
-
-		// TODO: Figure out a way to pause all events on everything paused and inside of wareEngine also add the gameRunning condition for pausing
-		// TODO: maybe would be as easy as attaching them to sceneObj when the input game obj thing gets fixed
-		app.inputEvents.forEach((ev) => ev.paused = app.everythingPaused || !app.inputEnabled);
 	});
 
 	return app;

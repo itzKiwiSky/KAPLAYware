@@ -1,6 +1,6 @@
-import { Color, KEventController, Key } from "kaplay";
-import { gameAPIs, generalEventControllers, timerControllers } from "../api";
-import { getGameID, isDefaultAsset, mergeWithRef, pickKeysInObj } from "../utils";
+import { Color, GameObj, KEventController, Key, Tag } from "kaplay";
+import { gameAPIs } from "../api";
+import { forAllCurrentAndFuture, getGameID, isDefaultAsset, mergeWithRef, overload2, pickKeysInObj } from "../utils";
 import { WareApp } from "../app";
 import { Kaplayware } from "../kaplayware";
 import { InputButton, MinigameAPI, MinigameCtx, StartCtx } from "./types";
@@ -37,45 +37,9 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 		},
 		play(src, options) {
 			// if sound name is string, check for @, else just send it
-			const sound = k.play(typeof src == "string" ? (src.startsWith("@") ? src : `${getGameID(game)}-${src}`) : src, options);
-
-			const newSound = {
-				...sound,
-				set paused(param: boolean) {
-					if (wareApp.soundsEnabled) {
-						sound.paused = param;
-						return;
-					}
-
-					// ALL OF THIS HAPPENS IF YOU CAN'T PLAY SOUNDS (queue stuff)
-					sound.paused = true;
-
-					// TODO: Figure out this
-					// // this means that it was queued to play but the user paused it
-					// if (wareApp.queuedSounds.includes(sound) && param == true) {
-					// 	wareApp.queuedSounds.splice(wareApp.queuedSounds.indexOf(sound), 1);
-					// }
-
-					// // this means the user removed it from queue but wants to add it again probably
-					// if (!wareApp.queuedSounds.includes(sound) && param == false) {
-					// 	wareApp.queuedSounds.push(sound);
-					// }
-				},
-				get paused() {
-					return sound.paused;
-				},
-			};
-
-			// if can't play sounds and the user intended to play it at start, pause it
-			if (!wareApp.soundsEnabled) {
-				if (!sound.paused) {
-					// wareApp.queuedSounds.push(sound);
-					sound.paused = true;
-				}
-			}
-
-			wareApp.sounds.push(newSound);
-			return newSound;
+			src = typeof src == "string" ? (src.startsWith("@") ? src : `${getGameID(game)}-${src}`) : src;
+			const sound = wareApp.play(src, options);
+			return sound;
 		},
 		area(opt) {
 			return {
@@ -109,6 +73,9 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 		},
 		shader(id, uniform) {
 			return k.shader(`${getGameID(game)}-${id}`, uniform);
+		},
+		get(tag, opts) {
+			return wareApp.sceneObj.get(tag, opts);
 		},
 		fixed() {
 			let fixed = true;
@@ -157,47 +124,107 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 			wareApp.inputEvents.push(ev);
 			return ev;
 		},
-	};
-
-	// TODO: figure out the overload issue
-	startCtx["onDraw"] = (...args: any[]) => {
-		// let ev: KEventController = null;
-		// if (typeof args[0] == "string") {
-		// 	const taggedChild = wareApp.sceneObj.get(args[0]);
-		// 	taggedChild.forEach((child) => child.onDraw(args[1]));
-		// 	wareApp.sceneObj.children.forEach((child) => {
-		// 		if (child.is(args[0])) child.onDraw(args[1]);
-		// 	});
-		// 	// how to push to drawEvents? how to return ev?
-		// }
-		// else if (typeof args[0] == "function") {
-		// 	const ev = wareApp.sceneObj.onDraw(args[0]);
-		// 	wareApp.drawEvents.push(ev);
-		// 	return ev;
-		// }
-
-		// return ev;
-		const ev = wareApp.sceneObj.on("draw", ...args as [any]);
-		wareApp.drawEvents.push(ev);
-		return ev;
-	};
-
-	generalEventControllers.forEach((api) => {
-		startCtx[api] = (...args: any[]) => {
-			// @ts-ignore
-			const ev = wareApp.sceneObj[api](...args);
-			wareApp.updateEvents.push(ev);
-			return ev;
-		};
-	});
-
-	timerControllers.forEach((api) => {
-		startCtx[api] = (...args: any[]) => {
-			// @ts-ignore
-			const ev = k[api](...args);
+		// timer controllers
+		tween(from, to, duration, setValue, easeFunc) {
+			const ev = wareApp.sceneObj.tween(from, to, duration, setValue, easeFunc);
 			wareApp.timerEvents.push(ev);
 			return ev;
+		},
+		wait(n, action) {
+			const ev = wareApp.sceneObj.wait(n, action);
+			wareApp.timerEvents.push(ev);
+			return ev;
+		},
+		loop(t, action, maxLoops, waitFirst) {
+			const ev = wareApp.sceneObj.loop(t, action, maxLoops, waitFirst);
+			wareApp.timerEvents.push(ev);
+			return ev;
+		},
+		// general event controllers
+		onCollide(t1, t2, action) {
+			const ev = k.onCollide(t1, t2, action);
+			wareApp.updateEvents.push(ev);
+			return ev;
+		},
+		onCollideUpdate(t1, t2, action) {
+			const ev = k.onCollideUpdate(t1, t2, action);
+			wareApp.updateEvents.push(ev);
+			return ev;
+		},
+		onCollideEnd(t1, t2, action) {
+			const ev = k.onCollideEnd(t1, t2, action);
+			wareApp.updateEvents.push(ev);
+			return ev;
+		},
+	};
+
+	startCtx["onUpdate"] = overload2((action: () => void): KEventController => {
+		const obj = wareApp.sceneObj.add([{ update: action }]);
+		const ev: KEventController = {
+			get paused() {
+				return obj.paused;
+			},
+			set paused(p) {
+				obj.paused = p;
+			},
+			cancel: () => obj.destroy(),
 		};
+		wareApp.updateEvents.push(ev);
+		return ev;
+	}, (tag: Tag, action: (obj: GameObj) => void) => {
+		const ev = k.on("update", tag, action);
+		wareApp.updateEvents.push(ev);
+		return ev;
+	});
+
+	startCtx["onDraw"] = overload2((action: () => void): KEventController => {
+		const obj = wareApp.sceneObj.add([{ draw: action }]);
+		const ev: KEventController = {
+			get paused() {
+				return obj.hidden;
+			},
+			set paused(p) {
+				obj.hidden = p;
+			},
+			cancel: () => obj.destroy(),
+		};
+		wareApp.drawEvents.push(ev);
+		return ev;
+	}, (tag: Tag, action: (obj: GameObj) => void) => {
+		const ev = k.on("draw", tag, action);
+		wareApp.drawEvents.push(ev);
+		return ev;
+	});
+
+	// another overload
+	startCtx["onClick"] = overload2((action: () => void) => {
+		const ev = wareApp.sceneObj.onMousePress(action);
+		wareApp.inputEvents.push(ev);
+		return ev;
+	}, (tag: Tag, action: (obj: GameObj) => void) => {
+		const events: KEventController[] = [];
+		let paused: boolean = false;
+
+		forAllCurrentAndFuture(tag, (obj) => {
+			if (!obj.area) {
+				throw new Error(
+					"onClick() requires the object to have area() component",
+				);
+			}
+			events.push(obj.onClick(() => action(obj)));
+		});
+		const ev: KEventController = {
+			get paused() {
+				return paused;
+			},
+			set paused(val: boolean) {
+				paused = val;
+			},
+			cancel() {
+				events.forEach((ev) => ev.cancel());
+			},
+		};
+		return ev;
 	});
 
 	return startCtx;
@@ -262,14 +289,17 @@ export function createMinigameAPI(wareApp: WareApp, wareEngine?: Kaplayware): Mi
 			return ev;
 		},
 		isInputButtonPressed: (btn) => {
+			if (wareApp.inputPaused) return false;
 			if (btn == "click") return k.isMousePressed("left");
 			else return k.isKeyPressed(dirToKeys(btn));
 		},
 		isInputButtonDown: (btn) => {
+			if (wareApp.inputPaused) return false;
 			if (btn == "click") return k.isMouseDown("left");
 			else return k.isKeyDown(dirToKeys(btn));
 		},
 		isInputButtonReleased: (btn) => {
+			if (wareApp.inputPaused) return false;
 			if (btn == "click") return k.isMouseReleased("left");
 			else return k.isKeyDown(dirToKeys(btn));
 		},
@@ -307,7 +337,15 @@ export function createMinigameAPI(wareApp: WareApp, wareEngine?: Kaplayware): Mi
 			return wareEngine.speed ?? 1;
 		},
 		get timeLeft() {
-			return wareEngine.timeLeft ?? 10;
+			return wareEngine.timeLeft ?? 20;
+		},
+		// TODO: figure out these, probably do wareEngine.curDuration and curPrompt (shitty)
+		// might just remove idk not really necessary
+		get duration() {
+			return 1;
+		},
+		get prompt() {
+			return "";
 		},
 	};
 }

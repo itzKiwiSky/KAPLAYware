@@ -137,6 +137,10 @@ export type MinigameAPI = {
 	readonly lives: number;
 	/** The time left for the minigame to finish */
 	readonly timeLeft: number;
+	/** The final duration of your minigame */
+	readonly duration: number;
+	/** The final prompt of  your minigame */
+	readonly prompt: string;
 };
 
 /** The context for the allowed functions in a minigame */

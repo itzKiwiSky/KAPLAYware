@@ -17,7 +17,6 @@ const getGame: Minigame = {
 		ctx.loadSound("rustle", "sounds/bushrustle.mp3");
 	},
 	start(ctx) {
-		ctx.speed = 1.6;
 		const SPEED = 300 * ctx.speed;
 		ctx.add([ctx.sprite("grass")]);
 

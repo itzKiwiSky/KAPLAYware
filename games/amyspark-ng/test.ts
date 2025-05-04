@@ -12,6 +12,7 @@ const testGame: Minigame = {
 		const bean = ctx.add([
 			ctx.sprite("@bean"),
 			ctx.pos(),
+			"bean",
 		]);
 
 		const timeText = ctx.add([
@@ -24,7 +25,14 @@ const testGame: Minigame = {
 			timeText.text = ctx.timeLeft.toFixed(2);
 		});
 
+		// this runs before the game even starts, bruh
+		ctx.wait(1, () => {
+			ctx.debug.log("finished waiting");
+		});
+
 		ctx.onUpdate(() => {
+			// ctx.debug.log("im alive!!!");
+
 			ctx.setRGB(ctx.lerp(ctx.getRGB(), ctx.winState == true ? ctx.mulfok.GREEN : ctx.winState == false ? ctx.mulfok.RED : ctx.WHITE, 0.5));
 
 			const angle = (ctx.time() * ctx.speed) % 360;

@@ -4,8 +4,6 @@ import { MinigameInput } from "../context/types";
 import { mergeWithRef } from "../utils";
 
 export function addTextPrompt(wareApp: WareApp, promptText: string, speed = 1) {
-	const ev = new k.KEvent();
-
 	const promptObj = wareApp.rootObj.add([
 		k.color(k.WHITE),
 		k.fixed(),
@@ -45,16 +43,14 @@ export function addTextPrompt(wareApp: WareApp, promptText: string, speed = 1) {
 		wareApp.pauseCtx.tween(0, 1.2, 0.25 / speed, (p) => promptObj.scale.x = p, k.easings.easeOutExpo);
 		wareApp.pauseCtx.tween(0, 0.9, 0.25 / speed, (p) => promptObj.scale.y = p, k.easings.easeOutExpo).onEnd(() => {
 			wareApp.pauseCtx.tween(promptObj.scale, k.vec2(1), 0.25 / speed, (p) => promptObj.scale = p, k.easings.easeOutElastic).onEnd(() => {
-				ev.trigger();
+				wareApp.pauseCtx.tween(1, 0, 0.25 / speed, (p) => {
+					promptObj.opacity = p;
+				}).onEnd(() => promptObj.destroy());
 			});
 		});
 	}
 
-	return mergeWithRef(promptObj, {
-		onEnd(action: () => void) {
-			return ev.add(action);
-		},
-	});
+	return promptObj;
 }
 
 export function addInputPrompt(wareApp: WareApp, input: MinigameInput, speed = 1) {
@@ -83,12 +79,11 @@ export function addInputPrompt(wareApp: WareApp, input: MinigameInput, speed = 1
 	wareApp.pauseCtx.tween(k.vec2(0), k.vec2(1), 0.25 / speed, (p) => inputBg.scale = p, k.easings.easeOutExpo);
 	wareApp.pauseCtx.tween(k.vec2(0), k.vec2(1), 0.25 / speed, (p) => inputPrompt.scale = p, k.easings.easeOutElastic);
 
-	prompt.end = () => {
-		const tween = wareApp.pauseCtx.tween(k.vec2(1), k.vec2(0), 0.25 / speed, (p) => inputBg.scale = p, k.easings.easeOutExpo);
-		tween.onEnd(() => {
-			prompt.destroy();
+	wareApp.pauseCtx.wait(0.5 / speed, () => {
+		wareApp.pauseCtx.tween(k.vec2(1), k.vec2(0), 0.25 / speed, (p) => inputBg.scale = p, k.easings.easeOutExpo).onEnd(() => {
+			inputPrompt.destroy();
 		});
-		return tween;
-	};
+	});
+
 	return prompt;
 }

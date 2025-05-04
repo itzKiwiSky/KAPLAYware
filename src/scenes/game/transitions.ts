@@ -2,7 +2,7 @@ import k from "../../engine";
 import { WareApp } from "./app";
 import { Kaplayware } from "./kaplayware";
 
-// TODO: rewrite a bit how these work, so it's liek a transition engine of some sorts? i had an idea but i forgor
+// make a "trans context" for being able to pause thigns here idk
 
 /** The many animations a transition can do */
 export type TransitionState = "win" | "lose" | "prep" | "speed" | "bossPrep" | "bossWin";
@@ -227,7 +227,7 @@ export function runTransition(states: TransitionState[], wareApp: WareApp, wareE
 		chillbutterfly.frame = 0;
 
 		const prepConductor = k.conductor(140 * speed);
-		trans.onUpdate(() => prepConductor.paused = wareApp.everythingPaused);
+		trans.onUpdate(() => prepConductor.paused = wareApp.gamePaused);
 
 		// page funny
 		pauseCtx.tween(fallingPage.scale.y, 1.8, 0.35 / speed, (p) => fallingPage.scale.y = p, k.easings.easeOutExpo).onEnd(() => {
