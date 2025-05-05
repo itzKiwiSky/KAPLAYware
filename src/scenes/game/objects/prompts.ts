@@ -54,9 +54,7 @@ export function addTextPrompt(wareApp: WareApp, promptText: string, speed = 1) {
 }
 
 export function addInputPrompt(wareApp: WareApp, input: MinigameInput, speed = 1) {
-	const prompt = wareApp.rootObj.add([{
-		end() {},
-	}]);
+	const prompt = wareApp.rootObj.add([k.z(2)]);
 
 	const inputBg = prompt.add([
 		k.sprite("input-circle"),

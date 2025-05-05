@@ -1,51 +1,35 @@
-import k from "../../engine";
-import { WareApp } from "./app";
-import { Kaplayware } from "./kaplayware";
+import k from "../../../engine";
+import { defineTransition } from "./makeTransition";
 
-// make a "trans context" for being able to pause thigns here idk
-
-/** The many animations a transition can do */
-export type TransitionState = "win" | "lose" | "prep" | "speed" | "bossPrep" | "bossWin";
-
-export function runTransition(states: TransitionState[], wareApp: WareApp, wareEngine: Kaplayware) {
+export const chillTransition = defineTransition((parent, camera, stageManager, wareApp, wareEngine) => {
 	const speed = wareEngine.speed;
 	const difficulty = wareEngine.difficulty;
 	const lives = wareEngine.lives;
 	const score = wareEngine.score;
+	const stages = stageManager.stages;
 
 	const conductor = k.conductor(140 * speed);
-
-	const stateStartEvent = new k.KEvent<TransitionState[]>();
-	const stateEndEvent = new k.KEvent<TransitionState[]>();
-	const transitionEndEvent = new k.KEvent<TransitionState[]>();
-	const inputPromptEvent = new k.KEvent();
-	const promptEvent = new k.KEvent();
-
 	const pauseCtx = wareApp.pauseCtx;
 
-	// woke agenda
-	// "trans" controls scale and position of the transitions, obj is just to attach, don't remove this
-	const trans = wareApp.rootObj.add([k.scale(), k.pos(k.center()), k.anchor("center"), k.state(states[0], states)]);
-	const objs = trans.add([k.pos(-k.width() / 2, -k.height() / 2)]);
-	objs.add([k.sprite("trans1-bg")]);
-	objs.add([k.sprite("trans1-grass")]);
-	objs.add([k.sprite("trans1-table")]);
+	parent.add([k.sprite("trans1-bg")]);
+	parent.add([k.sprite("trans1-grass")]);
+	parent.add([k.sprite("trans1-table")]);
 
-	trans.onUpdate(() => {
+	parent.onUpdate(() => {
 		conductor.paused = true;
 	});
 
 	const ZOOM_SCALE = k.vec2(5.9);
 	const ZOOM_Y = 827;
 
-	const coffee = objs.add([
+	const coffee = parent.add([
 		k.sprite("trans1-coffee"),
 		k.pos(65, 290),
 		k.anchor("center"),
 	]);
 	coffee.play("hot", { speed: 8 * speed, loop: true });
 
-	const flowerpot = objs.add([
+	const flowerpot = parent.add([
 		k.sprite("trans1-flowerpot"),
 		k.pos(680, 280),
 		k.anchor("top"),
@@ -53,7 +37,7 @@ export function runTransition(states: TransitionState[], wareApp: WareApp, wareE
 
 	// add flowers
 	for (let i = 0; i < difficulty; i++) {
-		const flower = objs.add([
+		const flower = parent.add([
 			k.sprite("trans1-flower"),
 			k.pos(flowerpot.pos.x, flowerpot.pos.y + 2),
 			k.anchor("bot"),
@@ -61,9 +45,9 @@ export function runTransition(states: TransitionState[], wareApp: WareApp, wareE
 			"flower",
 		]);
 
-		let flowerGap = ((flowerpot.width * 0.8) - flower.width * objs.get("flower").length) / (objs.get("flower").length + 1);
+		let flowerGap = ((flowerpot.width * 0.8) - flower.width * parent.get("flower").length) / (parent.get("flower").length + 1);
 		let flowerX = flowerGap;
-		objs.get("flower").forEach((flower, index) => {
+		parent.get("flower").forEach((flower, index) => {
 			flower.pos.x = (flowerpot.pos.x - 10) + flowerX;
 			flowerX += flowerGap + flower.width;
 		});
@@ -72,10 +56,10 @@ export function runTransition(states: TransitionState[], wareApp: WareApp, wareE
 	}
 
 	// add hearts
-	for (let i = 0; i < (states[0] == "lose" ? lives + 1 : lives); i++) {
+	for (let i = 0; i < (stages[0] == "lose" ? lives + 1 : lives); i++) {
 		let shake = 0;
 
-		const heart = objs.add([
+		const heart = parent.add([
 			k.sprite("trans1-heart"),
 			k.pos(220, 60),
 			k.scale(),
@@ -110,47 +94,47 @@ export function runTransition(states: TransitionState[], wareApp: WareApp, wareE
 	}
 
 	// TODO: Fix all the screen stuff when the new screen aspect ratio comes out
-	const screen = objs.add([
+	const screen = parent.add([
 		k.sprite("trans1-screen"),
 		k.pos(396, 214),
 		k.opacity(),
 		k.anchor("center"),
 	]);
 
-	const computer = objs.add([
+	const computer = parent.add([
 		k.sprite("trans1-computer"),
 		k.pos(236, 130),
 	]);
 
-	const chillguy = objs.add([
+	const chillguy = parent.add([
 		k.sprite("trans1-chillguy"),
 		k.scale(),
 		k.pos(214, 599),
 		k.anchor("bot"),
 	]);
 
-	const chillcat = objs.add([
+	const chillcat = parent.add([
 		k.sprite("trans1-chillcat"),
 		k.scale(),
 		k.pos(598, 600),
 		k.anchor("bot"),
 	]);
 
-	const chillbutterfly = objs.add([
+	const chillbutterfly = parent.add([
 		k.sprite("trans1-chillbutterfly"),
 		k.scale(),
 		k.pos(470, 491),
 		k.anchor("center"),
 	]);
 
-	const calendar = objs.add([
+	const calendar = parent.add([
 		k.sprite("trans1-calendar"),
 		k.pos(714, 84),
 		k.anchor("center"),
 	]);
 
 	function addCalendarPage(score: number) {
-		const fallingPage = objs.add([
+		const fallingPage = parent.add([
 			k.sprite("trans1-page"),
 			k.pos(calendar.pos.sub(calendar.width / 2, calendar.height / 2)),
 			k.anchor("top"),
@@ -176,13 +160,8 @@ export function runTransition(states: TransitionState[], wareApp: WareApp, wareE
 
 	const fallingPage = addCalendarPage(score - 1);
 
-	function destroy() {
-		trans.destroy();
-		pauseCtx.resetContext();
-	}
-
 	conductor.onBeat((beat) => {
-		objs.get("flower").forEach((flower) => {
+		parent.get("flower").forEach((flower) => {
 			if (difficulty == 1) {
 				pauseCtx.tween(0.6, 1, 0.35 / speed, (p) => flower.scale.y = p, k.easings.easeOutBack);
 			}
@@ -208,17 +187,16 @@ export function runTransition(states: TransitionState[], wareApp: WareApp, wareE
 	});
 
 	function zoomOut() {
-		pauseCtx.tween(ZOOM_Y, k.center().y, 0.5 / speed, (p) => trans.pos.y = p, k.easings.easeOutQuint);
-		pauseCtx.tween(ZOOM_SCALE, k.vec2(1), 0.5 / speed, (p) => trans.scale = p, k.easings.easeOutQuint);
+		pauseCtx.tween(ZOOM_Y, k.center().y, 0.5 / speed, (p) => camera.pos.y = p, k.easings.easeOutQuint);
+		pauseCtx.tween(ZOOM_SCALE, k.vec2(1), 0.5 / speed, (p) => camera.scale = p, k.easings.easeOutQuint);
 	}
 
 	function zoomIn() {
-		pauseCtx.tween(trans.pos.y, ZOOM_Y, 1 / speed, (p) => trans.pos.y = p, k.easings.easeOutQuint);
-		pauseCtx.tween(trans.scale, ZOOM_SCALE, 1 / speed, (p) => trans.scale = p, k.easings.easeOutQuint);
+		pauseCtx.tween(camera.pos.y, ZOOM_Y, 1 / speed, (p) => camera.pos.y = p, k.easings.easeOutQuint);
+		pauseCtx.tween(camera.scale, ZOOM_SCALE, 1 / speed, (p) => camera.scale = p, k.easings.easeOutQuint);
 	}
 
-	trans.onStateEnter("prep", () => {
-		stateStartEvent.trigger("prep");
+	stageManager.onStageStart("prep", () => {
 		pauseCtx.play("prepJingle", { speed: speed });
 
 		chillguy.frame = 0;
@@ -227,7 +205,7 @@ export function runTransition(states: TransitionState[], wareApp: WareApp, wareE
 		chillbutterfly.frame = 0;
 
 		const prepConductor = k.conductor(140 * speed);
-		trans.onUpdate(() => prepConductor.paused = wareApp.gamePaused);
+		parent.onUpdate(() => prepConductor.paused = wareApp.gamePaused);
 
 		// page funny
 		pauseCtx.tween(fallingPage.scale.y, 1.8, 0.35 / speed, (p) => fallingPage.scale.y = p, k.easings.easeOutExpo).onEnd(() => {
@@ -246,14 +224,14 @@ export function runTransition(states: TransitionState[], wareApp: WareApp, wareE
 		newPage.z = fallingPage.z - 1;
 
 		// tween the first one here bc conductor doesn't do beat 0
-		const hearts = objs.get("heart");
+		const hearts = parent.get("heart");
 		pauseCtx.tween(k.vec2(1.5), k.vec2(1), 0.35 / speed, (p) => hearts[0].scale = p, k.easings.easeOutQuint);
 		prepConductor.onBeat((beat) => {
 			if (beat == 1) {
-				inputPromptEvent.trigger();
+				stageManager.triggerInputPrompt();
 			}
 			else if (beat == 2) {
-				promptEvent.trigger();
+				stageManager.triggerPrompt();
 				// set gamebox
 				wareApp.boxObj.width = screen.width;
 				wareApp.boxObj.height = screen.height;
@@ -275,15 +253,14 @@ export function runTransition(states: TransitionState[], wareApp: WareApp, wareE
 					k.easings.easeOutQuint,
 				);
 				pauseCtx.tween(wareApp.boxObj.pos, k.center(), 0.5 / speed, (p) => wareApp.boxObj.pos = p, k.easings.easeOutQuint).onEnd(() => {
-					stateEndEvent.trigger("prep");
+					stageManager.endStage("prep");
 					prepConductor.destroy();
 				});
 			}
 		});
 	});
 
-	trans.onStateEnter("win", () => {
-		stateStartEvent.trigger("win");
+	stageManager.onStageStart("win", () => {
 		screen.opacity = 0;
 		zoomOut();
 		pauseCtx.tween(0, 1, 0.5 / speed, (p) => screen.opacity = p, k.easings.easeOutQuint);
@@ -297,7 +274,7 @@ export function runTransition(states: TransitionState[], wareApp: WareApp, wareE
 		);
 
 		const winConductor = k.conductor(140 * speed);
-		const hearts = objs.get("heart");
+		const hearts = parent.get("heart");
 		winConductor.onBeat(() => {
 		});
 
@@ -307,14 +284,13 @@ export function runTransition(states: TransitionState[], wareApp: WareApp, wareE
 		chillcat.frame = 1;
 		chillbutterfly.frame = 1;
 		pauseCtx.wait(sound.duration() / speed, () => {
-			stateEndEvent.trigger("win");
+			stageManager.endStage("win");
 		});
 	});
 
-	trans.onStateEnter("lose", () => {
-		stateStartEvent.trigger("lose");
-		pauseCtx.tween(ZOOM_Y, k.center().y, 0.5 / speed, (p) => trans.pos.y = p, k.easings.easeOutQuint);
-		pauseCtx.tween(ZOOM_SCALE, k.vec2(1), 0.5 / speed, (p) => trans.scale = p, k.easings.easeOutQuint);
+	stageManager.onStageStart("lose", () => {
+		pauseCtx.tween(ZOOM_Y, k.center().y, 0.5 / speed, (p) => camera.pos.y = p, k.easings.easeOutQuint);
+		pauseCtx.tween(ZOOM_SCALE, k.vec2(1), 0.5 / speed, (p) => camera.scale = p, k.easings.easeOutQuint);
 		pauseCtx.tween(0, 1, 0.25 / speed, (p) => screen.opacity = p, k.easings.easeOutQuint);
 
 		const sound = pauseCtx.play("loseJingle", { speed: speed });
@@ -323,22 +299,21 @@ export function runTransition(states: TransitionState[], wareApp: WareApp, wareE
 		chillcat.frame = 2;
 		chillbutterfly.frame = 2;
 
-		const dyingHeart = objs.get("heart")[objs.get("heart").length - 1];
+		const dyingHeart = parent.get("heart")[parent.get("heart").length - 1];
 		dyingHeart.kill();
-		objs.get("heart").forEach((heart, index, arr) => {
+		parent.get("heart").forEach((heart, index, arr) => {
 			if (index < arr.length - 1) heart.shake(7);
 		});
 
 		pauseCtx.wait(sound.duration() / speed, () => {
-			stateEndEvent.trigger("lose");
+			stageManager.endStage("lose");
 		});
 	});
 
-	trans.onStateEnter("speed", () => {
-		stateStartEvent.trigger("speed");
+	stageManager.onStageStart("speed", () => {
 		const sound = pauseCtx.play("speedJingle", { speed: speed });
 
-		const overlay = objs.add([
+		const overlay = parent.add([
 			k.rect(k.width(), k.height()),
 			k.color(),
 			k.opacity(0.5),
@@ -351,33 +326,30 @@ export function runTransition(states: TransitionState[], wareApp: WareApp, wareE
 
 		pauseCtx.wait(sound.duration() / speed, () => {
 			overlay.destroy();
-			stateEndEvent.trigger("speed");
+			stageManager.endStage("speed");
 		});
 	});
 
-	// TODO: Do these
-	trans.onStateEnter("bossPrep", () => {
-		stateStartEvent.trigger("bossPrep");
+	stageManager.onStageStart("bossPrep", () => {
 		const sound = pauseCtx.play("bossJingle", { speed: speed });
 
-		const bossText = objs.add([
+		const bossText = parent.add([
 			k.text("BOSS"),
 			k.anchor("center"),
 			k.pos(k.center()),
 		]);
 
 		pauseCtx.wait(sound.duration() / speed, () => {
-			stateEndEvent.trigger("bossPrep");
+			stageManager.endStage("bossPrep");
 			bossText.destroy();
 		});
 	});
 
-	trans.onStateEnter("bossWin", () => {
-		stateStartEvent.trigger("bossWin");
+	stageManager.onStageStart("bossWin", () => {
 		const sound = pauseCtx.play("bossWinJingle", { speed: speed });
 
-		pauseCtx.tween(ZOOM_Y, k.center().y, 0.5 / speed, (p) => trans.pos.y = p, k.easings.easeOutQuint);
-		pauseCtx.tween(ZOOM_SCALE, k.vec2(1), 0.5 / speed, (p) => trans.scale = p, k.easings.easeOutQuint);
+		pauseCtx.tween(ZOOM_Y, k.center().y, 0.5 / speed, (p) => camera.pos.y = p, k.easings.easeOutQuint);
+		pauseCtx.tween(ZOOM_SCALE, k.vec2(1), 0.5 / speed, (p) => camera.scale = p, k.easings.easeOutQuint);
 		pauseCtx.tween(0, 1, 0.25 / speed, (p) => screen.opacity = p, k.easings.easeOutQuint);
 		chillguy.frame = 1;
 		screen.frame = 1;
@@ -385,41 +357,25 @@ export function runTransition(states: TransitionState[], wareApp: WareApp, wareE
 		chillbutterfly.frame = 1;
 
 		pauseCtx.wait(sound.duration() / speed, () => {
-			stateEndEvent.trigger("bossWin");
+			stageManager.endStage("bossWin");
 		});
 	});
 
-	stateEndEvent.add((state) => {
-		if (states.indexOf(state) == states.length - 1) transitionEndEvent.trigger();
-		else trans.enterState(states[states.indexOf(state) + 1]);
+	stageManager.onStageStart("bossLose", () => {
+		const sound = pauseCtx.play("loseJingle", { speed: speed });
+
+		pauseCtx.tween(ZOOM_Y, k.center().y, 0.5 / speed, (p) => camera.pos.y = p, k.easings.easeOutQuint);
+		pauseCtx.tween(ZOOM_SCALE, k.vec2(1), 0.5 / speed, (p) => camera.scale = p, k.easings.easeOutQuint);
+		pauseCtx.tween(0, 1, 0.25 / speed, (p) => screen.opacity = p, k.easings.easeOutQuint);
+		chillguy.frame = 2;
+		screen.frame = 2;
+		chillcat.frame = 2;
+		chillbutterfly.frame = 2;
+
+		pauseCtx.wait(sound.duration() / speed, () => {
+			stageManager.endStage("bossLose");
+		});
 	});
+});
 
-	return {
-		destroy,
-
-		onStateStart(stateName: TransitionState, action: () => void) {
-			return stateStartEvent.add((state) => {
-				if (stateName == state) action();
-			});
-		},
-
-		onStateEnd(stateName: TransitionState, action: () => void) {
-			return stateStartEvent.add((state) => {
-				if (stateName == state) action();
-			});
-		},
-
-		/** Runs when all the states passed end */
-		onTransitionEnd(action: () => void) {
-			return transitionEndEvent.add(action);
-		},
-
-		onInputPromptTime(action: () => void) {
-			return inputPromptEvent.add(action);
-		},
-
-		onPromptTime(action: () => void) {
-			return promptEvent.add(action);
-		},
-	};
-}
+export default chillTransition;

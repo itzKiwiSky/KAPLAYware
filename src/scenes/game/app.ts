@@ -1,6 +1,7 @@
-import { Asset, AudioPlay, AudioPlayOpt, Color, GameObj, KEventController, MusicData, SoundData, Vec2 } from "kaplay";
+import { Asset, AudioPlay, AudioPlayOpt, Color, GameObj, KEventController, MusicData, SoundData, TimerController, TweenController, Vec2 } from "kaplay";
 import { createPauseCtx, PauseCtx } from "./context/pause";
 import k from "../../engine";
+import { Conductor, createConductor } from "../../plugins/conductor";
 
 /** Creates a cute little object that contains a buncha game objects that can hold, a ware instance
  * @returns An object with a lot of objects
@@ -98,11 +99,16 @@ export type WareApp = {
 	inputEvents: KEventController[];
 	inputPaused: boolean;
 
-	timerEvents: KEventController[];
+	timerEvents: (TweenController | TimerController)[];
 	timerPaused: boolean;
+	addTimer<T extends TimerController | TweenController>(timer: T): T;
 
 	sounds: AudioPlay[];
 	soundPaused: boolean;
+	addSound(snd: AudioPlay): AudioPlay;
+
+	createConductor(bpm: number, startPaused?: boolean): Conductor;
+
 	clearAllEvs(): void;
 	clearSounds(): void;
 	resetCamera(): void;
@@ -123,6 +129,8 @@ export function createWareApp(): WareApp {
 
 	/** Sounds that were disabled by "soundsEnabled" setter */
 	let disabledSounds: AudioPlay[] = [];
+
+	let conductors: Conductor[] = [];
 
 	const app = {
 		get rootObj() {
@@ -150,9 +158,11 @@ export function createWareApp(): WareApp {
 		},
 		set gamePaused(val: boolean) {
 			gamePaused = val;
+			app.timerPaused = gamePaused;
 			app.inputPaused = gamePaused;
 			app.soundPaused = gamePaused;
 			app.rootObj.paused = gamePaused;
+			conductors.forEach((conducto) => conducto.paused = gamePaused);
 		},
 		get timerPaused() {
 			return timerPaused;
@@ -191,6 +201,20 @@ export function createWareApp(): WareApp {
 			}
 		},
 		sounds: [],
+		addSound(this: WareApp, sound: AudioPlay) {
+			this.sounds.push(sound);
+			sound.onEnd(() => {
+				this.sounds.splice(this.sounds.indexOf(sound), 1);
+			});
+			return sound;
+		},
+		addTimer(this: WareApp, timer) {
+			this.timerEvents.push(timer);
+			timer.onEnd(() => {
+				this.timerEvents.splice(this.timerEvents.indexOf(timer), 1);
+			});
+			return timer;
+		},
 		play(this: WareApp, src, options) {
 			const sound = k.play(src, options);
 
@@ -235,6 +259,11 @@ export function createWareApp(): WareApp {
 			this.sounds = [];
 			disabledSounds.forEach((sound) => sound.stop());
 			disabledSounds = [];
+		},
+		createConductor(this: WareApp, bpm, startPaused = false) {
+			const conductor = createConductor(bpm, startPaused);
+			conductors.push(conductor);
+			return conductor;
 		},
 	} satisfies WareApp;
 

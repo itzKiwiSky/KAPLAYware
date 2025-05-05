@@ -3,13 +3,14 @@ import { createWareApp } from "./app";
 import { createGameCtx } from "./context/game";
 import games from "./games";
 import { gameHidesMouse, getGameByID, getGameColor, getGameDuration, getGameID, getGameInput } from "./utils";
-import { runTransition, TransitionState } from "./transitions";
 import { MinigameCtx, MinigameInput } from "./context/types";
 import { addBomb, WareBomb } from "./objects/bomb";
 import k from "../../engine";
 import cursor from "../../plugins/cursor";
 import Minigame from "./minigameType";
 import { addInputPrompt, addTextPrompt } from "./objects/prompts";
+import { TransitionStage } from "./transitions/makeTransition";
+import chillTransition from "./transitions/chill";
 
 /** Certain options to instantiate kaplayware (ware-engine) */
 export type KAPLAYwareOpts = {
@@ -26,6 +27,8 @@ export type Kaplayware = {
 	difficulty: 1 | 2 | 3;
 	curGame: Minigame;
 	curContext: MinigameCtx;
+	readonly curPrompt: string;
+	readonly curDuration: number;
 	timePaused: boolean;
 	gamePaused: boolean;
 	minigameHistory: string[];
@@ -52,10 +55,9 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 	let currentBomb: WareBomb = null;
 	let previousGame: Minigame = null;
 
+	// TODO: this is not working properly, getting boss radnomly
 	const getRandomGame = () => {
 		let possibleGames: Minigame[] = [...opt.games];
-
-		// TODO: figure out why this doesn't work properly
 
 		if (shouldBoss()) {
 			possibleGames = possibleGames.filter((game) => game.isBoss == true);
@@ -63,6 +65,7 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 
 		// now check for history and repeatedness and get a new one
 		possibleGames = possibleGames.filter((game) => {
+			if (possibleGames.every((g) => g.isBoss)) return true;
 			if (wareEngine.minigameHistory.length == 0 || opt.games.length == 1 || possibleGames.length == 1) return true;
 			else {
 				const previousPreviousID = wareEngine.minigameHistory[wareEngine.score - 3];
@@ -102,19 +105,19 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 
 	const shouldBoss = () => {
 		if (wareEngine.score % HOW_FREQUENT_BOSS == 0 && opt.games.some((g) => g.isBoss) || (opt.games.length == 1 && opt.games[0].isBoss)) return true;
+		else return false;
 	};
 
-	const getTransitionStates = (winState: boolean | undefined = wareEngine.winState): TransitionState[] => {
-		let transitionStates: TransitionState[] = ["prep"];
+	const getTransitionStages = (winState: boolean | undefined = wareEngine.winState): TransitionStage[] => {
+		let transitionStages: TransitionStage[] = ["prep"];
 
-		// TODO: if there's a boss loss put it here too
-		const winThing: TransitionState = previousGame?.isBoss ? (winState == true ? "bossWin" : "lose") : winState == true ? "win" : "lose";
-		if (winState != undefined) transitionStates.splice(0, 0, winThing);
-		if (shouldSpeedUp()) transitionStates.splice(1, 0, "speed");
-		if (isGameOver(winState)) transitionStates = ["lose"];
-		if (shouldBoss()) transitionStates.splice(1, 0, "bossPrep");
+		const winThing: TransitionStage = previousGame?.isBoss ? (winState == true ? "bossWin" : "bossLose") : winState == true ? "win" : "lose";
+		if (winState != undefined) transitionStages.splice(0, 0, winThing);
+		if (shouldSpeedUp()) transitionStages.splice(1, 0, "speed");
+		if (isGameOver(winState)) transitionStages = ["lose"];
+		if (shouldBoss()) transitionStages.splice(1, 0, "bossPrep");
 
-		return transitionStates;
+		return transitionStages;
 	};
 
 	const wareApp = createWareApp();
@@ -137,7 +140,12 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 		},
 		set paused(val: boolean) {
 			wareApp.gamePaused = val;
-			wareApp.soundPaused = !val;
+		},
+		get curDuration() {
+			return getGameDuration(this.curGame, this.curContext);
+		},
+		get curPrompt() {
+			return typeof wareEngine.curGame.prompt == "string" ? wareEngine.curGame.prompt : "";
 		},
 		clearPrevious() {
 			wareApp.clearAllEvs();
@@ -146,6 +154,7 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 			// fixed objs are added to root so they're not affected by camera (parent of sceneObj)
 			wareApp.rootObj.get("fixed").forEach((obj) => obj.destroy());
 			currentBomb?.destroy();
+			k.setGravity(0);
 		},
 		winGame() {
 			wareEngine.timePaused = true;
@@ -167,8 +176,6 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 		nextGame() {
 			wareEngine.score++;
 
-			// TODO: check things like transitions, bombs and conductors are destroyed when they stop being used
-
 			// pauses the current one and the next one
 			wareEngine.timePaused = true;
 			wareEngine.gamePaused = true;
@@ -180,19 +187,12 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 			wareApp.clearSounds();
 			wareEngine.onTimeOutEvents.clear();
 
-			const transition = runTransition(getTransitionStates(), wareApp, wareEngine);
+			const transition = chillTransition(getTransitionStages(), wareApp, wareEngine);
 			wareEngine.winState = undefined; // reset it after transition so it does the win and lose
-
-			// if this runs is because shouldSpeed() is true, so it's fine to increase speed here don't worry
-			transition.onStateStart("speed", () => {
-				// do the speed up function or just keep this like that
-				const increment = k.choose([0.06, 0.07, 0.08]);
-				wareEngine.speed = k.clamp(wareEngine.speed + wareEngine.speed * increment, 0, MAX_SPEED);
-			});
 
 			// runs on prep so the previous game isn't seen anymore
 			// thus can be cleared and the new one can be prepped
-			transition.onStateStart("prep", () => {
+			transition.onStageStart("prep", () => {
 				wareEngine.clearPrevious();
 				wareEngine.curGame = getRandomGame();
 				wareEngine.curContext = createGameCtx(wareEngine.curGame, wareApp, wareEngine);
@@ -201,7 +201,7 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 				cursor.fadeAway = gameHidesMouse(wareEngine.curGame);
 				wareEngine.minigameHistory[wareEngine.score - 1] = getGameID(wareEngine.curGame);
 				wareEngine.curGame.start(wareEngine.curContext);
-				wareEngine.timeLeft = getGameDuration(wareEngine.curGame, wareEngine.curContext) / wareEngine.speed;
+				wareEngine.timeLeft = wareEngine.curDuration / wareEngine.speed;
 				wareEngine.difficulty = calculateDifficulty();
 				currentBomb = null;
 
@@ -229,16 +229,22 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 				});
 			});
 
+			// if this runs is because shouldSpeed() is true, so it's fine to increase speed here don't worry
+			transition.onStageStart("speed", () => {
+				// do the speed up function or just keep this like that
+				const increment = k.choose([0.06, 0.07, 0.08]);
+				wareEngine.speed = k.clamp(wareEngine.speed + wareEngine.speed * increment, 0, MAX_SPEED);
+			});
+
 			transition.onInputPromptTime(() => {
 				addInputPrompt(wareApp, getGameInput(wareEngine.curGame));
 			});
 
 			transition.onPromptTime(() => {
-				const promptObj = addTextPrompt(wareApp, typeof wareEngine.curGame.prompt == "string" ? wareEngine.curGame.prompt : "", wareEngine.speed);
+				const promptObj = addTextPrompt(wareApp, wareEngine.curPrompt, wareEngine.speed);
 				if (typeof wareEngine.curGame.prompt == "function") wareEngine.curGame.prompt(wareEngine.curContext, promptObj);
 			});
 
-			// don't remove this, very crucial
 			transition.onTransitionEnd(() => {
 				cursor.fadeAway = gameHidesMouse(wareEngine.curGame);
 				wareApp.soundPaused = false;
@@ -249,6 +255,10 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 				cursor.canPoint = true;
 			});
 
+			// kickstart the whole process
+			// TODO: this is weird!!! have it run inside defineTransition SOMEHOW
+			transition.startStage(transition.stages[0]);
+
 			wareEngine.onTimeOutEvents.add(() => {
 				wareApp.inputPaused = true;
 			});
@@ -257,6 +267,8 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 
 	wareApp.rootObj.onUpdate(() => {
 		wareApp.sceneObj.paused = wareEngine.gamePaused;
+		// TODO: i might be forgetting to clear some objects, it slowly rises to 100
+		k.quickWatch("objects.length", k.debug.numObjects());
 		wareApp.handleQuickWatch();
 	});
 

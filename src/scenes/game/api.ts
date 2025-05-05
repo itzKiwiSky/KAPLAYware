@@ -138,4 +138,6 @@ export const gameAPIs = [
 	"get",
 	"mulfok",
 	"onMouseMove",
+	"trigger",
+	"on",
 ] as const;

@@ -15,6 +15,20 @@ const testGame: Minigame = {
 			"bean",
 		]);
 
+		const ghosty = ctx.add([
+			ctx.sprite("@ghosty"),
+			ctx.pos(ctx.center()),
+			ctx.fixed(),
+		]);
+
+		bean.on("eventName", (param) => {
+			ctx.debug.log("Left trigged, param: " + param);
+		});
+
+		ctx.onInputButtonPress("left", () => {
+			bean.trigger("eventName", true);
+		});
+
 		const timeText = ctx.add([
 			ctx.text(""),
 			ctx.pos(ctx.center()),

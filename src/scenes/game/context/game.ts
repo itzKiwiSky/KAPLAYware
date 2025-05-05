@@ -100,22 +100,22 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 			return {
 				...comp,
 				fadeOut(time: number, easeFunc = k.easings.linear) {
-					return wareApp.pauseCtx.tween(
+					return wareApp.addTimer(wareApp.sceneObj.tween(
 						this.opacity,
 						0,
 						time,
 						(a) => this.opacity = a,
 						easeFunc,
-					);
+					));
 				},
 				fadeIn(time: number, easeFunc = k.easings.linear) {
-					return wareApp.pauseCtx.tween(
-						this.opacity,
+					return wareApp.addTimer(wareApp.sceneObj.tween(
 						0,
+						this.opacity,
 						time,
 						(a) => this.opacity = a,
 						easeFunc,
-					);
+					));
 				},
 			};
 		},
@@ -155,6 +155,31 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 			const ev = k.onCollideEnd(t1, t2, action);
 			wareApp.updateEvents.push(ev);
 			return ev;
+		},
+		trigger(event, tag, ...args) {
+			wareApp.sceneObj.get(tag).forEach((child) => {
+				if (child.is(tag)) child.trigger(event, ...args);
+			});
+		},
+		on(event, tag, action) {
+			let paused = false;
+			const events: KEventController[] = [];
+			wareApp.sceneObj.get(tag).forEach((children) => {
+				const ev = children.on(event, action);
+				events.push(ev);
+			});
+			return {
+				get paused() {
+					return paused;
+				},
+				set paused(val: boolean) {
+					paused = val;
+					events.forEach((ev) => ev.paused = val);
+				},
+				cancel() {
+					events.forEach((ev) => ev.cancel());
+				},
+			};
 		},
 	};
 
@@ -196,7 +221,6 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 		return ev;
 	});
 
-	// another overload
 	startCtx["onClick"] = overload2((action: () => void) => {
 		const ev = wareApp.sceneObj.onMousePress(action);
 		wareApp.inputEvents.push(ev);
@@ -205,7 +229,7 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 		const events: KEventController[] = [];
 		let paused: boolean = false;
 
-		forAllCurrentAndFuture(tag, (obj) => {
+		forAllCurrentAndFuture(wareApp.sceneObj, tag, (obj) => {
 			if (!obj.area) {
 				throw new Error(
 					"onClick() requires the object to have area() component",
@@ -224,6 +248,7 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 				events.forEach((ev) => ev.cancel());
 			},
 		};
+		wareApp.inputEvents.push(ev);
 		return ev;
 	});
 
@@ -339,13 +364,11 @@ export function createMinigameAPI(wareApp: WareApp, wareEngine?: Kaplayware): Mi
 		get timeLeft() {
 			return wareEngine.timeLeft ?? 20;
 		},
-		// TODO: figure out these, probably do wareEngine.curDuration and curPrompt (shitty)
-		// might just remove idk not really necessary
 		get duration() {
-			return 1;
+			return wareEngine.curDuration;
 		},
 		get prompt() {
-			return "";
+			return wareEngine.curPrompt;
 		},
 	};
 }

@@ -4,8 +4,6 @@ import games, { modules } from "./games";
 import k from "../../engine";
 import Minigame from "./minigameType";
 
-// TODO: organize this a bit, what should go here and what shouldn't?
-
 export const getGameID = (g: Minigame) => {
 	const gamePath = Object.keys(modules).find((pathKey: string) => (modules[pathKey] as any).default == g);
 	const filename = gamePath.split("/")[gamePath.split("/").length - 1].replace(".ts", "");
@@ -102,12 +100,18 @@ export const gameHidesMouse = (g: Minigame) => {
 export const isDefaultAsset = (assetName: any) => typeof assetName == "string" && assetName.includes("@");
 
 /** Runs something on all current and future objects with a certain tag
+ * @param parent The parent to check objects
  * @param t The tag
  * @param action The something to run
  */
-export function forAllCurrentAndFuture(t: Tag, action: (obj: GameObj) => void) {
-	k._k.game.root.get(t, { recursive: true }).forEach(action);
-	k.onAdd(t, action);
+export function forAllCurrentAndFuture(parent: GameObj, t: Tag, action: (obj: GameObj) => void) {
+	// TODO: find a better way to run this only on sceneObj and clear it after
+	parent.get(t, { recursive: true }).forEach((obj) => action(obj));
+
+	k.onAdd(t, (obj) => {
+		if (obj.parent == parent) action(obj);
+	});
+
 	k.onTag((obj, tag) => {
 		if (tag === t) {
 			action(obj);
