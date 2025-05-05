@@ -7,11 +7,13 @@ const testGame: Minigame = {
 	rgb: [255, 255, 255],
 	duration: 4,
 	urlPrefix: "games/amyspark-ng/assets/",
-	load(ctx) {},
+	load(ctx) {
+		ctx.loadSprite("kasquare", "sprites/kasquare.png");
+	},
 	start(ctx) {
 		const bean = ctx.add([
 			ctx.sprite("@bean"),
-			ctx.pos(),
+			ctx.pos(ctx.center().x + 50, 0),
 			"bean",
 		]);
 
@@ -25,6 +27,26 @@ const testGame: Minigame = {
 			ctx.debug.log("Left trigged, param: " + param);
 		});
 
+		// draw overload works
+		ctx.onDraw("*", (obj) => {
+			if (!obj.width) return;
+
+			ctx.drawText({
+				text: ctx.vec2(obj.width, obj.height).toString(),
+			});
+
+			ctx.drawCircle({
+				radius: 5,
+				color: ctx.BLUE,
+			});
+		});
+
+		ctx.onDraw(() => {
+			ctx.drawSprite({
+				sprite: "kasquare",
+			});
+		});
+
 		ctx.onInputButtonPress("left", () => {
 			bean.trigger("eventName", true);
 		});
@@ -36,7 +58,7 @@ const testGame: Minigame = {
 		]);
 
 		ctx.onUpdate(() => {
-			timeText.text = ctx.timeLeft.toFixed(2);
+			timeText.text = `${ctx.timeLeft.toFixed(1)} / ${ctx.duration.toFixed(1)}`;
 		});
 
 		// this runs before the game even starts, bruh
@@ -54,7 +76,7 @@ const testGame: Minigame = {
 			ctx.setCamPos(ctx.center().add(spinCamera));
 		});
 
-		// TODO: add more things to test, camera, fixed, music, timeLeft, input, onDraw overloads, winState, etc
+		// TODO: add more things to test, music, events, onDraw overloads, winState, etc
 
 		ctx.onTimeout(() => {
 			ctx.win();

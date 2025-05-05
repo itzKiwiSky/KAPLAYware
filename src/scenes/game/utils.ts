@@ -1,4 +1,4 @@
-import { Color, GameObj, Tag } from "kaplay";
+import { Color, GameObj, KEventController, Tag } from "kaplay";
 import { MinigameCtx, MinigameInput } from "./context/types";
 import games, { modules } from "./games";
 import k from "../../engine";
@@ -104,19 +104,34 @@ export const isDefaultAsset = (assetName: any) => typeof assetName == "string" &
  * @param t The tag
  * @param action The something to run
  */
-export function forAllCurrentAndFuture(parent: GameObj, t: Tag, action: (obj: GameObj) => void) {
-	// TODO: find a better way to run this only on sceneObj and clear it after
+export function forAllCurrentAndFuture(parent: GameObj, t: Tag, action: (obj: GameObj) => void): KEventController {
 	parent.get(t, { recursive: true }).forEach((obj) => action(obj));
+	let paused = false;
 
-	k.onAdd(t, (obj) => {
+	const add = k.onAdd(t, (obj) => {
 		if (obj.parent == parent) action(obj);
 	});
 
-	k.onTag((obj, tag) => {
-		if (tag === t) {
+	const tag = k.onTag((obj, tag) => {
+		if (obj.parent == parent && tag === t) {
 			action(obj);
 		}
 	});
+
+	return {
+		get paused() {
+			return paused;
+		},
+		set paused(val: boolean) {
+			paused = val;
+			add.paused = paused;
+			tag.paused = paused;
+		},
+		cancel() {
+			add.cancel();
+			tag.cancel();
+		},
+	};
 }
 
 type Func = (...args: any[]) => any;

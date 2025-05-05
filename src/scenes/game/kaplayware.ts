@@ -193,6 +193,8 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 			// runs on prep so the previous game isn't seen anymore
 			// thus can be cleared and the new one can be prepped
 			transition.onStageStart("prep", () => {
+				console.log("run prep from kaplayware engine");
+
 				wareEngine.clearPrevious();
 				wareEngine.curGame = getRandomGame();
 				wareEngine.curContext = createGameCtx(wareEngine.curGame, wareApp, wareEngine);
@@ -236,6 +238,7 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 				wareEngine.speed = k.clamp(wareEngine.speed + wareEngine.speed * increment, 0, MAX_SPEED);
 			});
 
+			// these run but prep doesn't
 			transition.onInputPromptTime(() => {
 				addInputPrompt(wareApp, getGameInput(wareEngine.curGame));
 			});
@@ -246,6 +249,8 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 			});
 
 			transition.onTransitionEnd(() => {
+				console.log("run end from kaplayware engine");
+
 				cursor.fadeAway = gameHidesMouse(wareEngine.curGame);
 				wareApp.soundPaused = false;
 				wareApp.timerPaused = false;
@@ -254,10 +259,6 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 				wareEngine.timePaused = false;
 				cursor.canPoint = true;
 			});
-
-			// kickstart the whole process
-			// TODO: this is weird!!! have it run inside defineTransition SOMEHOW
-			transition.startStage(transition.stages[0]);
 
 			wareEngine.onTimeOutEvents.add(() => {
 				wareApp.inputPaused = true;

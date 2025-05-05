@@ -8,6 +8,8 @@ export const chillTransition = defineTransition((parent, camera, stageManager, w
 	const score = wareEngine.score;
 	const stages = stageManager.stages;
 
+	// find here to pass  trigger and stages
+
 	const conductor = k.conductor(140 * speed);
 	const pauseCtx = wareApp.pauseCtx;
 
@@ -196,7 +198,7 @@ export const chillTransition = defineTransition((parent, camera, stageManager, w
 		pauseCtx.tween(camera.scale, ZOOM_SCALE, 1 / speed, (p) => camera.scale = p, k.easings.easeOutQuint);
 	}
 
-	stageManager.onStageStart("prep", () => {
+	stageManager.defineStage("prep", () => {
 		pauseCtx.play("prepJingle", { speed: speed });
 
 		chillguy.frame = 0;
@@ -228,10 +230,10 @@ export const chillTransition = defineTransition((parent, camera, stageManager, w
 		pauseCtx.tween(k.vec2(1.5), k.vec2(1), 0.35 / speed, (p) => hearts[0].scale = p, k.easings.easeOutQuint);
 		prepConductor.onBeat((beat) => {
 			if (beat == 1) {
-				stageManager.triggerInputPrompt();
+				stageManager.callInput();
 			}
 			else if (beat == 2) {
-				stageManager.triggerPrompt();
+				stageManager.callPrompt();
 				// set gamebox
 				wareApp.boxObj.width = screen.width;
 				wareApp.boxObj.height = screen.height;
@@ -253,14 +255,14 @@ export const chillTransition = defineTransition((parent, camera, stageManager, w
 					k.easings.easeOutQuint,
 				);
 				pauseCtx.tween(wareApp.boxObj.pos, k.center(), 0.5 / speed, (p) => wareApp.boxObj.pos = p, k.easings.easeOutQuint).onEnd(() => {
-					stageManager.endStage("prep");
+					stageManager.finishStage("prep");
 					prepConductor.destroy();
 				});
 			}
 		});
 	});
 
-	stageManager.onStageStart("win", () => {
+	stageManager.defineStage("win", () => {
 		screen.opacity = 0;
 		zoomOut();
 		pauseCtx.tween(0, 1, 0.5 / speed, (p) => screen.opacity = p, k.easings.easeOutQuint);
@@ -284,11 +286,11 @@ export const chillTransition = defineTransition((parent, camera, stageManager, w
 		chillcat.frame = 1;
 		chillbutterfly.frame = 1;
 		pauseCtx.wait(sound.duration() / speed, () => {
-			stageManager.endStage("win");
+			stageManager.finishStage("win");
 		});
 	});
 
-	stageManager.onStageStart("lose", () => {
+	stageManager.defineStage("lose", () => {
 		pauseCtx.tween(ZOOM_Y, k.center().y, 0.5 / speed, (p) => camera.pos.y = p, k.easings.easeOutQuint);
 		pauseCtx.tween(ZOOM_SCALE, k.vec2(1), 0.5 / speed, (p) => camera.scale = p, k.easings.easeOutQuint);
 		pauseCtx.tween(0, 1, 0.25 / speed, (p) => screen.opacity = p, k.easings.easeOutQuint);
@@ -306,11 +308,11 @@ export const chillTransition = defineTransition((parent, camera, stageManager, w
 		});
 
 		pauseCtx.wait(sound.duration() / speed, () => {
-			stageManager.endStage("lose");
+			stageManager.finishStage("lose");
 		});
 	});
 
-	stageManager.onStageStart("speed", () => {
+	stageManager.defineStage("speed", () => {
 		const sound = pauseCtx.play("speedJingle", { speed: speed });
 
 		const overlay = parent.add([
@@ -326,11 +328,11 @@ export const chillTransition = defineTransition((parent, camera, stageManager, w
 
 		pauseCtx.wait(sound.duration() / speed, () => {
 			overlay.destroy();
-			stageManager.endStage("speed");
+			stageManager.finishStage("speed");
 		});
 	});
 
-	stageManager.onStageStart("bossPrep", () => {
+	stageManager.defineStage("bossPrep", () => {
 		const sound = pauseCtx.play("bossJingle", { speed: speed });
 
 		const bossText = parent.add([
@@ -340,12 +342,12 @@ export const chillTransition = defineTransition((parent, camera, stageManager, w
 		]);
 
 		pauseCtx.wait(sound.duration() / speed, () => {
-			stageManager.endStage("bossPrep");
+			stageManager.finishStage("bossPrep");
 			bossText.destroy();
 		});
 	});
 
-	stageManager.onStageStart("bossWin", () => {
+	stageManager.defineStage("bossWin", () => {
 		const sound = pauseCtx.play("bossWinJingle", { speed: speed });
 
 		pauseCtx.tween(ZOOM_Y, k.center().y, 0.5 / speed, (p) => camera.pos.y = p, k.easings.easeOutQuint);
@@ -357,11 +359,11 @@ export const chillTransition = defineTransition((parent, camera, stageManager, w
 		chillbutterfly.frame = 1;
 
 		pauseCtx.wait(sound.duration() / speed, () => {
-			stageManager.endStage("bossWin");
+			stageManager.finishStage("bossWin");
 		});
 	});
 
-	stageManager.onStageStart("bossLose", () => {
+	stageManager.defineStage("bossLose", () => {
 		const sound = pauseCtx.play("loseJingle", { speed: speed });
 
 		pauseCtx.tween(ZOOM_Y, k.center().y, 0.5 / speed, (p) => camera.pos.y = p, k.easings.easeOutQuint);
@@ -373,7 +375,7 @@ export const chillTransition = defineTransition((parent, camera, stageManager, w
 		chillbutterfly.frame = 2;
 
 		pauseCtx.wait(sound.duration() / speed, () => {
-			stageManager.endStage("bossLose");
+			stageManager.finishStage("bossLose");
 		});
 	});
 });

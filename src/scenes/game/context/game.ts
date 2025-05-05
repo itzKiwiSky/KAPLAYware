@@ -216,7 +216,27 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 		wareApp.drawEvents.push(ev);
 		return ev;
 	}, (tag: Tag, action: (obj: GameObj) => void) => {
-		const ev = k.on("draw", tag, action);
+		let paused = false;
+		const evs: KEventController[] = [];
+		const listener = forAllCurrentAndFuture(wareApp.sceneObj, tag, (obj) => {
+			const drawEv = obj.on("draw", () => action(obj));
+			evs.push(drawEv);
+		});
+
+		const ev: KEventController = {
+			get paused() {
+				return paused;
+			},
+			set paused(val: boolean) {
+				paused = val;
+				listener.paused = paused;
+			},
+			cancel() {
+				listener.cancel();
+				evs.forEach((ev) => ev.cancel());
+			},
+		};
+
 		wareApp.drawEvents.push(ev);
 		return ev;
 	});
@@ -229,7 +249,7 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 		const events: KEventController[] = [];
 		let paused: boolean = false;
 
-		forAllCurrentAndFuture(wareApp.sceneObj, tag, (obj) => {
+		const listener = forAllCurrentAndFuture(wareApp.sceneObj, tag, (obj) => {
 			if (!obj.area) {
 				throw new Error(
 					"onClick() requires the object to have area() component",
@@ -243,9 +263,11 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 			},
 			set paused(val: boolean) {
 				paused = val;
+				listener.paused = paused;
 			},
 			cancel() {
 				events.forEach((ev) => ev.cancel());
+				listener.cancel();
 			},
 		};
 		wareApp.inputEvents.push(ev);
