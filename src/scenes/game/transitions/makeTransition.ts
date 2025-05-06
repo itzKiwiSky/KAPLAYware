@@ -10,19 +10,17 @@ export type TransitionStage = typeof baseStages[number];
 // should return the runTransition function
 type CameraObject = GameObj<PosComp | ScaleComp | RotateComp>;
 type ParentObject = GameObj<PosComp>;
-type StateObject = GameObj<
-	StateComp | {
-		readonly stages: TransitionStage[];
-		defineStage(stage: TransitionStage, action: () => void): void;
-		finishStage(stage: TransitionStage): void;
-		callPrompt(): void;
-		callInput(): void;
-	}
->;
+type StateObject = {
+	stages: TransitionStage[];
+	defineStage(stage: TransitionStage, action: () => void): void;
+	enterStage(stage: TransitionStage): void;
+	finishStage(stage: TransitionStage): void;
+	callPrompt(): void;
+	callInput(): void;
+};
 
 /** A defined transition */
-type Transition = {
-	/** The stages that were called to run on the transition */
+export type Transition = {
 	readonly stages: TransitionStage[];
 	/** Callback for when a stage starts */
 	onStageStart(stage: TransitionStage, action: () => void): KEventController;
@@ -34,82 +32,95 @@ type Transition = {
 	onInputPromptTime(action: () => void): KEventController;
 	/** Callback for when all stages are over */
 	onTransitionEnd(action: () => void): KEventController;
+	trigger(stages: TransitionStage[]): void;
 };
 
-type TransitionDefinition = (parent: ParentObject, camera: CameraObject, stageManager: StateObject, wareApp: WareApp, wareEngine: Kaplayware) => void;
-/** A defined transition that when called will return {@link Transition `Transition`} */
-type TransitionFunction = (stages: TransitionStage[], wareApp: WareApp, wareEngine: Kaplayware) => Transition;
+export type TransitionDefinition = (parent: ParentObject, camera: CameraObject, stageManager: StateObject, wareApp: WareApp, wareEngine: Kaplayware) => void;
 
-/** Defines a cool transition for the KAPLAYWARE gameplay
- * @param transAction The actual content of the transition, must use stageManager.defineStage() and stageManager.finishStage() (es clave)
- */
-export function defineTransition(transAction: TransitionDefinition): TransitionFunction {
-	return (stages, wareApp, wareEngine) => {
-		// define the KEvents
-		const startEv = new k.KEvent<[TransitionStage]>();
-		const endEv = new k.KEvent<[TransitionStage]>();
-		const prompt = new k.KEvent();
-		const inputPrompt = new k.KEvent();
+export function createTransition(transAction: TransitionDefinition, wareApp: WareApp, wareEngine: Kaplayware): Transition {
+	const startEv = new k.KEvent<[TransitionStage]>();
+	const endEv = new k.KEvent<[TransitionStage]>();
+	const promptEv = new k.KEvent();
+	const inputEv = new k.KEvent();
+	const endTransEv = new k.KEvent();
 
-		// create objects for the transition to build on
+	const camera = wareApp.rootObj.add([k.scale(), k.pos(k.center()), k.rotate(0), k.anchor("center"), k.z(1)]);
+	const parent = camera.add([k.pos(-k.width() / 2, -k.height() / 2)]);
+	const stageManager: StateObject = {
+		stages: [],
+		defineStage(stage, action) {
+			startEv.add((actionStage) => {
+				if (actionStage == stage) action();
+			});
+		},
+		enterStage(stage) {
+			startEv.trigger(stage);
+		},
+		finishStage(stage) {
+			endEv.trigger(stage);
+		},
+		callPrompt() {
+			promptEv.trigger();
+		},
+		callInput() {
+			inputEv.trigger();
+		},
+	};
 
-		const camera = wareApp.rootObj.add([k.scale(), k.pos(k.center()), k.rotate(0), k.anchor("center"), k.z(1)]);
-		const parent = camera.add([k.pos(-k.width() / 2, -k.height() / 2)]);
-		const stageManager: StateObject = parent.add([k.state(stages[0], stages), {
-			get stages() {
-				return stages;
-			},
-			defineStage(stage: TransitionStage, action: () => void) {
-				return stageManager.onStateEnter(stage, () => {
-					startEv.trigger(stage);
+	// when a stage over is called, go to the next one
+	endEv.add((stage) => {
+		if (stageManager.stages.indexOf(stage) < stageManager.stages.length - 1) stageManager.enterStage(stageManager.stages[stageManager.stages.indexOf(stage) + 1]);
+		else endTransEv.trigger();
+	});
+
+	endTransEv.add(() => {
+		inputEv.clear();
+		promptEv.clear();
+	});
+
+	// run the transition definition
+	transAction(parent, camera, stageManager, wareApp, wareEngine);
+	// console.log("WARE: Creating Transition for the first time");
+
+	return {
+		get stages() {
+			return stageManager.stages;
+		},
+		trigger(stages: TransitionStage[]) {
+			startEv.trigger(stages[0]);
+			stageManager.stages = stages;
+			// console.log("WARE: Transition called with stages: " + stages);
+		},
+		onStageStart(stage, action) {
+			const ev = startEv.add((actionStage) => {
+				if (actionStage == stage) {
 					action();
-				});
-			},
-			finishStage(stage: TransitionStage) {
-				endEv.trigger(stage);
-			},
-			callPrompt() {
-				prompt.trigger();
-			},
-			callInput() {
-				inputPrompt.trigger();
-			},
-		}]);
-
-		// when a stage over is called, go to the next one
-		endEv.add((stage) => {
-			if (stages.indexOf(stage) < stages.length - 1) stageManager.enterState(stages[stages.indexOf(stage) + 1]);
-		});
-
-		// run the transition definition
-		transAction(parent, camera, stageManager, wareApp, wareEngine);
-
-		// now return the transition for me to use in the kaplayware engine
-		return {
-			get stages() {
-				return stages;
-			},
-			onStageStart(stage, action) {
-				return startEv.add((actionStage) => {
-					if (actionStage == stage) action();
-				});
-			},
-			onStageEnd(stage, action) {
-				return endEv.add((actionStage) => {
-					if (actionStage == stage) action();
-				});
-			},
-			onPromptTime(action) {
-				return prompt.add(action);
-			},
-			onInputPromptTime(action) {
-				return inputPrompt.add(action);
-			},
-			onTransitionEnd(action) {
-				return endEv.add((actionStage) => {
-					if (stages.indexOf(actionStage) == stages.length - 1) action();
-				});
-			},
-		};
+					ev.cancel();
+				}
+			});
+			return ev;
+		},
+		onStageEnd(stage, action) {
+			const ev = endEv.add((actionStage) => {
+				if (actionStage == stage) {
+					action();
+					ev.cancel();
+				}
+			});
+			return ev;
+		},
+		onTransitionEnd(action) {
+			const ev = endTransEv.add(() => {
+				action();
+				ev.cancel();
+			});
+			return ev;
+		},
+		onPromptTime(action) {
+			return promptEv.add(action);
+		},
+		onInputPromptTime(action) {
+			return inputEv.add(action);
+		},
 	};
 }

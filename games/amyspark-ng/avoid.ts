@@ -167,6 +167,7 @@ const avoidGame: Minigame = {
 		let inScreen = true;
 		mark.onUpdate(() => {
 			// foot
+			// make it faster, i think it doesn't wave according speed
 			if (ctx.timeLeft > 0) foot.pos.x = ctx.lerp(foot.pos.x, ctx.wave(20, ctx.width() - 20, ctx.time() / ctx.speed), 0.05 * ctx.speed);
 			else foot.pos.y = ctx.lerp(foot.pos.y, -100, 0.5 * ctx.speed);
 			if (mark.adjusting || !mark.isGrounded()) foot.area.scale = ctx.vec2(0);

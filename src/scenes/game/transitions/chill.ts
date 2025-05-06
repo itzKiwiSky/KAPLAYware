@@ -1,8 +1,8 @@
 import k from "../../../engine";
-import { defineTransition } from "./makeTransition";
+import { TransitionDefinition } from "./makeTransition";
 
 /** The cool "chill guy" transition for first pack of games */
-export const chillTransition = defineTransition((parent, camera, stageManager, wareApp, wareEngine) => {
+export const chillTransition: TransitionDefinition = (parent, camera, stageManager, wareApp, wareEngine) => {
 	const speed = wareEngine.speed;
 	const difficulty = wareEngine.difficulty;
 	const lives = wareEngine.lives;
@@ -36,6 +36,8 @@ export const chillTransition = defineTransition((parent, camera, stageManager, w
 		k.pos(680, 280),
 		k.anchor("top"),
 	]);
+
+	// TODO: flowers aren't re added with difficulty changing, fix it!
 
 	// add flowers
 	for (let i = 0; i < difficulty; i++) {
@@ -160,7 +162,7 @@ export const chillTransition = defineTransition((parent, camera, stageManager, w
 		return fallingPage;
 	}
 
-	const fallingPage = addCalendarPage(score - 1);
+	let fallingPage = addCalendarPage(wareEngine.score - 1);
 
 	conductor.onBeat((beat) => {
 		parent.get("flower").forEach((flower) => {
@@ -208,6 +210,10 @@ export const chillTransition = defineTransition((parent, camera, stageManager, w
 		const prepConductor = k.conductor(140 * speed);
 		parent.onUpdate(() => prepConductor.paused = wareApp.gamePaused);
 
+		fallingPage.destroy();
+		fallingPage = addCalendarPage(wareEngine.score - 1);
+		k.readd(fallingPage);
+
 		// page funny
 		pauseCtx.tween(fallingPage.scale.y, 1.8, 0.35 / speed, (p) => fallingPage.scale.y = p, k.easings.easeOutExpo).onEnd(() => {
 			fallingPage.scale.y = 0.5;
@@ -221,7 +227,7 @@ export const chillTransition = defineTransition((parent, camera, stageManager, w
 			pauseCtx.tween(fallingPage.opacity, 0, 0.4 / speed, (p) => fallingPage.opacity = p, k.easings.linear);
 		});
 
-		const newPage = addCalendarPage(score);
+		const newPage = addCalendarPage(wareEngine.score);
 		newPage.z = fallingPage.z - 1;
 
 		// tween the first one here bc conductor doesn't do beat 0
@@ -332,8 +338,6 @@ export const chillTransition = defineTransition((parent, camera, stageManager, w
 	});
 
 	stageManager.defineStage("bossPrep", () => {
-		stageManager.finishStage("bossPrep");
-
 		const sound = pauseCtx.play("bossJingle", { speed: speed });
 
 		const bossText = parent.add([
@@ -349,8 +353,6 @@ export const chillTransition = defineTransition((parent, camera, stageManager, w
 	});
 
 	stageManager.defineStage("bossWin", () => {
-		stageManager.finishStage("bossWin");
-
 		const sound = pauseCtx.play("bossWinJingle", { speed: speed });
 
 		pauseCtx.tween(ZOOM_Y, k.center().y, 0.5 / speed, (p) => camera.pos.y = p, k.easings.easeOutQuint);
@@ -381,6 +383,6 @@ export const chillTransition = defineTransition((parent, camera, stageManager, w
 			stageManager.finishStage("bossLose");
 		});
 	});
-});
+};
 
 export default chillTransition;

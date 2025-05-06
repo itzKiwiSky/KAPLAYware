@@ -9,7 +9,7 @@ import k from "../../engine";
 import cursor from "../../plugins/cursor";
 import Minigame from "./minigameType";
 import { addInputPrompt, addTextPrompt } from "./objects/prompts";
-import { TransitionStage } from "./transitions/makeTransition";
+import { createTransition, Transition, TransitionStage } from "./transitions/makeTransition";
 import chillTransition from "./transitions/chill";
 
 /** Certain options to instantiate kaplayware (ware-engine) */
@@ -54,13 +54,13 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 
 	let currentBomb: WareBomb = null;
 	let previousGame: Minigame = null;
+	let transition = null as Transition;
 
-	// TODO: this is not working properly, getting boss radnomly
 	const getRandomGame = () => {
-		let possibleGames: Minigame[] = [...opt.games];
+		let possibleGames: Minigame[] = [...opt.games.filter((g) => !g.isBoss)];
 
 		if (shouldBoss()) {
-			possibleGames = possibleGames.filter((game) => game.isBoss == true);
+			possibleGames = [...opt.games.filter((game) => game.isBoss == true)];
 		}
 
 		// now check for history and repeatedness and get a new one
@@ -95,8 +95,11 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 			else if (k.chance(0.1) && realScore % 5 == 0) return true;
 			else return false;
 		};
-		const condition = () => wareEngine.speed <= MAX_SPEED && !shouldBoss() && !previousGame.isBoss;
-		return division() && condition();
+		if (division() && wareEngine.speed <= MAX_SPEED && !shouldBoss()) {
+			if (previousGame && previousGame.isBoss) return false;
+			else return true;
+		}
+		else return false;
 	};
 
 	const isGameOver = (winState = wareEngine.winState) => {
@@ -104,8 +107,11 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 	};
 
 	const shouldBoss = () => {
-		if (wareEngine.score % HOW_FREQUENT_BOSS == 0 && opt.games.some((g) => g.isBoss) || (opt.games.length == 1 && opt.games[0].isBoss)) return true;
-		else return false;
+		const scoreEqualsBoss = () => wareEngine.score % HOW_FREQUENT_BOSS == 0;
+		const onlyBoss = () => opt.games.length == 1 && opt.games[0].isBoss == true;
+		console.log("score equals boss: " + scoreEqualsBoss());
+		console.log("the game is an only boss: " + onlyBoss());
+		return scoreEqualsBoss() || onlyBoss();
 	};
 
 	const getTransitionStages = (winState: boolean | undefined = wareEngine.winState): TransitionStage[] => {
@@ -115,7 +121,7 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 		if (winState != undefined) transitionStages.splice(0, 0, winThing);
 		if (shouldSpeedUp()) transitionStages.splice(1, 0, "speed");
 		if (isGameOver(winState)) transitionStages = ["lose"];
-		if (shouldBoss()) transitionStages.splice(1, 0, "bossPrep");
+		if (shouldBoss()) transitionStages.splice(1, 0, "bossPrep"); // this would be before the prep, so it does BOSS! then regular prep
 
 		return transitionStages;
 	};
@@ -186,9 +192,7 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 			previousGame = wareEngine.curGame;
 			wareApp.clearSounds();
 			wareEngine.onTimeOutEvents.clear();
-
-			const transition = chillTransition(getTransitionStages(), wareApp, wareEngine);
-			wareEngine.winState = undefined; // reset it after transition so it does the win and lose
+			if (!transition) transition = createTransition(chillTransition, wareApp, wareEngine);
 
 			// runs on prep so the previous game isn't seen anymore
 			// thus can be cleared and the new one can be prepped
@@ -201,7 +205,7 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 				cursor.fadeAway = gameHidesMouse(wareEngine.curGame);
 				wareEngine.minigameHistory[wareEngine.score - 1] = getGameID(wareEngine.curGame);
 				wareEngine.curGame.start(wareEngine.curContext);
-				wareEngine.timeLeft = wareEngine.curDuration / wareEngine.speed;
+				wareEngine.timeLeft = wareEngine.curDuration != undefined ? wareEngine.curDuration / wareEngine.speed : undefined;
 				wareEngine.difficulty = calculateDifficulty();
 				currentBomb = null;
 
@@ -231,9 +235,7 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 
 			// if this runs is because shouldSpeed() is true, so it's fine to increase speed here don't worry
 			transition.onStageStart("speed", () => {
-				// do the speed up function or just keep this like that
-				const increment = k.choose([0.06, 0.07, 0.08]);
-				wareEngine.speed = k.clamp(wareEngine.speed + wareEngine.speed * increment, 0, MAX_SPEED);
+				wareEngine.speed = k.clamp(wareEngine.speed + wareEngine.speed * 0.07, 0, MAX_SPEED);
 			});
 
 			// these run but prep doesn't
@@ -247,8 +249,6 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 			});
 
 			transition.onTransitionEnd(() => {
-				console.log("run end from kaplayware engine");
-
 				cursor.fadeAway = gameHidesMouse(wareEngine.curGame);
 				wareApp.soundPaused = false;
 				wareApp.timerPaused = false;
@@ -258,17 +258,27 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 				cursor.canPoint = true;
 			});
 
+			// trigger transition
+			transition.trigger(getTransitionStages());
+			wareEngine.winState = undefined; // reset it after transition so it does the win and lose
+
 			wareEngine.onTimeOutEvents.add(() => {
 				wareApp.inputPaused = true;
 			});
 		},
 	};
 
+	// TODO: maybe reset speed after boss? consult lajbel
+
 	wareApp.rootObj.onUpdate(() => {
 		wareApp.sceneObj.paused = wareEngine.gamePaused;
-		// TODO: i might be forgetting to clear some objects, it slowly rises to 100
-		k.quickWatch("objects.length", k.debug.numObjects());
 		wareApp.handleQuickWatch();
+		// TODO: some objects seem to not be cleared, might be around boss things??
+		// starts with 40 and after first round is 80, that's weird
+		k.quickWatch("objects.length", k.debug.numObjects());
+		k.quickWatch("score", wareEngine.score);
+		k.quickWatch("time", wareEngine.timeLeft.toFixed(2));
+		k.quickWatch("speed", wareEngine.speed.toFixed(2));
 	});
 
 	return wareEngine;
