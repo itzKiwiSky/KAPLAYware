@@ -1,17 +1,17 @@
 import k from "../../../engine";
 import { defineTransition } from "./makeTransition";
 
+/** The cool "chill guy" transition for first pack of games */
 export const chillTransition = defineTransition((parent, camera, stageManager, wareApp, wareEngine) => {
 	const speed = wareEngine.speed;
 	const difficulty = wareEngine.difficulty;
 	const lives = wareEngine.lives;
 	const score = wareEngine.score;
-	const stages = stageManager.stages;
-
-	// find here to pass  trigger and stages
 
 	const conductor = k.conductor(140 * speed);
 	const pauseCtx = wareApp.pauseCtx;
+	// TODO: figure out a pauseCtx improvement
+	// do something like wareApp.timers.tween() or simply wareApp.tween()?
 
 	parent.add([k.sprite("trans1-bg")]);
 	parent.add([k.sprite("trans1-grass")]);
@@ -58,7 +58,7 @@ export const chillTransition = defineTransition((parent, camera, stageManager, w
 	}
 
 	// add hearts
-	for (let i = 0; i < (stages[0] == "lose" ? lives + 1 : lives); i++) {
+	for (let i = 0; i < (stageManager.stages[0] == "lose" ? lives + 1 : lives); i++) {
 		let shake = 0;
 
 		const heart = parent.add([
@@ -95,7 +95,7 @@ export const chillTransition = defineTransition((parent, camera, stageManager, w
 		};
 	}
 
-	// TODO: Fix all the screen stuff when the new screen aspect ratio comes out
+	// TODO: Fix all the screen stuff when the new transition comes out
 	const screen = parent.add([
 		k.sprite("trans1-screen"),
 		k.pos(396, 214),
@@ -200,7 +200,6 @@ export const chillTransition = defineTransition((parent, camera, stageManager, w
 
 	stageManager.defineStage("prep", () => {
 		pauseCtx.play("prepJingle", { speed: speed });
-
 		chillguy.frame = 0;
 		screen.frame = 0;
 		chillcat.frame = 0;
@@ -255,8 +254,8 @@ export const chillTransition = defineTransition((parent, camera, stageManager, w
 					k.easings.easeOutQuint,
 				);
 				pauseCtx.tween(wareApp.boxObj.pos, k.center(), 0.5 / speed, (p) => wareApp.boxObj.pos = p, k.easings.easeOutQuint).onEnd(() => {
-					stageManager.finishStage("prep");
 					prepConductor.destroy();
+					stageManager.finishStage("prep");
 				});
 			}
 		});
@@ -333,6 +332,8 @@ export const chillTransition = defineTransition((parent, camera, stageManager, w
 	});
 
 	stageManager.defineStage("bossPrep", () => {
+		stageManager.finishStage("bossPrep");
+
 		const sound = pauseCtx.play("bossJingle", { speed: speed });
 
 		const bossText = parent.add([
@@ -348,6 +349,8 @@ export const chillTransition = defineTransition((parent, camera, stageManager, w
 	});
 
 	stageManager.defineStage("bossWin", () => {
+		stageManager.finishStage("bossWin");
+
 		const sound = pauseCtx.play("bossWinJingle", { speed: speed });
 
 		pauseCtx.tween(ZOOM_Y, k.center().y, 0.5 / speed, (p) => camera.pos.y = p, k.easings.easeOutQuint);

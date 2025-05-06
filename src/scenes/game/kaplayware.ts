@@ -193,8 +193,6 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 			// runs on prep so the previous game isn't seen anymore
 			// thus can be cleared and the new one can be prepped
 			transition.onStageStart("prep", () => {
-				console.log("run prep from kaplayware engine");
-
 				wareEngine.clearPrevious();
 				wareEngine.curGame = getRandomGame();
 				wareEngine.curContext = createGameCtx(wareEngine.curGame, wareApp, wareEngine);
