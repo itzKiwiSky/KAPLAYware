@@ -1,7 +1,6 @@
 import k from "../../../engine";
 import { WareApp } from "../app";
 import { MinigameInput } from "../context/types";
-import { mergeWithRef } from "../utils";
 
 export function addTextPrompt(wareApp: WareApp, promptText: string, speed = 1) {
 	const promptObj = wareApp.rootObj.add([
@@ -40,10 +39,10 @@ export function addTextPrompt(wareApp: WareApp, promptText: string, speed = 1) {
 		});
 
 		// the jumpy
-		wareApp.pauseCtx.tween(0, 1.2, 0.25 / speed, (p) => promptObj.scale.x = p, k.easings.easeOutExpo);
-		wareApp.pauseCtx.tween(0, 0.9, 0.25 / speed, (p) => promptObj.scale.y = p, k.easings.easeOutExpo).onEnd(() => {
-			wareApp.pauseCtx.tween(promptObj.scale, k.vec2(1), 0.25 / speed, (p) => promptObj.scale = p, k.easings.easeOutElastic).onEnd(() => {
-				wareApp.pauseCtx.tween(1, 0, 0.25 / speed, (p) => {
+		wareApp.transCtx.tween(0, 1.2, 0.25 / speed, (p) => promptObj.scale.x = p, k.easings.easeOutExpo);
+		wareApp.transCtx.tween(0, 0.9, 0.25 / speed, (p) => promptObj.scale.y = p, k.easings.easeOutExpo).onEnd(() => {
+			wareApp.transCtx.tween(promptObj.scale, k.vec2(1), 0.25 / speed, (p) => promptObj.scale = p, k.easings.easeOutElastic).onEnd(() => {
+				wareApp.transCtx.tween(1, 0, 0.25 / speed, (p) => {
 					promptObj.opacity = p;
 				}).onEnd(() => promptObj.destroy());
 			});
@@ -74,11 +73,11 @@ export function addInputPrompt(wareApp: WareApp, input: MinigameInput, speed = 1
 	prompt.onUpdate(() => {
 		inputBg.angle += 0.1 * speed;
 	});
-	wareApp.pauseCtx.tween(k.vec2(0), k.vec2(1), 0.25 / speed, (p) => inputBg.scale = p, k.easings.easeOutExpo);
-	wareApp.pauseCtx.tween(k.vec2(0), k.vec2(1), 0.25 / speed, (p) => inputPrompt.scale = p, k.easings.easeOutElastic);
+	wareApp.transCtx.tween(k.vec2(0), k.vec2(1), 0.25 / speed, (p) => inputBg.scale = p, k.easings.easeOutExpo);
+	wareApp.transCtx.tween(k.vec2(0), k.vec2(1), 0.25 / speed, (p) => inputPrompt.scale = p, k.easings.easeOutElastic);
 
-	wareApp.pauseCtx.wait(0.5 / speed, () => {
-		wareApp.pauseCtx.tween(k.vec2(1), k.vec2(0), 0.25 / speed, (p) => inputBg.scale = p, k.easings.easeOutExpo).onEnd(() => {
+	wareApp.transCtx.wait(0.5 / speed, () => {
+		wareApp.transCtx.tween(k.vec2(1), k.vec2(0), 0.25 / speed, (p) => inputBg.scale = p, k.easings.easeOutExpo).onEnd(() => {
 			inputPrompt.destroy();
 		});
 	});

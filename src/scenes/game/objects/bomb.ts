@@ -77,7 +77,7 @@ export function addBomb(wareApp: WareApp) {
 			if (cordstart.exists()) cordstart.destroy();
 			cordtip.opacity = 0;
 			movingFuse = true;
-			wareApp.pauseCtx.tween(fuse.pos.y, fuse.pos.y - 30, conductor.beatInterval, (p) => fuse.pos.y = p);
+			wareApp.timers.tween(fuse.pos.y, fuse.pos.y - 30, conductor.beatInterval, (p) => fuse.pos.y = p);
 		}
 	});
 
@@ -86,7 +86,7 @@ export function addBomb(wareApp: WareApp) {
 		destroy();
 		const kaboom = k.addKaboom(bombSpr.pos);
 		kaboom.parent = wareApp.rootObj;
-		wareApp.pauseCtx.play("explosion");
+		wareApp.sounds.play("explosion");
 		hasExploded = true;
 	}
 
@@ -95,8 +95,8 @@ export function addBomb(wareApp: WareApp) {
 		if (beatsLeft > 0) {
 			beatsLeft--;
 			const tweenMult = 2 - beatsLeft + 1; // goes from 1 to 3;
-			wareApp.pauseCtx.tween(k.vec2(1).add(0.33 * tweenMult), k.vec2(1).add((0.33 * tweenMult) / 2), 0.5 / 3, (p) => bombSpr.scale = p, k.easings.easeOutQuint);
-			wareApp.pauseCtx.play("tick", { detune: 25 * 2 - beatsLeft });
+			wareApp.timers.tween(k.vec2(1).add(0.33 * tweenMult), k.vec2(1).add((0.33 * tweenMult) / 2), 0.5 / 3, (p) => bombSpr.scale = p, k.easings.easeOutQuint);
+			wareApp.sounds.play("tick", { detune: 25 * 2 - beatsLeft });
 			if (beatsLeft == 2) bombSpr.color = k.YELLOW;
 			else if (beatsLeft == 1) bombSpr.color = k.RED.lerp(k.YELLOW, 0.5);
 			else if (beatsLeft == 0) bombSpr.color = k.RED;

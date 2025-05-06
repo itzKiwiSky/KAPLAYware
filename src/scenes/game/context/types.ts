@@ -23,8 +23,6 @@ interface WareSpriteComp extends Omit<SpriteComp, "sprite"> {
 export type StartCtx = Pick<typeof k, typeof gameAPIs[number]> & {
 	/** ### Modified add() for KAPLAYware */
 	add<T>(comps?: CompList<T> | GameObj<T>): GameObj<T>;
-	// TODO: what is this modified add for?
-
 	/** ### Custom sprite component for KAPLAYware that holds default assets
 	 *
 	 * Attach and render a sprite to a Game Object.

@@ -148,7 +148,7 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 			return typeof wareEngine.curGame.prompt == "string" ? wareEngine.curGame.prompt : "";
 		},
 		clearPrevious() {
-			wareApp.clearAllEvs();
+			wareApp.clearAll();
 			wareApp.resetCamera();
 			wareApp.sceneObj.removeAll();
 			// fixed objs are added to root so they're not affected by camera (parent of sceneObj)
@@ -180,12 +180,11 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 			// pauses the current one and the next one
 			wareEngine.timePaused = true;
 			wareEngine.gamePaused = true;
-			wareApp.timerPaused = true;
-			wareApp.soundPaused = true;
-			wareApp.inputPaused = true;
+			wareApp.timers.paused = true;
+			wareApp.sounds.paused = true;
+			wareApp.inputs.paused = true;
 			cursor.canPoint = false;
 			previousGame = wareEngine.curGame;
-			wareApp.clearSounds();
 			wareEngine.onTimeOutEvents.clear();
 			if (!transition) transition = createTransition(chillTransition, wareApp, wareEngine);
 
@@ -216,7 +215,6 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 					// When there's 4 beats left
 					const beatInterval = 60 / (140 * wareEngine.speed);
 					if (wareEngine.timeLeft <= beatInterval * 4 && currentBomb == null) {
-						// TODO: bomb keeps ticking when you lose, what should do?
 						currentBomb = addBomb(wareApp);
 						currentBomb.lit(140 * wareEngine.speed);
 					}
@@ -246,9 +244,9 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 
 			transition.onTransitionEnd(() => {
 				cursor.fadeAway = gameHidesMouse(wareEngine.curGame);
-				wareApp.soundPaused = false;
-				wareApp.timerPaused = false;
-				wareApp.inputPaused = false;
+				wareApp.timers.paused = false;
+				wareApp.sounds.paused = false;
+				wareApp.inputs.paused = false;
 				wareEngine.gamePaused = false;
 				wareEngine.timePaused = false;
 				cursor.canPoint = true;
@@ -259,7 +257,7 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 			wareEngine.winState = undefined; // reset it after transition so it does the win and lose
 
 			wareEngine.onTimeOutEvents.add(() => {
-				wareApp.inputPaused = true;
+				wareApp.inputs.paused = true;
 			});
 		},
 	};
@@ -269,10 +267,10 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 		wareApp.handleQuickWatch();
 		// TODO: some objects seem to not be cleared, might be around boss things??
 		// starts with 40 and after first round is 80, that's weird
-		k.quickWatch("objects.length", k.debug.numObjects());
-		k.quickWatch("score", wareEngine.score);
-		k.quickWatch("time", wareEngine.timeLeft?.toFixed(2));
-		k.quickWatch("speed", wareEngine.speed.toFixed(2));
+		k.quickWatch("ware.score", wareEngine.score);
+		k.quickWatch("ware.time", wareEngine.timeLeft?.toFixed(2));
+		k.quickWatch("ware.speed", wareEngine.speed.toFixed(2));
+		k.quickWatch("k.objects", k.debug.numObjects());
 	});
 
 	return wareEngine;

@@ -1,5 +1,3 @@
-export const pauseAPIs = ["tween", "wait", "loop", "play"] as const;
-
 export const loadAPIs = [
 	"loadRoot",
 	"loadSprite",

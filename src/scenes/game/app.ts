@@ -1,7 +1,7 @@
-import { Asset, AudioPlay, AudioPlayOpt, Color, GameObj, KEventController, MusicData, SoundData, TimerController, TweenController, Vec2 } from "kaplay";
-import { createPauseCtx, PauseCtx } from "./context/pause";
+import { AudioPlay, Color, KEventController, TimerController, TweenController, Vec2 } from "kaplay";
 import k from "../../engine";
 import { Conductor, createConductor } from "../../plugins/conductor";
+import { createTransCtx, TransCtx } from "./context/trans";
 
 /** Creates a cute little object that contains a buncha game objects that can hold, a ware instance
  * @returns An object with a lot of objects
@@ -89,47 +89,73 @@ export type WareApp = {
 	readonly sceneObj: GameContainer["scene"];
 	/** Is attached to mask */
 	readonly cameraObj: GameContainer["camera"];
-	readonly pauseCtx: PauseCtx;
+
+	/** The current transition context that can be paused */
+	readonly transCtx: TransCtx;
+
+	events: {
+		paused: boolean;
+		readonly length: number;
+		add(ev: KEventController): KEventController;
+		cancel(): void;
+	};
+
+	inputs: {
+		paused: boolean;
+		readonly length: number;
+		add(ev: KEventController): KEventController;
+		cancel(): void;
+	};
+
+	sounds: {
+		play: typeof k["play"];
+		paused: boolean;
+		readonly length: number;
+		cancel(): void;
+	};
+
+	timers: {
+		tween: typeof k["tween"];
+		loop: typeof k["loop"];
+		wait: typeof k["wait"];
+		paused: boolean;
+		readonly length: number;
+		cancel(): void;
+	};
+
 	backgroundColor: Color;
 	gamePaused: boolean;
 
-	updateEvents: KEventController[];
-	drawEvents: KEventController[];
-
-	inputEvents: KEventController[];
-	inputPaused: boolean;
-
-	timerEvents: (TweenController | TimerController)[];
-	timerPaused: boolean;
-	addTimer<T extends TimerController | TweenController>(timer: T): T;
-
-	sounds: AudioPlay[];
-	soundPaused: boolean;
-	addSound(snd: AudioPlay): AudioPlay;
-
-	createConductor(bpm: number, startPaused?: boolean): Conductor;
-
-	clearAllEvs(): void;
-	clearSounds(): void;
+	createConductor: typeof createConductor;
+	clearAll(): void;
 	resetCamera(): void;
 	handleQuickWatch(): void;
-	play(src: string | SoundData | Asset<SoundData> | Asset<string>, options?: AudioPlayOpt): AudioPlay;
 };
 
 /** Function that creates an instance of {@link WareApp `WareApp`} */
 export function createWareApp(): WareApp {
 	const gameContainer = createGameContainer();
-	const pauseCtx = createPauseCtx();
 
 	/** Wheter EVERYTHING should be paused */
 	let gamePaused = false;
-	let soundPaused = true;
-	let inputPaused = true;
-	let timerPaused = true;
+
+	let events: KEventController[] = [];
+	let eventsPaused = false;
+
+	let timers: (TimerController | TweenController)[] = [];
+	let timersPaused = false;
+
+	let sounds: AudioPlay[] = [];
+	let soundsPaused = false;
+	let disabledSounds: AudioPlay[] = [];
+
+	let inputs: KEventController[] = [];
+	let inputsPaused = false;
 
 	/** Sounds that were disabled by "soundsEnabled" setter */
-	let disabledSounds: AudioPlay[] = [];
 	let conductors: Conductor[] = [];
+
+	const transCtx = createTransCtx();
 
 	const app = {
 		get rootObj() {
@@ -144,101 +170,155 @@ export function createWareApp(): WareApp {
 		get cameraObj() {
 			return gameContainer.camera;
 		},
-		get pauseCtx() {
-			return pauseCtx;
+
+		get transCtx() {
+			return transCtx;
 		},
+
+		events: {
+			get length() {
+				return events.length;
+			},
+			set paused(val: boolean) {
+				eventsPaused = val;
+				events.forEach((i) => i.paused = val);
+			},
+			get paused() {
+				return eventsPaused;
+			},
+			add(ev) {
+				events.push(ev);
+				return ev;
+			},
+			cancel() {
+				events.forEach((i) => i.cancel());
+				events = [];
+			},
+		},
+
+		inputs: {
+			get length() {
+				return inputs.length;
+			},
+			set paused(val: boolean) {
+				inputsPaused = val;
+				inputs.forEach((i) => i.paused = val);
+			},
+			get paused() {
+				return inputsPaused;
+			},
+			add(ev) {
+				inputs.push(ev);
+				return ev;
+			},
+			cancel() {
+				inputs.forEach((i) => i.cancel());
+				inputs = [];
+			},
+		},
+
+		timers: {
+			get paused() {
+				return timersPaused;
+			},
+			set paused(val: boolean) {
+				timersPaused = val;
+				timers.forEach((timer) => timer.paused = timersPaused);
+			},
+			get length() {
+				return timers.length;
+			},
+			loop(t, action, maxLoops, waitFirst) {
+				const l = gameContainer.scene.loop(t, action, maxLoops, waitFirst);
+				timers.push(l);
+				return l;
+			},
+			wait(n, action) {
+				const w = gameContainer.scene.wait(n, action);
+				timers.push(w);
+				return w;
+			},
+			tween(from, to, duration, setValue, easeFunc) {
+				const t = gameContainer.scene.tween(from, to, duration, setValue, easeFunc);
+				timers.push(t);
+				return t;
+			},
+			cancel() {
+				timers.forEach((t) => t.cancel());
+				timers = [];
+			},
+		},
+
+		sounds: {
+			get length() {
+				return sounds.length;
+			},
+			get paused() {
+				return soundsPaused;
+			},
+			set paused(val: boolean) {
+				soundsPaused = val;
+
+				if (soundsPaused == true) {
+					sounds.forEach((sound) => {
+						if (sound.paused) return;
+						// sound is intended to play but sounds were disabled
+						disabledSounds.push(sound);
+						sound.paused = true;
+					});
+				}
+				else if (soundsPaused == false) {
+					disabledSounds.forEach((sound) => {
+						// re enable the good sounds
+						sound.paused = false;
+						disabledSounds.splice(disabledSounds.indexOf(sound), 1);
+					});
+				}
+			},
+			play(src, options) {
+				const sound = k.play(src, options);
+
+				if (soundsPaused && sound.paused == false) {
+					sound.paused = true;
+					disabledSounds.push(sound);
+				}
+
+				sounds.push(sound);
+
+				sound.onEnd(() => {
+					sounds.splice(sounds.indexOf(sound), 1);
+					if (disabledSounds.includes(sound)) disabledSounds.splice(disabledSounds.indexOf(sound), 1);
+				});
+
+				return sound;
+			},
+			cancel() {
+				sounds.forEach((sound) => sound.stop());
+				sounds = [];
+			},
+		},
+
 		backgroundColor: k.rgb(),
-		updateEvents: [],
-		drawEvents: [],
-		inputEvents: [],
-		timerEvents: [],
 		get gamePaused() {
 			return gamePaused;
 		},
 		set gamePaused(val: boolean) {
 			gamePaused = val;
-			app.timerPaused = gamePaused;
-			app.inputPaused = gamePaused;
-			app.soundPaused = gamePaused;
-			app.rootObj.paused = gamePaused;
+			(this as WareApp).events.paused = gamePaused;
+			(this as WareApp).timers.paused = gamePaused;
+			(this as WareApp).inputs.paused = gamePaused;
+			(this as WareApp).sounds.paused = gamePaused;
+			(this as WareApp).rootObj.paused = gamePaused;
+			(this as WareApp).transCtx.paused = gamePaused;
 			conductors.forEach((theGuyWhoWavesHisStickAtTheOrchestra) => theGuyWhoWavesHisStickAtTheOrchestra.paused = gamePaused);
 		},
-		get timerPaused() {
-			return timerPaused;
-		},
-		set timerPaused(val: boolean) {
-			timerPaused = val;
-			(this as WareApp).timerEvents.forEach((ev) => ev.paused = timerPaused);
-		},
-		get inputPaused() {
-			return inputPaused;
-		},
-		set inputPaused(val: boolean) {
-			inputPaused = val;
-			(this as WareApp).inputEvents.forEach((ev) => ev.paused = inputPaused);
-		},
-		get soundPaused() {
-			return soundPaused;
-		},
-		set soundPaused(val: boolean) {
-			soundPaused = val;
-
-			if (soundPaused == true) {
-				(this as WareApp).sounds.forEach((sound) => {
-					if (sound.paused) return;
-					// sound is intended to play but sounds were disabled
-					disabledSounds.push(sound);
-					sound.paused = true;
-				});
-			}
-			else if (soundPaused == false) {
-				disabledSounds.forEach((sound) => {
-					// re enable the good sounds
-					sound.paused = false;
-					disabledSounds.splice(disabledSounds.indexOf(sound), 1);
-				});
-			}
-		},
-		sounds: [],
-		addSound(this: WareApp, sound: AudioPlay) {
-			this.sounds.push(sound);
-			sound.onEnd(() => {
-				this.sounds.splice(this.sounds.indexOf(sound), 1);
-			});
-			return sound;
-		},
-		addTimer(this: WareApp, timer) {
-			this.timerEvents.push(timer);
-			timer.onEnd(() => {
-				this.timerEvents.splice(this.timerEvents.indexOf(timer), 1);
-			});
-			return timer;
-		},
-		play(this: WareApp, src, options) {
-			const sound = k.play(src, options);
-
-			if (this.soundPaused && sound.paused == false) {
-				sound.paused = true;
-				disabledSounds.push(sound);
-			}
-			this.sounds.push(sound);
-
-			sound.onEnd(() => {
-				this.sounds.splice(this.sounds.indexOf(sound), 1);
-				if (disabledSounds.includes(sound)) disabledSounds.splice(disabledSounds.indexOf(sound), 1);
-			});
-			return sound;
-		},
-		clearAllEvs(this: WareApp) {
-			this.updateEvents.forEach((ev) => ev.cancel());
-			this.drawEvents.forEach((ev) => ev.cancel());
-			this.inputEvents.forEach((ev) => ev.cancel());
-			this.timerEvents.forEach((ev) => ev.cancel());
-
-			this.updateEvents = [];
-			this.drawEvents = [];
-			this.inputEvents = [];
-			this.timerEvents = [];
+		clearAll(this: WareApp) {
+			this.events.cancel();
+			this.inputs.cancel();
+			this.timers.cancel();
+			this.sounds.cancel();
+			disabledSounds.forEach((s) => s.stop());
+			disabledSounds = [];
 		},
 		resetCamera(this: WareApp) {
 			this.cameraObj.pos = k.center();
@@ -247,17 +327,10 @@ export function createWareApp(): WareApp {
 			this.cameraObj.shake = 0;
 		},
 		handleQuickWatch(this: WareApp) {
-			k.quickWatch("events", `${this.updateEvents.length}`);
-			k.quickWatch("draw", `${this.drawEvents.length}`);
-			k.quickWatch("sound", `${this.sounds.length} (${!this.soundPaused})`);
-			k.quickWatch("input", `${this.inputEvents.length} (${!this.inputPaused})`);
-			k.quickWatch("timers", `${this.timerEvents.length} (${!this.timerPaused})`);
-		},
-		clearSounds(this: WareApp) {
-			this.sounds.forEach((sound) => sound.stop());
-			this.sounds = [];
-			disabledSounds.forEach((sound) => sound.stop());
-			disabledSounds = [];
+			k.quickWatch("app.events", `${this.events.length} (${!this.events.paused})`);
+			k.quickWatch("app.sound", `${this.sounds.length} (${!this.sounds.paused})`);
+			k.quickWatch("app.input", `${this.inputs.length} (${!this.inputs.paused})`);
+			k.quickWatch("app.timers", `${this.timers.length} (${!this.timers.paused})`);
 		},
 		createConductor(this: WareApp, bpm, startPaused = false) {
 			const conductor = createConductor(bpm, startPaused);

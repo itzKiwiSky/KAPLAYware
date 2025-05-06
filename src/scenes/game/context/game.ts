@@ -38,18 +38,15 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 		play(src, options) {
 			// if sound name is string, check for @, else just send it
 			src = typeof src == "string" ? (src.startsWith("@") ? src : `${getGameID(game)}-${src}`) : src;
-			const sound = wareApp.play(src, options);
-			return sound;
+			return wareApp.sounds.play(src, options);
 		},
 		area(opt) {
 			return {
 				...k.area(opt),
 				onClick(f, btn) {
-					const ev = k.onMousePress("left", () => {
+					return wareApp.inputs.add(k.onMousePress("left", () => {
 						if (this.isHovering()) f();
-					});
-					wareApp.inputEvents.push(ev);
-					return ev;
+					}));
 				},
 			};
 		},
@@ -100,61 +97,51 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 			return {
 				...comp,
 				fadeOut(time: number, easeFunc = k.easings.linear) {
-					return wareApp.addTimer(wareApp.sceneObj.tween(
+					return wareApp.timers.tween(
 						this.opacity,
 						0,
 						time,
 						(a) => this.opacity = a,
 						easeFunc,
-					));
+					);
 				},
 				fadeIn(time: number, easeFunc = k.easings.linear) {
-					return wareApp.addTimer(wareApp.sceneObj.tween(
+					return wareApp.timers.tween(
 						0,
 						this.opacity,
 						time,
 						(a) => this.opacity = a,
 						easeFunc,
-					));
+					);
 				},
 			};
 		},
 		onMouseMove(action) {
-			const ev = k.onMouseMove(action);
-			wareApp.inputEvents.push(ev);
-			return ev;
+			// TODO: figure out important stuff like
+			// should ctx.width() return width of gamebox?
+			// what about mousepos?
+			// stuff like that
+			return wareApp.inputs.add(k.onMouseMove(action));
 		},
 		// timer controllers
 		tween(from, to, duration, setValue, easeFunc) {
-			const ev = wareApp.sceneObj.tween(from, to, duration, setValue, easeFunc);
-			wareApp.timerEvents.push(ev);
-			return ev;
+			return wareApp.timers.tween(from, to, duration, setValue, easeFunc);
 		},
 		wait(n, action) {
-			const ev = wareApp.sceneObj.wait(n, action);
-			wareApp.timerEvents.push(ev);
-			return ev;
+			return wareApp.timers.wait(n, action);
 		},
 		loop(t, action, maxLoops, waitFirst) {
-			const ev = wareApp.sceneObj.loop(t, action, maxLoops, waitFirst);
-			wareApp.timerEvents.push(ev);
-			return ev;
+			return wareApp.timers.loop(t, action, maxLoops, waitFirst);
 		},
 		// general event controllers
 		onCollide(t1, t2, action) {
-			const ev = k.onCollide(t1, t2, action);
-			wareApp.updateEvents.push(ev);
-			return ev;
+			return wareApp.events.add(k.onCollide(t1, t2, action));
 		},
 		onCollideUpdate(t1, t2, action) {
-			const ev = k.onCollideUpdate(t1, t2, action);
-			wareApp.updateEvents.push(ev);
-			return ev;
+			return wareApp.events.add(k.onCollideUpdate(t1, t2, action));
 		},
 		onCollideEnd(t1, t2, action) {
-			const ev = k.onCollideEnd(t1, t2, action);
-			wareApp.updateEvents.push(ev);
-			return ev;
+			return wareApp.events.add(k.onCollideEnd(t1, t2, action));
 		},
 		trigger(event, tag, ...args) {
 			wareApp.sceneObj.get(tag).forEach((child) => {
@@ -181,6 +168,11 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 				},
 			};
 		},
+		addKaboom(pos, opt) {
+			const ka = k.addKaboom(pos, opt);
+			ka.parent = wareApp.sceneObj;
+			return ka;
+		},
 	};
 
 	startCtx["onUpdate"] = overload2((action: () => void): KEventController => {
@@ -194,12 +186,10 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 			},
 			cancel: () => obj.destroy(),
 		};
-		wareApp.updateEvents.push(ev);
+		wareApp.events.add(ev);
 		return ev;
 	}, (tag: Tag, action: (obj: GameObj) => void) => {
-		const ev = k.on("update", tag, action);
-		wareApp.updateEvents.push(ev);
-		return ev;
+		return wareApp.events.add(k.on("update", tag, action));
 	});
 
 	startCtx["onDraw"] = overload2((action: () => void): KEventController => {
@@ -213,8 +203,7 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 			},
 			cancel: () => obj.destroy(),
 		};
-		wareApp.drawEvents.push(ev);
-		return ev;
+		return wareApp.events.add(ev);
 	}, (tag: Tag, action: (obj: GameObj) => void) => {
 		let paused = false;
 		const evs: KEventController[] = [];
@@ -237,14 +226,12 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 			},
 		};
 
-		wareApp.drawEvents.push(ev);
-		return ev;
+		return wareApp.events.add(ev);
 	});
 
 	startCtx["onClick"] = overload2((action: () => void) => {
 		const ev = wareApp.sceneObj.onMousePress(action);
-		wareApp.inputEvents.push(ev);
-		return ev;
+		return wareApp.inputs.add(ev);
 	}, (tag: Tag, action: (obj: GameObj) => void) => {
 		const events: KEventController[] = [];
 		let paused: boolean = false;
@@ -270,8 +257,7 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 				listener.cancel();
 			},
 		};
-		wareApp.inputEvents.push(ev);
-		return ev;
+		return wareApp.inputs.add(ev);
 	});
 
 	return startCtx;
@@ -318,35 +304,35 @@ export function createMinigameAPI(wareApp: WareApp, wareEngine?: Kaplayware): Mi
 			let ev: KEventController = null;
 			if (btn == "click") ev = k.onMousePress("left", action);
 			else ev = k.onKeyPress(dirToKeys(btn), action);
-			wareApp.inputEvents.push(ev);
+			wareApp.inputs.add(ev);
 			return ev;
 		},
 		onInputButtonDown: (btn, action) => {
 			let ev: KEventController = null;
 			if (btn == "click") ev = k.onMouseDown("left", action);
 			else ev = k.onKeyDown(dirToKeys(btn), action);
-			wareApp.inputEvents.push(ev);
+			wareApp.inputs.add(ev);
 			return ev;
 		},
 		onInputButtonRelease: (btn, action) => {
 			let ev: KEventController = null;
 			if (btn == "click") ev = k.onMouseRelease("left", action);
 			else ev = k.onKeyRelease(dirToKeys(btn), action);
-			wareApp.inputEvents.push(ev);
+			wareApp.inputs.add(ev);
 			return ev;
 		},
 		isInputButtonPressed: (btn) => {
-			if (wareApp.inputPaused) return false;
+			if (wareApp.inputs.paused) return false;
 			if (btn == "click") return k.isMousePressed("left");
 			else return k.isKeyPressed(dirToKeys(btn));
 		},
 		isInputButtonDown: (btn) => {
-			if (wareApp.inputPaused) return false;
+			if (wareApp.inputs.paused) return false;
 			if (btn == "click") return k.isMouseDown("left");
 			else return k.isKeyDown(dirToKeys(btn));
 		},
 		isInputButtonReleased: (btn) => {
-			if (wareApp.inputPaused) return false;
+			if (wareApp.inputs.paused) return false;
 			if (btn == "click") return k.isMouseReleased("left");
 			else return k.isKeyDown(dirToKeys(btn));
 		},
