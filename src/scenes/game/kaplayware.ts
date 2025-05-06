@@ -57,10 +57,10 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 	let transition = null as Transition;
 
 	const getRandomGame = () => {
-		let possibleGames: Minigame[] = [...opt.games.filter((g) => !g.isBoss)];
+		let possibleGames: Minigame[] = [...opt.games];
 
-		if (shouldBoss()) {
-			possibleGames = [...opt.games.filter((game) => game.isBoss == true)];
+		if (!shouldBoss()) {
+			possibleGames = possibleGames.filter((game) => !game.isBoss);
 		}
 
 		// now check for history and repeatedness and get a new one
@@ -79,12 +79,8 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 		return k.choose(possibleGames);
 	};
 
-	const calculateDifficulty = (): 1 | 2 | 3 => {
-		let diff = 1;
-		if (previousGame?.isBoss || opt.games.filter((g) => g.isBoss).length == 0 && wareEngine.score % HOW_FREQUENT_BOSS == 0) {
-			diff = 1 + wareEngine.difficulty % 3;
-		}
-		return diff as 1 | 2 | 3;
+	const calculateDifficulty = (score = wareEngine.score): 1 | 2 | 3 => {
+		return Math.max(1, (Math.floor(score / 10) + 1) % 4) as 1 | 2 | 3;
 	};
 
 	const shouldSpeedUp = () => {
@@ -109,8 +105,6 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 	const shouldBoss = () => {
 		const scoreEqualsBoss = () => wareEngine.score % HOW_FREQUENT_BOSS == 0;
 		const onlyBoss = () => opt.games.length == 1 && opt.games[0].isBoss == true;
-		console.log("score equals boss: " + scoreEqualsBoss());
-		console.log("the game is an only boss: " + onlyBoss());
 		return scoreEqualsBoss() || onlyBoss();
 	};
 
@@ -171,6 +165,7 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 			wareEngine.lives--;
 			wareEngine.timePaused = true;
 			wareEngine.winState = false;
+			currentBomb?.explode();
 		},
 		finishGame() {
 			if (wareEngine.winState == undefined) {
@@ -221,6 +216,7 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 					// When there's 4 beats left
 					const beatInterval = 60 / (140 * wareEngine.speed);
 					if (wareEngine.timeLeft <= beatInterval * 4 && currentBomb == null) {
+						// TODO: bomb keeps ticking when you lose, what should do?
 						currentBomb = addBomb(wareApp);
 						currentBomb.lit(140 * wareEngine.speed);
 					}
@@ -268,8 +264,6 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 		},
 	};
 
-	// TODO: maybe reset speed after boss? consult lajbel
-
 	wareApp.rootObj.onUpdate(() => {
 		wareApp.sceneObj.paused = wareEngine.gamePaused;
 		wareApp.handleQuickWatch();
@@ -277,7 +271,7 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 		// starts with 40 and after first round is 80, that's weird
 		k.quickWatch("objects.length", k.debug.numObjects());
 		k.quickWatch("score", wareEngine.score);
-		k.quickWatch("time", wareEngine.timeLeft.toFixed(2));
+		k.quickWatch("time", wareEngine.timeLeft?.toFixed(2));
 		k.quickWatch("speed", wareEngine.speed.toFixed(2));
 	});
 

@@ -1,12 +1,15 @@
 import { AudioPlay, KAPLAYCtx, KEventController } from "kaplay";
 import k from "../engine";
 
+// TODO: move this somewhere else, no longer a plugin
 export type Conductor = {
+	time: number;
 	bpm: number;
 	paused: boolean;
 	readonly beatInterval: number;
 	destroy(): void;
 	onBeat(action: (beat: number, beatTime: number) => void): KEventController;
+	onUpdate(action: () => void): KEventController;
 };
 
 /** Small conductor class for managing beat hit behaviour
@@ -28,8 +31,9 @@ export function createConductor(bpm: number, startPaused: boolean = false): Cond
 	let time = 0;
 	let beatInterval = 60 / bpm;
 	let paused = startPaused;
-
-	const update = k.onUpdate(() => {
+	const updateEv = new k.KEvent();
+	const update = k.onUpdate(() => updateEv.trigger());
+	updateEv.add(() => {
 		if (paused) return;
 		beatInterval = 60 / bpm;
 		time = (time + k.dt()) % 60;
@@ -61,9 +65,18 @@ export function createConductor(bpm: number, startPaused: boolean = false): Cond
 		set paused(val: boolean) {
 			paused = val;
 		},
+		set time(val: number) {
+			time = 0;
+		},
+		get time() {
+			return time;
+		},
 		destroy() {
 			update.cancel();
 			beatHitEv.clear();
+		},
+		onUpdate(action) {
+			return updateEv.add(action);
 		},
 	};
 }

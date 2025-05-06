@@ -2,20 +2,30 @@ import { AreaComp, GameObj, KEvent, KEventController, PosComp, RotateComp, Scale
 import { WareApp } from "../app";
 import k from "../../../engine";
 import { Kaplayware } from "../kaplayware";
-const baseStages = ["prep", "win", "lose", "bossPrep", "bossWin", "bossLose", "speed"] as const;
 
+const baseStages = ["prep", "win", "lose", "bossPrep", "bossWin", "bossLose", "speed"] as const;
 /** The many stages an animation can go through */
 export type TransitionStage = typeof baseStages[number];
 
-// should return the runTransition function
 type CameraObject = GameObj<PosComp | ScaleComp | RotateComp>;
 type ParentObject = GameObj<PosComp>;
 type StateObject = {
+	/** KEvents that shouldn't be cleared */
+	startEv: KEvent<[TransitionStage]>;
+	endEv: KEvent<[TransitionStage]>;
+	/** The last stages the transition was called with */
 	stages: TransitionStage[];
+	/** Runs when the first stage runs */
+	onStart(action: () => void): void;
+	/** Defines a stage of the transition */
 	defineStage(stage: TransitionStage, action: () => void): void;
+	/** Triggers a stage of the transition, will cause it to run all over them */
 	enterStage(stage: TransitionStage): void;
+	/** Mark the ending of a stage */
 	finishStage(stage: TransitionStage): void;
+	/** Trigger the prompt */
 	callPrompt(): void;
+	/** Trigger the input prompt */
 	callInput(): void;
 };
 
@@ -35,8 +45,14 @@ export type Transition = {
 	trigger(stages: TransitionStage[]): void;
 };
 
+/** A transition function, is the one that plays the songs and adds the objects and such */
 export type TransitionDefinition = (parent: ParentObject, camera: CameraObject, stageManager: StateObject, wareApp: WareApp, wareEngine: Kaplayware) => void;
 
+/** Runs one time and creates a transition for actual use inside the KAPLAYWARE engine
+ * @param transAction (clave) Gets called after creating all the events and such
+ * @param wareApp The ware app necessary to add trans camera and such
+ * @param wareEngine The ware engine necessary to pass into the transition so it can use speed, lives etc etc
+ */
 export function createTransition(transAction: TransitionDefinition, wareApp: WareApp, wareEngine: Kaplayware): Transition {
 	const startEv = new k.KEvent<[TransitionStage]>();
 	const endEv = new k.KEvent<[TransitionStage]>();
@@ -47,16 +63,25 @@ export function createTransition(transAction: TransitionDefinition, wareApp: War
 	const camera = wareApp.rootObj.add([k.scale(), k.pos(k.center()), k.rotate(0), k.anchor("center"), k.z(1)]);
 	const parent = camera.add([k.pos(-k.width() / 2, -k.height() / 2)]);
 	const stageManager: StateObject = {
+		startEv: new k.KEvent<[TransitionStage]>(),
+		endEv: new k.KEvent<[TransitionStage]>(),
 		stages: [],
+		onStart(action) {
+			this.startEv.add((stage) => {
+				if (stage == this.stages[0]) action();
+			});
+		},
 		defineStage(stage, action) {
-			startEv.add((actionStage) => {
+			this.startEv.add((actionStage) => {
 				if (actionStage == stage) action();
 			});
 		},
 		enterStage(stage) {
+			this.startEv.trigger(stage);
 			startEv.trigger(stage);
 		},
 		finishStage(stage) {
+			this.endEv.trigger(stage);
 			endEv.trigger(stage);
 		},
 		callPrompt() {
@@ -68,14 +93,18 @@ export function createTransition(transAction: TransitionDefinition, wareApp: War
 	};
 
 	// when a stage over is called, go to the next one
-	endEv.add((stage) => {
+	stageManager.endEv.add((stage) => {
 		if (stageManager.stages.indexOf(stage) < stageManager.stages.length - 1) stageManager.enterStage(stageManager.stages[stageManager.stages.indexOf(stage) + 1]);
-		else endTransEv.trigger();
-	});
-
-	endTransEv.add(() => {
-		inputEv.clear();
-		promptEv.clear();
+		else {
+			endTransEv.trigger();
+			startEv.clear();
+			endEv.clear();
+			inputEv.clear();
+			promptEv.clear();
+			endTransEv.clear();
+			camera.paused = true;
+			camera.hidden = true;
+		}
 	});
 
 	// run the transition definition
@@ -87,34 +116,26 @@ export function createTransition(transAction: TransitionDefinition, wareApp: War
 			return stageManager.stages;
 		},
 		trigger(stages: TransitionStage[]) {
-			startEv.trigger(stages[0]);
 			stageManager.stages = stages;
+			stageManager.enterStage(stages[0]);
+			camera.paused = false;
+			camera.hidden = false;
 			// console.log("WARE: Transition called with stages: " + stages);
 		},
 		onStageStart(stage, action) {
-			const ev = startEv.add((actionStage) => {
-				if (actionStage == stage) {
-					action();
-					ev.cancel();
-				}
+			return startEv.add((actionStage) => {
+				if (actionStage == stage) action();
 			});
-			return ev;
 		},
 		onStageEnd(stage, action) {
-			const ev = endEv.add((actionStage) => {
-				if (actionStage == stage) {
-					action();
-					ev.cancel();
-				}
+			return endEv.add((actionStage) => {
+				if (actionStage == stage) action();
 			});
-			return ev;
 		},
 		onTransitionEnd(action) {
-			const ev = endTransEv.add(() => {
+			return endTransEv.add(() => {
 				action();
-				ev.cancel();
 			});
-			return ev;
 		},
 		onPromptTime(action) {
 			return promptEv.add(action);

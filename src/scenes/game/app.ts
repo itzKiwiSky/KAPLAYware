@@ -129,7 +129,6 @@ export function createWareApp(): WareApp {
 
 	/** Sounds that were disabled by "soundsEnabled" setter */
 	let disabledSounds: AudioPlay[] = [];
-
 	let conductors: Conductor[] = [];
 
 	const app = {
@@ -162,7 +161,7 @@ export function createWareApp(): WareApp {
 			app.inputPaused = gamePaused;
 			app.soundPaused = gamePaused;
 			app.rootObj.paused = gamePaused;
-			conductors.forEach((conducto) => conducto.paused = gamePaused);
+			conductors.forEach((theGuyWhoWavesHisStickAtTheOrchestra) => theGuyWhoWavesHisStickAtTheOrchestra.paused = gamePaused);
 		},
 		get timerPaused() {
 			return timerPaused;
