@@ -1,8 +1,8 @@
 import { KAPLAYCtx, SpriteAtlasData } from "kaplay";
 import { getGameID } from "../utils";
-import { Minigame } from "../minigameType";
 import { loadAPIs } from "../api";
 import k from "../../../engine";
+import Minigame from "../minigameType";
 
 /** The allowed load functions */
 export type LoadCtx = Pick<KAPLAYCtx, typeof loadAPIs[number]>;
@@ -48,7 +48,7 @@ export function createLoadCtx(game: Minigame) {
 		}
 	}
 
-	// patch loadRoot() to consider g.urlPrefix
+	// this patches loadRoot() to consider g.urlPrefix
 	if (game.urlPrefix != undefined) {
 		loadCtx["loadRoot"] = (p: string) => {
 			if (p) k.loadRoot(game.urlPrefix + p);

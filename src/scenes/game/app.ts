@@ -124,7 +124,7 @@ export type WareApp = {
 	};
 
 	backgroundColor: Color;
-	gamePaused: boolean;
+	paused: boolean;
 
 	createConductor: typeof createConductor;
 	clearAll(): void;
@@ -147,12 +147,11 @@ export function createWareApp(): WareApp {
 
 	let sounds: AudioPlay[] = [];
 	let soundsPaused = false;
-	let disabledSounds: AudioPlay[] = [];
+	let disabledSounds: AudioPlay[] = []; // sounds that were disabled by sounds.paused
 
 	let inputs: KEventController[] = [];
 	let inputsPaused = false;
 
-	/** Sounds that were disabled by "soundsEnabled" setter */
 	let conductors: Conductor[] = [];
 
 	const transCtx = createTransCtx();
@@ -299,18 +298,18 @@ export function createWareApp(): WareApp {
 		},
 
 		backgroundColor: k.rgb(),
-		get gamePaused() {
+		get paused() {
 			return gamePaused;
 		},
-		set gamePaused(val: boolean) {
+		set paused(val: boolean) {
 			gamePaused = val;
 			(this as WareApp).events.paused = gamePaused;
 			(this as WareApp).timers.paused = gamePaused;
 			(this as WareApp).inputs.paused = gamePaused;
 			(this as WareApp).sounds.paused = gamePaused;
-			(this as WareApp).rootObj.paused = gamePaused;
 			(this as WareApp).transCtx.paused = gamePaused;
-			conductors.forEach((theGuyWhoWavesHisStickAtTheOrchestra) => theGuyWhoWavesHisStickAtTheOrchestra.paused = gamePaused);
+			(this as WareApp).rootObj.paused = gamePaused;
+			conductors.forEach((c) => c.paused = gamePaused);
 		},
 		clearAll(this: WareApp) {
 			this.events.cancel();
@@ -327,6 +326,7 @@ export function createWareApp(): WareApp {
 			this.cameraObj.shake = 0;
 		},
 		handleQuickWatch(this: WareApp) {
+			k.quickWatch("app.paused", `${this.paused}`);
 			k.quickWatch("app.events", `${this.events.length} (${!this.events.paused})`);
 			k.quickWatch("app.sound", `${this.sounds.length} (${!this.sounds.paused})`);
 			k.quickWatch("app.input", `${this.inputs.length} (${!this.inputs.paused})`);

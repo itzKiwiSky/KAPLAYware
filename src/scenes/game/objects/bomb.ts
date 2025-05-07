@@ -1,6 +1,6 @@
 import k from "../../../engine";
+import { Conductor, createConductor } from "../../../plugins/conductor";
 import { WareApp } from "../app";
-import { Kaplayware } from "../kaplayware";
 
 /** Add the bomb for the wareEngine
  * @param wareApp The app
@@ -22,7 +22,7 @@ export function addBomb(wareApp: WareApp) {
 		explode,
 	}]);
 
-	let conductor: ReturnType<typeof k.conductor> = null;
+	let conductor: Conductor = null;
 
 	const bombSpr = bomb.add([
 		k.sprite("bomb"),
@@ -72,7 +72,7 @@ export function addBomb(wareApp: WareApp) {
 		cord.width = width;
 		cordtip.pos.x = width;
 
-		if (conductor) conductor.paused = wareApp.gamePaused;
+		if (conductor) conductor.paused = wareApp.paused;
 		if (beatsLeft == 0 && !movingFuse) {
 			if (cordstart.exists()) cordstart.destroy();
 			cordtip.opacity = 0;
@@ -106,7 +106,7 @@ export function addBomb(wareApp: WareApp) {
 
 	/** Will start a conductor which will explode the bomb in 4 beats (tick, tick, tick, BOOM!) */
 	function lit(bpm = 140) {
-		conductor = k.conductor(bpm);
+		conductor = wareApp.transCtx.createConductor(bpm);
 		conductor.onBeat((beat, beatTime) => {
 			tick();
 			if (beat == 4) destroy();

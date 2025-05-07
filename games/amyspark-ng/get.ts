@@ -17,9 +17,7 @@ const getGame: Minigame = {
 		ctx.loadSound("rustle", "sounds/bushrustle.mp3");
 	},
 	start(ctx) {
-		// TODO: why is it so slow?
-
-		const SPEED = 300 * ctx.speed;
+		const SPEED = 400 * ctx.speed;
 		ctx.add([ctx.sprite("grass")]);
 
 		let appleOnFloor = false;

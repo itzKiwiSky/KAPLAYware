@@ -78,7 +78,7 @@ export function addInputPrompt(wareApp: WareApp, input: MinigameInput, speed = 1
 
 	wareApp.transCtx.wait(0.5 / speed, () => {
 		wareApp.transCtx.tween(k.vec2(1), k.vec2(0), 0.25 / speed, (p) => inputBg.scale = p, k.easings.easeOutExpo).onEnd(() => {
-			inputPrompt.destroy();
+			prompt.destroy();
 		});
 	});
 

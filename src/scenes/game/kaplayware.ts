@@ -30,7 +30,7 @@ export type Kaplayware = {
 	readonly curPrompt: string;
 	readonly curDuration: number;
 	timePaused: boolean;
-	gamePaused: boolean;
+	scenePaused: boolean;
 	minigameHistory: string[];
 	queuedSounds: KEventController[];
 	onTimeOutEvents: KEvent;
@@ -59,13 +59,11 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 	const getRandomGame = () => {
 		let possibleGames: Minigame[] = [...opt.games];
 
-		if (!shouldBoss()) {
-			possibleGames = possibleGames.filter((game) => !game.isBoss);
-		}
+		if (shouldBoss()) possibleGames = possibleGames.filter((game) => game.isBoss);
+		else possibleGames = possibleGames.filter((game) => !game.isBoss);
 
 		// now check for history and repeatedness and get a new one
 		possibleGames = possibleGames.filter((game) => {
-			if (possibleGames.every((g) => g.isBoss)) return true;
 			if (wareEngine.minigameHistory.length == 0 || opt.games.length == 1 || possibleGames.length == 1) return true;
 			else {
 				const previousPreviousID = wareEngine.minigameHistory[wareEngine.score - 3];
@@ -120,7 +118,9 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 		return transitionStages;
 	};
 
+	let warePaused = false;
 	const wareApp = createWareApp();
+
 	const wareEngine: Kaplayware = {
 		timeLeft: 4,
 		lives: 4,
@@ -128,18 +128,37 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 		speed: 1,
 		difficulty: 1,
 		timePaused: false,
-		gamePaused: false,
 		minigameHistory: [],
 		queuedSounds: [],
 		winState: undefined,
 		curGame: undefined,
 		curContext: undefined,
 		onTimeOutEvents: new k.KEvent(),
+		get scenePaused() {
+			return wareApp.sceneObj.paused;
+		},
+		set scenePaused(val) {
+			wareApp.sceneObj.paused = val;
+		},
 		get paused() {
-			return wareApp.gamePaused;
+			return warePaused;
 		},
 		set paused(val: boolean) {
-			wareApp.gamePaused = val;
+			warePaused = val;
+
+			// TODO: figure out why wareEngine.paused seems to return false when it's true on quickWatch
+			// if scene is unpaused, wareApp should pause absolutely everything
+			// else, if pausing pause everything
+			// and if unpausing, keep events paused but unpause the transCtx and the rootObj
+			if (!wareEngine.scenePaused) wareApp.paused = warePaused;
+			else {
+				if (warePaused) wareApp.paused = true;
+				else {
+					wareApp.paused = true;
+					wareApp.transCtx.paused = false;
+					wareApp.rootObj.paused = false;
+				}
+			}
 		},
 		get curDuration() {
 			return getGameDuration(this.curGame, this.curContext);
@@ -179,10 +198,11 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 
 			// pauses the current one and the next one
 			wareEngine.timePaused = true;
-			wareEngine.gamePaused = true;
-			wareApp.timers.paused = true;
-			wareApp.sounds.paused = true;
-			wareApp.inputs.paused = true;
+			wareEngine.scenePaused = true;
+			wareApp.paused = true;
+			wareApp.transCtx.paused = false;
+			wareApp.rootObj.paused = false;
+
 			cursor.canPoint = false;
 			previousGame = wareEngine.curGame;
 			wareEngine.onTimeOutEvents.clear();
@@ -243,17 +263,17 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 			});
 
 			transition.onTransitionEnd(() => {
-				cursor.fadeAway = gameHidesMouse(wareEngine.curGame);
-				wareApp.timers.paused = false;
-				wareApp.sounds.paused = false;
-				wareApp.inputs.paused = false;
-				wareEngine.gamePaused = false;
 				wareEngine.timePaused = false;
+				wareEngine.scenePaused = false;
+				wareApp.paused = false;
+				wareApp.transCtx.cancel(); // clear the transCtx
 				cursor.canPoint = true;
+				cursor.fadeAway = gameHidesMouse(wareEngine.curGame);
 			});
 
 			// trigger transition
 			transition.trigger(getTransitionStages());
+
 			wareEngine.winState = undefined; // reset it after transition so it does the win and lose
 
 			wareEngine.onTimeOutEvents.add(() => {
@@ -263,10 +283,13 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 	};
 
 	wareApp.rootObj.onUpdate(() => {
-		wareApp.sceneObj.paused = wareEngine.gamePaused;
+		k.quickWatch("GAME.paused", wareEngine.paused);
 		wareApp.handleQuickWatch();
+
 		// TODO: some objects seem to not be cleared, might be around boss things??
 		// starts with 40 and after first round is 80, that's weird
+		k.quickWatch("ware.scenePaused", wareEngine.scenePaused);
+		k.quickWatch("ware.objects", wareApp.sceneObj.get("*", { recursive: true }).length);
 		k.quickWatch("ware.score", wareEngine.score);
 		k.quickWatch("ware.time", wareEngine.timeLeft?.toFixed(2));
 		k.quickWatch("ware.speed", wareEngine.speed.toFixed(2));

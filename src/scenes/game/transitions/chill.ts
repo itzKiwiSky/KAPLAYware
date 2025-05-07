@@ -8,7 +8,6 @@ export const chillTransition: TransitionDefinition = (parent, camera, stageManag
 	const conductor = createConductor(140 * wareEngine.speed);
 	conductor.onUpdate(() => {
 		conductor.bpm = 140 * wareEngine.speed;
-		conductor.paused = parent.paused;
 	});
 
 	parent.add([k.sprite("trans1-bg")]);
@@ -70,7 +69,7 @@ export const chillTransition: TransitionDefinition = (parent, camera, stageManag
 		return flower;
 	}
 
-	// add hearts
+	// adds the hearts
 	for (let i = 0; i < (stageManager.stages[0] == "lose" ? wareEngine.lives + 1 : wareEngine.lives); i++) {
 		let shake = 0;
 
@@ -227,8 +226,6 @@ export const chillTransition: TransitionDefinition = (parent, camera, stageManag
 		chillbutterfly.frame = 0;
 
 		const prepConductor = createConductor(140 * wareEngine.speed);
-		parent.onUpdate(() => prepConductor.paused = wareApp.gamePaused);
-
 		fallingPage.destroy();
 		fallingPage = addCalendarPage(wareEngine.score - 1);
 
@@ -284,7 +281,7 @@ export const chillTransition: TransitionDefinition = (parent, camera, stageManag
 			}
 		});
 
-		// add the first flower in case there isn't one
+		// adds the first flower in case there isn't one
 		if (!parent.get("flower")[0] && !parent.get("piranha")[0]) {
 			for (let i = 0; i < wareEngine.difficulty; i++) {
 				addFlower();

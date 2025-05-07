@@ -1,4 +1,4 @@
-import kaplay, { GameObj, Vec2 } from "kaplay";
+import { GameObj } from "kaplay";
 import Minigame from "../../src/scenes/game/minigameType";
 
 const aimGame: Minigame = {
@@ -9,18 +9,17 @@ const aimGame: Minigame = {
 	input: "mouse (hidden)",
 	duration: 6,
 	load(ctx) {
-		// ctx.loadSprite("balloon", "/aim/balloon.png");
-		ctx.loadAseprite("bullet", "/aim/bullet.png", "/aim/bullet.json");
-		ctx.loadAseprite("balloon", "/aim/balloon.png", "/aim/balloon.json");
-		ctx.loadSprite("explosivoon", "/aim/bomb.png");
-		ctx.loadSprite("aim", "/aim/aim.png");
-		ctx.loadSprite("cloud", "/aim/cloud.png");
-		ctx.loadSprite("mountain", "/aim/mountain.png");
+		ctx.loadAseprite("bullet", "aim/bullet.png", "/aim/bullet.json");
+		ctx.loadAseprite("balloon", "aim/balloon.png", "/aim/balloon.json");
+		ctx.loadSprite("explosivoon", "aim/bomb.png");
+		ctx.loadSprite("aim", "aim/aim.png");
+		ctx.loadSprite("cloud", "aim/cloud.png");
+		ctx.loadSprite("mountain", "aim/mountain.png");
 
-		ctx.loadSound("pop1", "/aim/sounds/balloon_pop-01.mp3");
-		ctx.loadSound("pop2", "/aim/sounds/balloon_pop-02.mp3");
-		ctx.loadSound("pop3", "/aim/sounds/balloon_pop-03.mp3");
-		ctx.loadSound("explode", "/aim/sounds/explosion.wav");
+		ctx.loadSound("pop1", "aim/sounds/balloon_pop-01.mp3");
+		ctx.loadSound("pop2", "aim/sounds/balloon_pop-02.mp3");
+		ctx.loadSound("pop3", "aim/sounds/balloon_pop-03.mp3");
+		ctx.loadSound("explode", "aim/sounds/explosion.wav");
 	},
 	// TODO: Touch up some stuff
 	start(ctx) {
