@@ -93,6 +93,13 @@ export type WareApp = {
 	/** The current transition context that can be paused */
 	readonly transCtx: TransCtx;
 
+	draws: {
+		paused: boolean;
+		readonly length: number;
+		add(ev: KEventController): KEventController;
+		cancel(): void;
+	};
+
 	events: {
 		paused: boolean;
 		readonly length: number;
@@ -142,6 +149,9 @@ export function createWareApp(): WareApp {
 	let events: KEventController[] = [];
 	let eventsPaused = false;
 
+	let draws: KEventController[] = [];
+	let drawsPaused = false;
+
 	let timers: (TimerController | TweenController)[] = [];
 	let timersPaused = false;
 
@@ -172,6 +182,27 @@ export function createWareApp(): WareApp {
 
 		get transCtx() {
 			return transCtx;
+		},
+
+		draws: {
+			get length() {
+				return draws.length;
+			},
+			set paused(val: boolean) {
+				drawsPaused = val;
+				draws.forEach((d) => d.paused = drawsPaused);
+			},
+			get paused() {
+				return drawsPaused;
+			},
+			add(ev) {
+				draws.push(ev);
+				return ev;
+			},
+			cancel() {
+				draws.forEach((i) => i.cancel());
+				draws = [];
+			},
 		},
 
 		events: {
@@ -304,6 +335,7 @@ export function createWareApp(): WareApp {
 		set paused(val: boolean) {
 			gamePaused = val;
 			(this as WareApp).events.paused = gamePaused;
+			(this as WareApp).draws.paused = gamePaused;
 			(this as WareApp).timers.paused = gamePaused;
 			(this as WareApp).inputs.paused = gamePaused;
 			(this as WareApp).sounds.paused = gamePaused;
@@ -313,6 +345,7 @@ export function createWareApp(): WareApp {
 		},
 		clearAll(this: WareApp) {
 			this.events.cancel();
+			this.draws.cancel();
 			this.inputs.cancel();
 			this.timers.cancel();
 			this.sounds.cancel();
@@ -328,6 +361,7 @@ export function createWareApp(): WareApp {
 		handleQuickWatch(this: WareApp) {
 			k.quickWatch("app.paused", `${this.paused}`);
 			k.quickWatch("app.events", `${this.events.length} (${!this.events.paused})`);
+			k.quickWatch("app.draws", `${this.draws.length} (${!this.draws.paused})`);
 			k.quickWatch("app.sound", `${this.sounds.length} (${!this.sounds.paused})`);
 			k.quickWatch("app.input", `${this.inputs.length} (${!this.inputs.paused})`);
 			k.quickWatch("app.timers", `${this.timers.length} (${!this.timers.paused})`);

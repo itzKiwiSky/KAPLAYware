@@ -14,8 +14,10 @@ import chillTransition from "./transitions/chill";
 
 /** Certain options to instantiate kaplayware (ware-engine) */
 export type KAPLAYwareOpts = {
+	/** What games will be available generally */
 	games?: Minigame[];
-	filters?: { input: MinigameInput; }; // TODO: do this eventually, be able to filter by input, by boss and such idk
+	/** What input should be determined? */
+	inputFilter?: MinigameInput | "any";
 	// mods here
 };
 
@@ -44,9 +46,12 @@ export type Kaplayware = {
 };
 
 /** Instantiates and runs KAPLAYWARE (aka ware-engine), to start it, run nextGame() */
-export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
+export function kaplayware(opt: KAPLAYwareOpts = { games: games, inputFilter: "any" }): Kaplayware {
 	const HOW_FREQUENT_BOSS = 10;
 	const MAX_SPEED = 1.6;
+
+	if (opt.inputFilter == "both") opt.games = opt.games.filter((g) => g.isBoss);
+	else if (opt.inputFilter == "keys" || opt.inputFilter == "mouse") opt.games = opt.games.filter((g) => getGameInput(g) == opt.inputFilter || g.isBoss);
 
 	for (const game of opt.games) {
 		game.isBoss = game.isBoss ?? false;
@@ -55,26 +60,25 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 	let currentBomb: WareBomb = null;
 	let previousGame: Minigame = null;
 	let transition = null as Transition;
+	let minigameHat = [...opt.games];
 
+	/** Basically there's this minigame hat, when you pick a minigame, that minigame gets taken out of the hat, when there's no more minigames just add more again to the hat */
 	const getRandomGame = () => {
-		let possibleGames: Minigame[] = [...opt.games];
+		let randomGame: Minigame = null;
 
-		if (shouldBoss()) possibleGames = possibleGames.filter((game) => game.isBoss);
-		else possibleGames = possibleGames.filter((game) => !game.isBoss);
+		const regularHat = minigameHat.filter((g) => !g.isBoss);
+		const bossHat = minigameHat.filter((g) => g.isBoss);
 
-		// now check for history and repeatedness and get a new one
-		possibleGames = possibleGames.filter((game) => {
-			if (wareEngine.minigameHistory.length == 0 || opt.games.length == 1 || possibleGames.length == 1) return true;
-			else {
-				const previousPreviousID = wareEngine.minigameHistory[wareEngine.score - 3];
-				const previousPreviousGame = getGameByID(previousPreviousID);
+		// first check if there's items available in the hat, if not, push to the arrays above
+		if (shouldBoss() && bossHat.length == 0) bossHat.push(...opt.games.filter((g) => g.isBoss));
+		else if (!shouldBoss() && regularHat.length == 0) regularHat.push(...opt.games.filter((g) => !g.isBoss));
+		minigameHat = regularHat.concat(bossHat);
 
-				if (previousPreviousGame) return game != wareEngine.curGame && game != previousPreviousGame;
-				else return game != wareEngine.curGame;
-			}
-		});
+		// now choose a random minigame based on if should boss or not
+		randomGame = k.choose(shouldBoss() ? bossHat : regularHat);
+		minigameHat.splice(minigameHat.indexOf(randomGame), 1); // remove it from hat
 
-		return k.choose(possibleGames);
+		return randomGame;
 	};
 
 	const calculateDifficulty = (score = wareEngine.score): 1 | 2 | 3 => {
@@ -146,17 +150,24 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 		set paused(val: boolean) {
 			warePaused = val;
 
-			// TODO: figure out why wareEngine.paused seems to return false when it's true on quickWatch
 			// if scene is unpaused, wareApp should pause absolutely everything
 			// else, if pausing pause everything
 			// and if unpausing, keep events paused but unpause the transCtx and the rootObj
-			if (!wareEngine.scenePaused) wareApp.paused = warePaused;
+			// if draws are paused then draws are not shown
+			if (!wareEngine.scenePaused) {
+				wareApp.paused = warePaused;
+				wareApp.draws.paused = false;
+			}
 			else {
-				if (warePaused) wareApp.paused = true;
+				if (warePaused) {
+					wareApp.paused = true;
+					wareApp.draws.paused = false;
+				}
 				else {
 					wareApp.paused = true;
 					wareApp.transCtx.paused = false;
 					wareApp.rootObj.paused = false;
+					wareApp.draws.paused = false;
 				}
 			}
 		},
@@ -202,6 +213,7 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 			wareApp.paused = true;
 			wareApp.transCtx.paused = false;
 			wareApp.rootObj.paused = false;
+			wareApp.draws.paused = false;
 
 			cursor.canPoint = false;
 			previousGame = wareEngine.curGame;
@@ -286,13 +298,12 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games }): Kaplayware {
 		k.quickWatch("GAME.paused", wareEngine.paused);
 		wareApp.handleQuickWatch();
 
-		// TODO: some objects seem to not be cleared, might be around boss things??
-		// starts with 40 and after first round is 80, that's weird
 		k.quickWatch("ware.scenePaused", wareEngine.scenePaused);
 		k.quickWatch("ware.objects", wareApp.sceneObj.get("*", { recursive: true }).length);
 		k.quickWatch("ware.score", wareEngine.score);
 		k.quickWatch("ware.time", wareEngine.timeLeft?.toFixed(2));
 		k.quickWatch("ware.speed", wareEngine.speed.toFixed(2));
+		k.quickWatch("ware.gamehat", minigameHat.length);
 		k.quickWatch("k.objects", k.debug.numObjects());
 	});
 

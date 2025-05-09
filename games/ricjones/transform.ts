@@ -21,6 +21,7 @@ const transformGame: Minigame = {
 		ctx.loadSound("bwomp", "bwomp.ogg");
 		ctx.loadSound("hellothere", "hellothere.mp3");
 	},
+	// TODO: maybe remove mark from the punching bag and add him as a picture hanged, would be funny
 	start(ctx) {
 		// game options start
 		const PIXEL_VEL = ctx.width() * 0.8 * ctx.speed;

@@ -203,7 +203,7 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 			},
 			cancel: () => obj.destroy(),
 		};
-		return wareApp.events.add(ev);
+		return wareApp.draws.add(ev);
 	}, (tag: Tag, action: (obj: GameObj) => void) => {
 		let paused = false;
 		const evs: KEventController[] = [];
@@ -226,7 +226,7 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 			},
 		};
 
-		return wareApp.events.add(ev);
+		return wareApp.draws.add(ev);
 	});
 
 	startCtx["onClick"] = overload2((action: () => void) => {

@@ -245,6 +245,8 @@ export const chillTransition: TransitionDefinition = (parent, camera, stageManag
 		const newPage = addCalendarPage(wareEngine.score);
 		newPage.z = fallingPage.z - 1;
 
+		// TODO: when there are 3 flowers they don't beat anymore
+
 		// tween the first one here bc conductor doesn't do beat 0
 		const hearts = parent.get("heart");
 		tween(k.vec2(1.5), k.vec2(1), 0.35 / wareEngine.speed, (p) => hearts[0].scale = p, k.easings.easeOutQuint);

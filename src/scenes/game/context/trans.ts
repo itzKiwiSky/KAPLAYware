@@ -24,7 +24,6 @@ export function createTransCtx(): TransCtx {
 	return {
 		play(src, options) {
 			const snd = k.play(src, options);
-			sounds.push(snd);
 
 			if (paused && snd.paused == false) {
 				snd.paused = true;
