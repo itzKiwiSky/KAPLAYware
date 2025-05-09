@@ -144,7 +144,7 @@ const uploadGame: Minigame = {
 		if (ctx.difficulty > 1) addFile("zombean", false);
 		if (ctx.difficulty > 2) addFile("skuller", false);
 
-		ctx.onInputButtonDown("click", () => {
+		ctx.onButtonDown("click", () => {
 			for (const obj of ctx.get("drag").reverse()) {
 				if (obj.isHovering()) {
 					obj.dragging = true;

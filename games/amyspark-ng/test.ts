@@ -47,11 +47,11 @@ const testGame: Minigame = {
 			});
 		});
 
-		ctx.onInputButtonPress("left", () => {
+		ctx.onButtonPress("left", () => {
 			bean.trigger("eventName", true);
 		});
 
-		ctx.onInputButtonPress("action", () => {
+		ctx.onButtonPress("action", () => {
 			ctx.lose();
 			ctx.wait(1, () => {
 				ctx.finish();

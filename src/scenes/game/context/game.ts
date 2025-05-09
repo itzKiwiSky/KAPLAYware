@@ -300,38 +300,38 @@ export function createMinigameAPI(wareApp: WareApp, wareEngine?: Kaplayware): Mi
 		getRGB: () => wareApp.backgroundColor,
 		setRGB: (val) => wareApp.backgroundColor = val,
 
-		onInputButtonPress: (btn, action) => {
+		onButtonPress: (btn, action) => {
 			let ev: KEventController = null;
 			if (btn == "click") ev = k.onMousePress("left", action);
 			else ev = k.onKeyPress(dirToKeys(btn), action);
 			wareApp.inputs.add(ev);
 			return ev;
 		},
-		onInputButtonDown: (btn, action) => {
+		onButtonDown: (btn, action) => {
 			let ev: KEventController = null;
 			if (btn == "click") ev = k.onMouseDown("left", action);
 			else ev = k.onKeyDown(dirToKeys(btn), action);
 			wareApp.inputs.add(ev);
 			return ev;
 		},
-		onInputButtonRelease: (btn, action) => {
+		onButtonReleasse: (btn, action) => {
 			let ev: KEventController = null;
 			if (btn == "click") ev = k.onMouseRelease("left", action);
 			else ev = k.onKeyRelease(dirToKeys(btn), action);
 			wareApp.inputs.add(ev);
 			return ev;
 		},
-		isInputButtonPressed: (btn) => {
+		isButtonPressed: (btn) => {
 			if (wareApp.inputs.paused) return false;
 			if (btn == "click") return k.isMousePressed("left");
 			else return k.isKeyPressed(dirToKeys(btn));
 		},
-		isInputButtonDown: (btn) => {
+		isButtonDown: (btn) => {
 			if (wareApp.inputs.paused) return false;
 			if (btn == "click") return k.isMouseDown("left");
 			else return k.isKeyDown(dirToKeys(btn));
 		},
-		isInputButtonReleased: (btn) => {
+		isButtonReleased: (btn) => {
 			if (wareApp.inputs.paused) return false;
 			if (btn == "click") return k.isMouseReleased("left");
 			else return k.isKeyDown(dirToKeys(btn));

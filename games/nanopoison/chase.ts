@@ -142,28 +142,28 @@ const newGame: Minigame = {
 			"karat",
 		]);
 
-		ctx.onInputButtonPress("left", () => {
+		ctx.onButtonPress("left", () => {
 			var cellCoords = grid.getCellCoords(kat.pos);
 			var moveCoords = ctx.vec2(cellCoords.x - 1, cellCoords.y);
 
 			moveTo(kat, moveCoords);
 		});
 
-		ctx.onInputButtonPress("right", () => {
+		ctx.onButtonPress("right", () => {
 			var cellCoords = grid.getCellCoords(kat.pos);
 			var moveCoords = ctx.vec2(cellCoords.x + 1, cellCoords.y);
 
 			moveTo(kat, moveCoords);
 		});
 
-		ctx.onInputButtonPress("up", () => {
+		ctx.onButtonPress("up", () => {
 			var cellCoords = grid.getCellCoords(kat.pos);
 			var moveCoords = ctx.vec2(cellCoords.x, cellCoords.y - 1);
 
 			moveTo(kat, moveCoords);
 		});
 
-		ctx.onInputButtonPress("down", () => {
+		ctx.onButtonPress("down", () => {
 			var cellCoords = grid.getCellCoords(kat.pos);
 			var moveCoords = ctx.vec2(cellCoords.x, cellCoords.y + 1);
 

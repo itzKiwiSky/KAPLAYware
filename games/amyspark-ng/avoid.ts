@@ -179,7 +179,7 @@ const avoidGame: Minigame = {
 
 			// mark
 			if (ctx.winState == false) return;
-			const walking = ctx.isInputButtonDown("left") || ctx.isInputButtonDown("right");
+			const walking = ctx.isButtonDown("left") || ctx.isButtonDown("right");
 
 			if (mark.isGrounded() && mark.adjusting == false) {
 				if (walking && mark.getCurAnim()?.name != "walk") mark.play("walk");
@@ -187,8 +187,8 @@ const avoidGame: Minigame = {
 			}
 
 			crawl.paused = !(walking && mark.isGrounded() && ctx.winState == undefined);
-			mark.flipX = ctx.isInputButtonDown("left");
-			mov.x = ctx.isInputButtonDown("left") ? -1 : ctx.isInputButtonDown("right") ? 1 : 0;
+			mark.flipX = ctx.isButtonDown("left");
+			mov.x = ctx.isButtonDown("left") ? -1 : ctx.isButtonDown("right") ? 1 : 0;
 			lerpMov = ctx.lerp(lerpMov, mov, 0.5);
 			mark.move(lerpMov.scale(SPEED));
 

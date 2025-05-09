@@ -187,14 +187,14 @@ const killGame: Minigame = {
 		const mov = ctx.vec2(0);
 		let lerpMovement = ctx.vec2();
 		spaceship.onUpdate(() => {
-			mov.x = ctx.isInputButtonDown("left") ? -1 : ctx.isInputButtonDown("right") ? 1 : 0;
-			mov.y = ctx.isInputButtonDown("up") ? -1 : ctx.isInputButtonDown("down") ? 1 : 0;
+			mov.x = ctx.isButtonDown("left") ? -1 : ctx.isButtonDown("right") ? 1 : 0;
+			mov.y = ctx.isButtonDown("up") ? -1 : ctx.isButtonDown("down") ? 1 : 0;
 
 			lerpMovement = ctx.lerp(lerpMovement, mov.unit().scale(SPEED), 0.75);
 			spaceship.move(lerpMovement);
 
 			spaceship.angle = getAngleToMouse(spaceship.pos);
-			if (ctx.isInputButtonPressed("click")) {
+			if (ctx.isButtonPressed("click")) {
 				spaceship.shoot();
 				aim.scale = ctx.vec2(1.2);
 			}

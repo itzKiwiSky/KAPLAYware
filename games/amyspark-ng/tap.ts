@@ -60,8 +60,8 @@ const tapGame: Minigame = {
 		}
 
 		ctx.onUpdate(() => {
-			hand.pos = ctx.isInputButtonDown("click") ? ctx.mousePos().sub(0, 30) : ctx.mousePos();
-			hand.frame = ctx.isInputButtonDown("click") ? 1 : 0;
+			hand.pos = ctx.isButtonDown("click") ? ctx.mousePos().sub(0, 30) : ctx.mousePos();
+			hand.frame = ctx.isButtonDown("click") ? 1 : 0;
 		});
 
 		const grid = generateGrid();

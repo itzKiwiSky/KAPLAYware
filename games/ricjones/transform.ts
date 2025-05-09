@@ -269,10 +269,10 @@ const transformGame: Minigame = {
 
 		ctx.onUpdate(() => {
 			// checking input if it is within the box
-			if (ctx.isInputButtonPressed("up") && isInputValid(DIRECTION.UP)) onInputValid();
-			else if (ctx.isInputButtonPressed("down") && isInputValid(DIRECTION.DOWN)) onInputValid();
-			else if (ctx.isInputButtonPressed("left") && isInputValid(DIRECTION.LEFT)) onInputValid();
-			else if (ctx.isInputButtonPressed("right") && isInputValid(DIRECTION.RIGHT)) onInputValid();
+			if (ctx.isButtonPressed("up") && isInputValid(DIRECTION.UP)) onInputValid();
+			else if (ctx.isButtonPressed("down") && isInputValid(DIRECTION.DOWN)) onInputValid();
+			else if (ctx.isButtonPressed("left") && isInputValid(DIRECTION.LEFT)) onInputValid();
+			else if (ctx.isButtonPressed("right") && isInputValid(DIRECTION.RIGHT)) onInputValid();
 			else if (left_com.pos.x >= check.pos.x + check.width * 0.5 && canPress) onInputInvalid();
 		});
 	},

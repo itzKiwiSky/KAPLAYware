@@ -98,8 +98,8 @@ const getGame: Minigame = {
 			bean.pos.y = ctx.clamp(bean.pos.y, bean.height / 2, ctx.height() - bean.height / 2);
 
 			// this is to prevent bean going faster on diagonal movement
-			movement.x = ctx.isInputButtonDown("left") ? -1 : ctx.isInputButtonDown("right") ? 1 : 0;
-			movement.y = ctx.isInputButtonDown("up") ? -1 : ctx.isInputButtonDown("down") ? 1 : 0;
+			movement.x = ctx.isButtonDown("left") ? -1 : ctx.isButtonDown("right") ? 1 : 0;
+			movement.y = ctx.isButtonDown("up") ? -1 : ctx.isButtonDown("down") ? 1 : 0;
 
 			// this just lerps a movement to the unit, which rounds the magnitude of 1.4 to 1 :thumbsup:
 			lerpMovement = ctx.lerp(lerpMovement, movement.unit().scale(SPEED), 0.75);

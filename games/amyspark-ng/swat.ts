@@ -107,7 +107,7 @@ const swatGame: Minigame = {
 		};
 		let flies = ctx.difficulty;
 
-		ctx.onInputButtonPress("click", () => {
+		ctx.onButtonPress("click", () => {
 			// TODO: Removing this line makes the game 1000x more fun i assure you
 			if (ctx.get("shock").length > 0) return;
 

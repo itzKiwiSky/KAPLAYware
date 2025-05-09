@@ -249,7 +249,7 @@ const sortGame: Minigame = {
 						draggedItem.pos.y += acceleration;
 					}
 
-					if (ctx.isInputButtonReleased("click")) {
+					if (ctx.isButtonReleased("click")) {
 						draggedItem.drop();
 					}
 				});

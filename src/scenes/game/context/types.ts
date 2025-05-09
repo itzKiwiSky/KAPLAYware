@@ -1,5 +1,5 @@
 import { assets } from "@kaplayjs/crew";
-import { Asset, Color, CompList, GameObj, KEventController, SpriteComp, SpriteCompOpt, SpriteData, TweenController, Vec2 } from "kaplay";
+import { Asset, Color, CompList, GameObj, GameObjRaw, KEventController, MergeComps, SpriteComp, SpriteCompOpt, SpriteData, TweenController, Vec2 } from "kaplay";
 import { gameAPIs } from "../api";
 import { ConfettiOpt } from "../objects/confetti";
 import k from "../../../engine";
@@ -20,42 +20,35 @@ interface WareSpriteComp extends Omit<SpriteComp, "sprite"> {
 	sprite: CustomSprite<string>;
 }
 
+// TODO: maybe actually remove these functions from the add, make a banProps list from game obj???
+// TODO: maybe move these other types to another place?????????
+type WareGameObjRaw = Omit<GameObjRaw, "onButtonDown" | "onButtonPress" | "onButtonRelease" | "add"> & {
+	add<T extends CompList<unknown>>(comps?: [...T]): WareGameObj<T[number]>;
+};
+
+/** A modified type of GameObj that removes a few unused functions
+ *
+ * The basic unit of KAPLAY yada yada.
+ * @group GameObj
+ */
+type WareGameObj<T = any> = WareGameObjRaw & MergeComps<T>;
+
+k.add();
+
 export type StartCtx = Pick<typeof k, typeof gameAPIs[number]> & {
-	/** ### Modified add() for KAPLAYware */
-	add<T extends CompList<unknown>>(comps?: [...T]): GameObj<T[number]>;
-	/** ### Custom sprite component for KAPLAYware that holds default assets
+	/**
+	 * — Modified KAPLAYWARE add() function.
 	 *
-	 * Attach and render a sprite to a Game Object.
+	 * Assemble a game object from a list of components, and add it to the game.
+	 */
+	add<T extends CompList<unknown>>(comps?: [...T]): WareGameObj<T[number]>;
+	/**
+	 * — Modified KAPLAYWARE sprite() component. Adds default assets
+	 *
+	 * Attach and render a sprite to a Game Object. yada yada
 	 *
 	 * @param spr - The sprite to render.
 	 * @param opt - Options for the sprite component. See {@link SpriteCompOpt `SpriteCompOpt`}.
-	 *
-	 * @example
-	 * ```js
-	 * // minimal setup
-	 * add([
-	 *     sprite("bean"),
-	 * ])
-	 *
-	 * // with options
-	 * const bean = add([
-	 *     sprite("bean", {
-	 *         // start with animation "idle"
-	 *         anim: "idle",
-	 *     }),
-	 * ])
-	 *
-	 * // play / stop an anim
-	 * bean.play("jump")
-	 * bean.stop()
-	 *
-	 * // manually setting a frame
-	 * bean.frame = 3
-	 * ```
-	 *
-	 * @returns The sprite comp.
-	 * @since v2000.0
-	 * @group Components
 	 */
 	sprite(spr: CustomSprite<string> | SpriteData | Asset<SpriteData>, opt?: SpriteCompOpt): WareSpriteComp;
 };
@@ -77,20 +70,21 @@ export type MinigameAPI = {
 	/**
 	 * Register an event that runs once when a button is pressed.
 	 */
-	onInputButtonPress(btn: InputButton, action: () => void): KEventController;
+	onButtonPress(btn: InputButton, action: () => void): KEventController;
 	/**
 	 * Register an event that runs once when a button is released.
 	 */
-	onInputButtonRelease(btn: InputButton, action: () => void): KEventController;
+	onButtonReleasse(btn: InputButton, action: () => void): KEventController;
 	/**
 	 * Register an event that runs every frame when a button is held down.
 	 */
-	onInputButtonDown(btn: InputButton, action: () => void): KEventController;
-	isInputButtonPressed(btn: InputButton): boolean;
-	isInputButtonDown(btn: InputButton): boolean;
-	isInputButtonReleased(btn: InputButton): boolean;
-	// TODO: maybe rename these to only onInputPress and onInputDown, weren't these name that before?
-	// I think they were called onButtonPress, that's why they were confusing
+	onButtonDown(btn: InputButton, action: () => void): KEventController;
+	/** Returns true if the button was pressed in the last frame */
+	isButtonPressed(btn: InputButton): boolean;
+	/** Returns true if the button is currently being held down */
+	isButtonDown(btn: InputButton): boolean;
+	/** Returns true if the button was released in the last frame */
+	isButtonReleased(btn: InputButton): boolean;
 
 	/** Adds a buncha confetti!!! */
 	addConfetti(opts?: ConfettiOpt): void;

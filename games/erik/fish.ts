@@ -243,7 +243,7 @@ const fishGame: Minigame = {
 			});
 		});
 
-		ctx.onInputButtonPress("action", async () => {
+		ctx.onButtonPress("action", async () => {
 			if (bobber.state === "reeling") {
 				return;
 			}

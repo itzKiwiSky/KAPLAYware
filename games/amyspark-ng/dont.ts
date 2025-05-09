@@ -99,11 +99,11 @@ const dontGame: Minigame = {
 		}
 
 		ctx.onUpdate(() => {
-			button.frame = ctx.isInputButtonDown("action") ? 1 : 0;
+			button.frame = ctx.isButtonDown("action") ? 1 : 0;
 			stars.move(-ctx.rand(5, 10) * ctx.speed, 0);
 			earth.angle -= ctx.rand(0.005, 0.05) * ctx.speed;
 		});
-		ctx.onInputButtonPress("action", explodeEverything);
+		ctx.onButtonPress("action", explodeEverything);
 	},
 };
 

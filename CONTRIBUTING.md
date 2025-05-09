@@ -187,10 +187,10 @@ start(ctx) {
     ]);
 
     // now we move bean with the input buttons
-    ctx.onInputButtonDown("left", () => bean.move(-SPEED, 0));
-    ctx.onInputButtonDown("down", () => bean.move(0, SPEED));
-    ctx.onInputButtonDown("up", () => bean.move(0, -SPEED));
-    ctx.onInputButtonDown("right", () => bean.move(SPEED, 0));
+    ctx.onButtonDown("left", () => bean.move(-SPEED, 0));
+    ctx.onButtonDown("down", () => bean.move(0, SPEED));
+    ctx.onButtonDown("up", () => bean.move(0, -SPEED));
+    ctx.onButtonDown("right", () => bean.move(SPEED, 0));
 }
 ```
 
@@ -220,10 +220,10 @@ start(ctx) {
     ])
 
     // now we move bean with the input buttons
-    ctx.onInputButtonDown("left", () => bean.move(-SPEED, 0));
-    ctx.onInputButtonDown("down", () => bean.move(0, SPEED));
-    ctx.onInputButtonDown("up", () => bean.move(0, -SPEED));
-    ctx.onInputButtonDown("right", () => bean.move(SPEED, 0));
+    ctx.onButtonDown("left", () => bean.move(-SPEED, 0));
+    ctx.onButtonDown("down", () => bean.move(0, SPEED));
+    ctx.onButtonDown("up", () => bean.move(0, -SPEED));
+    ctx.onButtonDown("right", () => bean.move(SPEED, 0));
 
     // now we check for the collision of bean with an object tagged "apple"
     bean.onCollide("apple", (apple) => {
@@ -252,13 +252,13 @@ Or shake the camera when the time runs out doing: `ctx.shakeCam()`.
 For starters, DON'T MAKE USE OF KAPLAY'S BUTTON API, it's not setup and it will not work, at all
 ```ts
 bean.onButtonPress("action") // DON'T, not related to KAPLAYware at all
-ctx.onInputButtonPress("action") // DO, the appropiate function to use
+ctx.onButtonPress("action") // DO, the appropiate function to use
 ```
 
 Also DON'T USE `onMousePress` FUNCTIONS EITHER, these are not accounted for and will crash KAPLAYware's engine
 ```ts
 bean.onMousePress("left") // DON'T, will break our game
-ctx.onInputButtonPress("click") // DO, the proper function to use 
+ctx.onButtonPress("click") // DO, the proper function to use 
 ```
 
 This means that you can't use different mouse buttons in your minigame, don't get smart with us, it's only left click 😔.
