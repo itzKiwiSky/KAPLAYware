@@ -83,6 +83,7 @@ export function addBomb(wareApp: WareApp) {
 
 	let hasExploded = false;
 	function explode() {
+		if (hasExploded) return;
 		destroy();
 		const kaboom = k.addKaboom(bombSpr.pos);
 		kaboom.parent = wareApp.rootObj;

@@ -51,6 +51,13 @@ const testGame: Minigame = {
 			bean.trigger("eventName", true);
 		});
 
+		ctx.onInputButtonPress("action", () => {
+			ctx.lose();
+			ctx.wait(1, () => {
+				ctx.finish();
+			});
+		});
+
 		const timeText = ctx.add([
 			ctx.text(""),
 			ctx.pos(ctx.center()),
