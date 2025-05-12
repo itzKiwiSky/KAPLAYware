@@ -9,7 +9,6 @@ k.scene("menu", () => {
 		const btnIndex = k.get("button").length;
 
 		const initialPos = k.vec2(0);
-
 		const button = k.add([
 			k.pos(),
 			k.sprite("buttons"),

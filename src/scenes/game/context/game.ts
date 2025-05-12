@@ -173,6 +173,14 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 			ka.parent = wareApp.sceneObj;
 			return ka;
 		},
+		// TODO: find a way to do something that keeps this from keeping t o increasing
+		time() {
+			return k.time();
+		},
+		// TODO: this probably causes problems with app, maybe make an app timer comp and add it to sceneObj, so it's th same??
+		timer(maxLoopsPerFrame) {
+			return k.timer(maxLoopsPerFrame);
+		},
 	};
 
 	startCtx["onUpdate"] = overload2((action: () => void): KEventController => {

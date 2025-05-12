@@ -9,16 +9,16 @@ const aimGame: Minigame = {
 	input: "mouse (hidden)",
 	duration: 6,
 	load(ctx) {
-		ctx.loadAseprite("bullet", "aim/bullet.png", "/aim/bullet.json");
-		ctx.loadAseprite("balloon", "aim/balloon.png", "/aim/balloon.json");
+		ctx.loadSprite("balloon", "aim/balloon.png", {
+			sliceX: 6,
+			sliceY: 1,
+		});
 		ctx.loadSprite("explosivoon", "aim/bomb.png");
 		ctx.loadSprite("aim", "aim/aim.png");
 		ctx.loadSprite("cloud", "aim/cloud.png");
 		ctx.loadSprite("mountain", "aim/mountain.png");
 
-		ctx.loadSound("pop1", "aim/sounds/balloon_pop-01.mp3");
-		ctx.loadSound("pop2", "aim/sounds/balloon_pop-02.mp3");
-		ctx.loadSound("pop3", "aim/sounds/balloon_pop-03.mp3");
+		ctx.loadSound("pop", "aim/sounds/balloon_pop.mp3");
 		ctx.loadSound("explode", "aim/sounds/explosion.wav");
 	},
 	// TODO: Touch up some stuff
@@ -113,6 +113,7 @@ const aimGame: Minigame = {
 		const aim = ctx.add([
 			ctx.sprite("aim"),
 			ctx.pos(),
+			ctx.z(1),
 			ctx.area({
 				scale: 0.85,
 			}),
@@ -141,14 +142,14 @@ const aimGame: Minigame = {
 			// ctx.drawSprite
 			ctx.drawSprite({
 				sprite: "cloud",
-				pos: ctx.vec2(-64, -16),
+				pos: ctx.vec2(-64, -16 + ctx.wave(-10, 10, ctx.time() / ctx.speed)),
 				tiled: true,
 				width: ctx.width() + 87,
 			});
 
 			ctx.drawSprite({
 				sprite: "cloud",
-				pos: ctx.vec2(0, 8),
+				pos: ctx.vec2(0, 8 + ctx.wave(-10, 10, ctx.time() / ctx.speed)),
 				tiled: true,
 				width: ctx.width() + 128,
 			});
@@ -172,7 +173,7 @@ const aimGame: Minigame = {
 					if (!mngr.hasLost) {
 						ctx.addKaboom(ctx.mousePos());
 						ctx.shakeCam(2.2);
-						ctx.play("pop" + ctx.randi(1, 3));
+						ctx.play("pop", { detune: ctx.rand(0, 100) });
 						hittedBalloons.push(bln);
 						bln.destroy();
 
@@ -228,7 +229,7 @@ const aimGame: Minigame = {
 				ctx.lose();
 				ctx.wait(0.5, () => {
 					ctx.get("*").forEach((obj, i, a) => {
-						ctx.play("pop" + ctx.randi(1, 3));
+						ctx.play("pop", { detune: ctx.rand(0, 100) });
 						ctx.addKaboom(obj.pos);
 						obj.destroy();
 					});
