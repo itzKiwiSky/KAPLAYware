@@ -322,7 +322,7 @@ export function createMinigameAPI(wareApp: WareApp, wareEngine?: Kaplayware): Mi
 			wareApp.inputs.add(ev);
 			return ev;
 		},
-		onButtonReleasse: (btn, action) => {
+		onButtonRelease: (btn, action) => {
 			let ev: KEventController = null;
 			if (btn == "click") ev = k.onMouseRelease("left", action);
 			else ev = k.onKeyRelease(dirToKeys(btn), action);

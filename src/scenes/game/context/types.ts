@@ -74,7 +74,7 @@ export type MinigameAPI = {
 	/**
 	 * Register an event that runs once when a button is released.
 	 */
-	onButtonReleasse(btn: InputButton, action: () => void): KEventController;
+	onButtonRelease(btn: InputButton, action: () => void): KEventController;
 	/**
 	 * Register an event that runs every frame when a button is held down.
 	 */
