@@ -10,6 +10,7 @@
 		"kaplay": "4000.0.0-alpha.18"
 	},
 	"devDependencies": {
+		"esbuild": "^0.25.5",
 		"terser": "^5.32.0",
 		"typescript": "^5.6.2",
 		"vite": "^5.4.5",
