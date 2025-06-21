@@ -1,4 +1,4 @@
-import { Minigame } from "./minigameType";
+import Minigame from "./minigameType";
 import { getGameDuration } from "./utils";
 
 // export function createPreviewWare() {

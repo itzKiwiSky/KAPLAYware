@@ -3,7 +3,8 @@
 	"type": "module",
 	"scripts": {
 		"dev": "node scripts/dev.js",
-		"create-game": "node scripts/create.js"
+		"create-game": "node scripts/create.js",
+		"check": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@kaplayjs/crew": "^1.7.1",

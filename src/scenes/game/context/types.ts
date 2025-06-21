@@ -22,9 +22,15 @@ interface WareSpriteComp extends Omit<SpriteComp, "sprite"> {
 
 // TODO: maybe actually remove these functions from the add, make a banProps list from game obj???
 // TODO: maybe move these other types to another place?????????
-type WareGameObjRaw = Omit<GameObjRaw, "onButtonDown" | "onButtonPress" | "onButtonRelease" | "add"> & {
+interface WareGameObjRaw extends GameObjRaw {
 	add<T extends CompList<unknown>>(comps?: [...T]): WareGameObj<T[number]>;
-};
+	/** @deprecated This is not used by KAPLAYWare. */
+	onButtonDown: GameObjRaw["onButtonDown"];
+	/** @deprecated This is not used by KAPLAYWare. */
+	onButtonPress: GameObjRaw["onButtonPress"];
+	/** @deprecated This is not used by KAPLAYWare. */
+	onButtonRelease: GameObjRaw["onButtonRelease"];
+}
 
 /** A modified type of GameObj that removes a few unused functions
  *
