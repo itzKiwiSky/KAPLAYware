@@ -1,4 +1,4 @@
-import Minigame from "../../src/types/Minigame";
+import { Minigame } from "../../src/types/Minigame";
 
 const transformGame: Minigame = {
 	prompt: "TRANSFORM!",

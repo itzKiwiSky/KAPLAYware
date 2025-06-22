@@ -1,5 +1,5 @@
 import { GameObj } from "kaplay";
-import Minigame from "../../src/types/Minigame";
+import { Minigame } from "../../src/types/Minigame";
 
 const aimGame: Minigame = {
 	prompt: "AIM!",

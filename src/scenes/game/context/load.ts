@@ -2,7 +2,7 @@ import { KAPLAYCtx, SpriteAtlasData } from "kaplay";
 import { getGameID } from "../utils";
 import { loadAPIs } from "../api";
 import k from "../../../engine";
-import Minigame from "../../../types/Minigame";
+import { Minigame } from "../../../types/Minigame";
 
 /** The allowed load functions */
 export type LoadCtx = Pick<KAPLAYCtx, typeof loadAPIs[number]>;

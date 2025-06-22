@@ -1,4 +1,4 @@
-import Minigame from "../../types/Minigame";
+import { Minigame } from "../../types/Minigame";
 import { getGameID } from "./utils";
 
 export const modules = import.meta.glob("../../../games/*/*.ts", { eager: true });

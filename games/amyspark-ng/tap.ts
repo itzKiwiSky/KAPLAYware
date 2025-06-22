@@ -1,5 +1,5 @@
 import { Vec2 } from "kaplay";
-import Minigame from "../../src/types/Minigame";
+import { Minigame } from "../../src/types/Minigame";
 
 const tapGame: Minigame = {
 	prompt: "TAP!",

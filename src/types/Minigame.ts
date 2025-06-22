@@ -134,6 +134,4 @@ interface BossMinigame extends BaseMinigame {
 /**
  * A minigame is a little game that can be played on KAPLAYWare.
  */
-type Minigame = NormalMinigame | BossMinigame;
-
-export default Minigame;
+export type Minigame = NormalMinigame | BossMinigame;
