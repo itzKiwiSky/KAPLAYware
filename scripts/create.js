@@ -22,7 +22,7 @@ const randomNum = (max = 255) => {
 const template = `
 import { Microgame } from "../../src/types/Microgame";
 
-export const ${gamePrompt}Game: Microgame = {
+const ${gamePrompt}Game: Microgame = {
 	name: "${gamePrompt}",
 	author: "${author}",
 	prompt: "${gamePrompt.toUpperCase() + "!"}",
@@ -37,7 +37,10 @@ export const ${gamePrompt}Game: Microgame = {
 			ctx.pos(),
 		]);
 	},
-};`.trim();
+};
+
+export default ${gamePrompt}Game;
+`.trim();
 
 const isDir = (path) =>
 	fs
