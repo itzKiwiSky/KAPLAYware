@@ -1,4 +1,4 @@
-import { Color, Vec2 } from "kaplay";
+import { Color } from "kaplay";
 import { LoadCtx } from "../scenes/game/context/load";
 import { MinigameCtx } from "../scenes/game/context/types";
 import { addTextPrompt } from "../scenes/game/objects/prompts";
@@ -120,8 +120,8 @@ interface NormalMinigame extends BaseMinigame {
 	 * }
 	 * ```
 	 */
-	duration: number | undefined | ((ctx: MinigameCtx) => number);
-	isBoss?: false | undefined;
+	duration?: number | ((ctx: MinigameCtx) => number);
+	isBoss?: false;
 }
 
 interface BossMinigame extends BaseMinigame {
