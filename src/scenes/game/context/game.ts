@@ -3,7 +3,7 @@ import { gameAPIs } from "../api";
 import { forAllCurrentAndFuture, getGameID, isDefaultAsset, mergeWithRef, overload2, pickKeysInObj } from "../utils";
 import { WareApp } from "../app";
 import { Kaplayware } from "../kaplayware";
-import { InputButton, MinigameAPI, MinigameCtx, StartCtx } from "./types";
+import { MinigameAPI, MinigameCtx, StartCtx } from "./types";
 import { addConfetti } from "../objects/confetti";
 import k from "../../../engine";
 import Minigame from "../minigameType";
@@ -276,14 +276,6 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
  * @param wareEngine Is optional for "preview" mode, if not wareEngine will skip win() lose() and finish() calls
  */
 export function createMinigameAPI(wareApp: WareApp, wareEngine?: Kaplayware): MinigameAPI {
-	function dirToKeys(button: InputButton): Key[] {
-		if (button == "left") return ["left", "a"];
-		else if (button == "down") return ["down", "s"];
-		else if (button == "up") return ["up", "w"];
-		else if (button == "right") return ["right", "d"];
-		else if (button == "action") return ["space"];
-	}
-
 	return {
 		getCamAngle: () => wareApp.cameraObj.angle,
 		setCamAngle: (val: number) => wareApp.cameraObj.angle = val,
@@ -308,42 +300,6 @@ export function createMinigameAPI(wareApp: WareApp, wareEngine?: Kaplayware): Mi
 		getRGB: () => wareApp.backgroundColor,
 		setRGB: (val) => wareApp.backgroundColor = val,
 
-		onButtonPress: (btn, action) => {
-			let ev: KEventController = null;
-			if (btn == "click") ev = k.onMousePress("left", action);
-			else ev = k.onKeyPress(dirToKeys(btn), action);
-			wareApp.inputs.add(ev);
-			return ev;
-		},
-		onButtonDown: (btn, action) => {
-			let ev: KEventController = null;
-			if (btn == "click") ev = k.onMouseDown("left", action);
-			else ev = k.onKeyDown(dirToKeys(btn), action);
-			wareApp.inputs.add(ev);
-			return ev;
-		},
-		onButtonRelease: (btn, action) => {
-			let ev: KEventController = null;
-			if (btn == "click") ev = k.onMouseRelease("left", action);
-			else ev = k.onKeyRelease(dirToKeys(btn), action);
-			wareApp.inputs.add(ev);
-			return ev;
-		},
-		isButtonPressed: (btn) => {
-			if (wareApp.inputs.paused) return false;
-			if (btn == "click") return k.isMousePressed("left");
-			else return k.isKeyPressed(dirToKeys(btn));
-		},
-		isButtonDown: (btn) => {
-			if (wareApp.inputs.paused) return false;
-			if (btn == "click") return k.isMouseDown("left");
-			else return k.isKeyDown(dirToKeys(btn));
-		},
-		isButtonReleased: (btn) => {
-			if (wareApp.inputs.paused) return false;
-			if (btn == "click") return k.isMouseReleased("left");
-			else return k.isKeyDown(dirToKeys(btn));
-		},
 		// TODO: Make this in a way that nothing happens if runs on wareEngine
 		onTimeout: (action) => {
 			return wareEngine.onTimeOutEvents.add(action);

@@ -12,6 +12,16 @@ export const k = kaplay({
 	background: [0, 0, 0],
 	font: "happy-o",
 	focus: false,
+	debug: true,
+	maxFPS: 120,
+	buttons: {
+		"up": { "keyboard": ["up", "w"] },
+		"left": { "keyboard": ["left", "a"] },
+		"down": { "keyboard": ["down", "s"] },
+		"right": { "keyboard": ["right", "d"] },
+		"action": { "keyboard": "space" },
+		"click": { "mouse": "left" },
+	},
 	plugins: [
 		dragCompPlugin,
 		watchPlugin,
@@ -19,8 +29,6 @@ export const k = kaplay({
 		plainBackgroundPlug,
 		mulfokPalettePlug,
 	],
-	debug: true,
-	maxFPS: 120,
 });
 console.log("KAPLAY RAN");
 

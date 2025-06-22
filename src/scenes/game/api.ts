@@ -13,6 +13,7 @@ export const loadAPIs = [
 ] as const;
 
 export const gameAPIs = [
+	"add",
 	"pos",
 	"scale",
 	"rotate",
@@ -138,4 +139,10 @@ export const gameAPIs = [
 	"onMouseMove",
 	"trigger",
 	"on",
+	"isButtonPressed",
+	"isButtonDown",
+	"isButtonReleased",
+	"onButtonPress",
+	"onButtonDown",
+	"onButtonRelease",
 ] as const;

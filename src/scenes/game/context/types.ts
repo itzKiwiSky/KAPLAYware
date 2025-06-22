@@ -20,34 +20,7 @@ interface WareSpriteComp extends Omit<SpriteComp, "sprite"> {
 	sprite: CustomSprite<string>;
 }
 
-// TODO: maybe actually remove these functions from the add, make a banProps list from game obj???
-// TODO: maybe move these other types to another place?????????
-interface WareGameObjRaw extends GameObjRaw {
-	add<T extends CompList<unknown>>(comps?: [...T]): WareGameObj<T[number]>;
-	/** @deprecated This is not used by KAPLAYWare. */
-	onButtonDown: GameObjRaw["onButtonDown"];
-	/** @deprecated This is not used by KAPLAYWare. */
-	onButtonPress: GameObjRaw["onButtonPress"];
-	/** @deprecated This is not used by KAPLAYWare. */
-	onButtonRelease: GameObjRaw["onButtonRelease"];
-}
-
-/** A modified type of GameObj that removes a few unused functions
- *
- * The basic unit of KAPLAY yada yada.
- * @group GameObj
- */
-type WareGameObj<T = any> = WareGameObjRaw & MergeComps<T>;
-
-k.add();
-
 export type StartCtx = Pick<typeof k, typeof gameAPIs[number]> & {
-	/**
-	 * — Modified KAPLAYWARE add() function.
-	 *
-	 * Assemble a game object from a list of components, and add it to the game.
-	 */
-	add<T extends CompList<unknown>>(comps?: [...T]): WareGameObj<T[number]>;
 	/**
 	 * — Modified KAPLAYWARE sprite() component. Adds default assets
 	 *
@@ -62,36 +35,8 @@ export type StartCtx = Pick<typeof k, typeof gameAPIs[number]> & {
 /** The type of input a minigame does */
 export type MinigameInput = "mouse" | "keys" | "both";
 
-/** A button */
-export type InputButton =
-	| "action"
-	| "left"
-	| "right"
-	| "up"
-	| "down"
-	| "click";
-
 /** The specific API for minigames */
 export type MinigameAPI = {
-	/**
-	 * Register an event that runs once when a button is pressed.
-	 */
-	onButtonPress(btn: InputButton, action: () => void): KEventController;
-	/**
-	 * Register an event that runs once when a button is released.
-	 */
-	onButtonRelease(btn: InputButton, action: () => void): KEventController;
-	/**
-	 * Register an event that runs every frame when a button is held down.
-	 */
-	onButtonDown(btn: InputButton, action: () => void): KEventController;
-	/** Returns true if the button was pressed in the last frame */
-	isButtonPressed(btn: InputButton): boolean;
-	/** Returns true if the button is currently being held down */
-	isButtonDown(btn: InputButton): boolean;
-	/** Returns true if the button was released in the last frame */
-	isButtonReleased(btn: InputButton): boolean;
-
 	/** Adds a buncha confetti!!! */
 	addConfetti(opts?: ConfettiOpt): void;
 
