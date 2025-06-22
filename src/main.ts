@@ -16,7 +16,7 @@ k.setCursor("none");
 k.loadRoot("./");
 
 const INITIAL_SCENE = () => {
-	if (DEV_MICROGAME) goGame();
+	if (window.DEV_MICROGAME) goGame();
 	else goGame();
 };
 
