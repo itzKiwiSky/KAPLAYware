@@ -1,4 +1,4 @@
-import Minigame from "../../src/scenes/game/minigameType";
+import { Minigame } from "../../src/types/Minigame";
 
 const testGame: Minigame = {
 	author: "amyspark-ng",

@@ -6,7 +6,7 @@ import { Kaplayware } from "../kaplayware";
 import { MinigameAPI, MinigameCtx, StartCtx } from "./types";
 import { addConfetti } from "../objects/confetti";
 import k from "../../../engine";
-import Minigame from "../minigameType";
+import { Minigame } from "../../../types/Minigame";
 
 /** Create the basic context, is a modified kaplay context
  * @param game Needs game for things like sprite() and play()
