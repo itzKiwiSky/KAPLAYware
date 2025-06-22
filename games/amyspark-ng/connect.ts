@@ -1,5 +1,5 @@
 import { GameObj } from "kaplay";
-import Minigame from "../../src/scenes/game/minigameType";
+import Minigame from "../../src/types/Minigame";
 
 const connectGame: Minigame = {
 	prompt: "CONNECT!",

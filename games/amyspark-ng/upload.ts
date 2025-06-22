@@ -1,5 +1,5 @@
 import { Vec2 } from "kaplay";
-import Minigame from "../../src/scenes/game/minigameType";
+import Minigame from "../../src/types/Minigame";
 
 const uploadGame: Minigame = {
 	prompt: "UPLOAD!",

@@ -1,9 +1,7 @@
 import { Color, Vec2 } from "kaplay";
-import { LoadCtx } from "./context/load";
-import { MinigameCtx } from "./context/types";
-import { addTextPrompt } from "./objects/prompts";
-
-// TODO: move this somewhere better, it's only to contain the Minigame type since it's very very long
+import { LoadCtx } from "../scenes/game/context/load";
+import { MinigameCtx } from "../scenes/game/context/types";
+import { addTextPrompt } from "../scenes/game/objects/prompts";
 
 /** The type for a minigame */
 type Minigame =

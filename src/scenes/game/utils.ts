@@ -2,7 +2,7 @@ import { Color, GameObj, KEventController, Tag } from "kaplay";
 import { MinigameCtx, MinigameInput } from "./context/types";
 import games, { modules } from "./games";
 import k from "../../engine";
-import Minigame from "./minigameType";
+import Minigame from "../../types/Minigame";
 
 export const getGameID = (g: Minigame) => {
 	const gamePath = Object.keys(modules).find((pathKey: string) => (modules[pathKey] as any).default == g);

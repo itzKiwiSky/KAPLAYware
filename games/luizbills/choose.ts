@@ -1,5 +1,5 @@
 import { AreaComp, Color } from "kaplay";
-import Minigame from "../../src/scenes/game/minigameType";
+import Minigame from "../../src/types/Minigame";
 
 // all art made by me (amyspark-ng) hehe
 const colorGame: Minigame = {

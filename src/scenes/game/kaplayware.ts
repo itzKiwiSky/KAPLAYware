@@ -7,7 +7,7 @@ import { MinigameCtx, MinigameInput } from "./context/types";
 import { addBomb, WareBomb } from "./objects/bomb";
 import k from "../../engine";
 import cursor from "../../plugins/cursor";
-import Minigame from "./minigameType";
+import Minigame from "../../types/Minigame";
 import { addInputPrompt, addTextPrompt } from "./objects/prompts";
 import { createTransition, Transition, TransitionStage } from "./transitions/makeTransition";
 import chillTransition from "./transitions/chill";
