@@ -131,7 +131,9 @@ interface BossMinigame extends BaseMinigame {
 	hideMouse: boolean;
 }
 
-/** The type for a minigame */
+/**
+ * A minigame is a little game that can be played on KAPLAYWare.
+ */
 type Minigame = NormalMinigame | BossMinigame;
 
 export default Minigame;
