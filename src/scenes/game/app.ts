@@ -60,7 +60,7 @@ export function createGameContainer() {
 		shakeCam: shakeCameraObject,
 		/** Is the camera */
 		camera: cameraObject,
-		/** Is the real scene where minigame objects can be added with no problem, should have 0 children */
+		/** Is the real scene where micorgame objects can be added with no problem, should have 0 children */
 		scene: sceneObject,
 		set scale(val: Vec2) {
 			gameBox.scale = val;

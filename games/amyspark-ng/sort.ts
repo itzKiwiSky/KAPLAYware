@@ -1,8 +1,8 @@
 import { GameObj, Vec2 } from "kaplay";
-import { Minigame } from "../../src/types/Minigame";
+import { Microgame } from "../../src/types/Microgame";
 
 // almost 300 lines of pure unadultered pain that took me a whole day to write
-const sortGame: Minigame = {
+const sortGame: Microgame = {
 	name: "sort",
 	prompt: "SORT!",
 	author: "amyspark-ng",

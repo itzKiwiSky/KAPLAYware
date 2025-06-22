@@ -2,13 +2,13 @@ import { KAPLAYCtx, SpriteAtlasData } from "kaplay";
 import { getGameID } from "../utils";
 import { loadAPIs } from "../api";
 import k from "../../../engine";
-import { Minigame } from "../../../types/Minigame";
+import { Microgame } from "../../../types/Microgame";
 
 /** The allowed load functions */
 export type LoadCtx = Pick<KAPLAYCtx, typeof loadAPIs[number]>;
 
-/** Creates the context exclusive for loading the assets of a minigame */
-export function createLoadCtx(game: Minigame) {
+/** Creates the context exclusive for loading the assets of a microgame */
+export function createLoadCtx(game: Microgame) {
 	// load game assets
 	const loadCtx = {};
 

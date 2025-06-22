@@ -1,1 +1,1 @@
-declare const DEV_MINIGAME: string;
+declare const DEV_MICROGAME: string;

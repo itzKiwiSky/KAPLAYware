@@ -1,7 +1,7 @@
 import k from "../../src/engine";
-import { Minigame } from "../../src/types/Minigame";
+import { Microgame } from "../../src/types/Microgame";
 
-const pickGame: Minigame = {
+const pickGame: Microgame = {
 	name: "pick",
 	author: "amyspark-ng",
 	prompt: "PICK!",

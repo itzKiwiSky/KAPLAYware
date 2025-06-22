@@ -1,9 +1,9 @@
-import { Minigame } from "../../src/types/Minigame";
+import { Microgame } from "../../src/types/Microgame";
 
-const dontGame: Minigame = {
+const dontGame: Microgame = {
 	name: "dont",
-	author: "amyspark-ng",
 	prompt: "DONT'T!",
+	author: "amyspark-ng",
 	rgb: (ctx) => ctx.mulfok.VOID_VIOLET,
 	duration: 3,
 	input: "keys",

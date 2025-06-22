@@ -1,8 +1,8 @@
 import { LoadSpriteOpt, Vec2 } from "kaplay";
-import { Minigame } from "../../src/types/Minigame";
+import { Microgame } from "../../src/types/Microgame";
 
 // TODO: Do the whole squid cool game
-const killGame: Minigame = {
+const killGame: Microgame = {
 	name: "kill",
 	author: "amyspark-ng",
 	prompt: "KILL!",

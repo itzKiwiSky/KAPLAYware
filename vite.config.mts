@@ -27,6 +27,6 @@ export default defineConfig(async () => ({
 		sourcemap: "hidden", // makes it so code is obstructed on release
 	},
 	define: {
-		DEV_MINIGAME: process.env.DEV_MINIGAME,
+		DEV_MICROGAME: process.env.DEV_MICROGAME,
 	},
 }));

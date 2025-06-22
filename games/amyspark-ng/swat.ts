@@ -1,6 +1,6 @@
-import { Minigame } from "../../src/types/Minigame";
+import { Microgame } from "../../src/types/Microgame";
 
-const swatGame: Minigame = {
+const swatGame: Microgame = {
 	name: "swat",
 	author: "amyspark-ng",
 	prompt: "SWAT!",

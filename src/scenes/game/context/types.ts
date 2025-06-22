@@ -32,11 +32,11 @@ export type StartCtx = Pick<typeof k, typeof gameAPIs[number]> & {
 	sprite(spr: CustomSprite<string> | SpriteData | Asset<SpriteData>, opt?: SpriteCompOpt): WareSpriteComp;
 };
 
-/** The type of input a minigame does */
-export type MinigameInput = "mouse" | "keys" | "both";
+/** The type of input a microgame does */
+export type MicrogameInput = "mouse" | "keys" | "both";
 
-/** The specific API for minigames */
-export type MinigameAPI = {
+/** The specific API for microgames */
+export type MicrogameAPI = {
 	/** Adds a buncha confetti!!! */
 	addConfetti(opts?: ConfettiOpt): void;
 
@@ -52,9 +52,9 @@ export type MinigameAPI = {
 	 * @param time How long the flash will be on screen
 	 */
 	flashCam(flashColor?: Color, time?: number, opacity?: number): TweenController;
-	/** Gets the current RGB of the background of your minigame */
+	/** Gets the current RGB of the background of your microgame */
 	getRGB(): Color;
-	/** Sets the RGB to the background of your minigame */
+	/** Sets the RGB to the background of your microgame */
 	setRGB(val: Color): void;
 	/** Register an event that runs once when timer runs out. */
 	onTimeout: (action: () => void) => KEventController;
@@ -62,9 +62,9 @@ export type MinigameAPI = {
 	win: () => void;
 	/** Run this when player failed. */
 	lose: () => void;
-	/** Run this when your minigame has 100% finished all win/lose animations etc */
+	/** Run this when your microgame has 100% finished all win/lose animations etc */
 	finish: () => void;
-	/** The win/lose state of the current minigame
+	/** The win/lose state of the current microgame
 	 * If ctx.win() has been called, it will return true
 	 *
 	 * If ctx.lose() was called, it will return false
@@ -78,13 +78,13 @@ export type MinigameAPI = {
 	readonly speed: number;
 	/** The lives the player has left */
 	readonly lives: number;
-	/** The time left for the minigame to finish */
+	/** The time left for the microgame to finish */
 	readonly timeLeft: number;
-	/** The final duration of your minigame */
+	/** The final duration of your microgame */
 	readonly duration: number;
-	/** The final prompt of  your minigame */
+	/** The final prompt of  your microgame */
 	readonly prompt: string;
 };
 
-/** The context for the allowed functions in a minigame */
-export type MinigameCtx = StartCtx & MinigameAPI;
+/** The context for the allowed functions in a microgame */
+export type MicrogameCtx = StartCtx & MicrogameAPI;

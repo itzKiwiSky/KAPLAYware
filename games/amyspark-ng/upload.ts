@@ -1,7 +1,7 @@
 import { Vec2 } from "kaplay";
-import { Minigame } from "../../src/types/Minigame";
+import { Microgame } from "../../src/types/Microgame";
 
-const uploadGame: Minigame = {
+const uploadGame: Microgame = {
 	name: "upload",
 	author: "amyspark-ng",
 	prompt: "UPLOAD!",

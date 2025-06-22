@@ -1,7 +1,8 @@
-import { Minigame } from "../../src/types/Minigame";
+import { assets } from "@kaplayjs/crew";
+import { Microgame } from "../../src/types/Microgame";
 import { GameObj, Vec2 } from "kaplay";
 
-const newGame: Minigame = {
+const newGame: Microgame = {
 	name: "chase",
 	author: "nanopoison",
 	prompt: "CHASE!",

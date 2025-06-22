@@ -1,8 +1,8 @@
 import { AreaComp, Color } from "kaplay";
-import { Minigame } from "../../src/types/Minigame";
+import { Microgame } from "../../src/types/Microgame";
 
 // all art made by me (amyspark-ng) hehe
-const colorGame: Minigame = {
+const colorGame: Microgame = {
 	name: "choose",
 	author: "luizbills",
 	prompt: "CHOOSE!",

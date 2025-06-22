@@ -1,7 +1,7 @@
 import { GameObj } from "kaplay";
-import { Minigame } from "../../src/types/Minigame";
+import { Microgame } from "../../src/types/Microgame";
 
-const connectGame: Minigame = {
+const connectGame: Microgame = {
 	name: "connect",
 	author: "amyspark-ng",
 	prompt: "CONNECT!",

@@ -3,11 +3,11 @@ import { createWareApp } from "./app";
 import { createGameCtx } from "./context/game";
 import games from "./games";
 import { gameHidesMouse, getGameByID, getGameColor, getGameDuration, getGameID, getGameInput } from "./utils";
-import { MinigameCtx, MinigameInput } from "./context/types";
+import { MicrogameCtx, MicrogameInput } from "./context/types";
 import { addBomb, WareBomb } from "./objects/bomb";
 import k from "../../engine";
 import cursor from "../../plugins/cursor";
-import { Minigame } from "../../types/Minigame";
+import { Microgame } from "../../types/Microgame";
 import { addInputPrompt, addTextPrompt } from "./objects/prompts";
 import { createTransition, Transition, TransitionStage } from "./transitions/makeTransition";
 import chillTransition from "./transitions/chill";
@@ -15,9 +15,9 @@ import chillTransition from "./transitions/chill";
 /** Certain options to instantiate kaplayware (ware-engine) */
 export type KAPLAYwareOpts = {
 	/** What games will be available generally */
-	games?: Minigame[];
+	games?: Microgame[];
 	/** What input should be determined? */
-	inputFilter?: MinigameInput | "any";
+	inputFilter?: MicrogameInput | "any";
 	// mods here
 };
 
@@ -27,13 +27,13 @@ export type Kaplayware = {
 	timeLeft: number;
 	speed: number;
 	difficulty: 1 | 2 | 3;
-	curGame: Minigame;
-	curContext: MinigameCtx;
+	curGame: Microgame;
+	curContext: MicrogameCtx;
 	readonly curPrompt: string;
 	readonly curDuration: number;
 	timePaused: boolean;
 	scenePaused: boolean;
-	minigameHistory: string[];
+	microgameHistory: string[];
 	queuedSounds: KEventController[];
 	onTimeOutEvents: KEvent;
 	winState: boolean | undefined;
@@ -58,25 +58,25 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games, inputFilter: "a
 	}
 
 	let currentBomb: WareBomb = null;
-	let previousGame: Minigame = null;
+	let previousGame: Microgame = null;
 	let transition = null as Transition;
-	let minigameHat = [...opt.games];
+	let microgameHat = [...opt.games];
 
-	/** Basically there's this minigame hat, when you pick a minigame, that minigame gets taken out of the hat, when there's no more minigames just add more again to the hat */
+	/** Basically there's this microgame hat, when you pick a microgame, that microgame gets taken out of the hat, when there's no more microgames just add more again to the hat */
 	const getRandomGame = () => {
-		let randomGame: Minigame = null;
+		let randomGame: Microgame = null;
 
-		const regularHat = minigameHat.filter((g) => !g.isBoss);
-		const bossHat = minigameHat.filter((g) => g.isBoss);
+		const regularHat = microgameHat.filter((g) => !g.isBoss);
+		const bossHat = microgameHat.filter((g) => g.isBoss);
 
 		// first check if there's items available in the hat, if not, push to the arrays above
 		if (shouldBoss() && bossHat.length == 0) bossHat.push(...opt.games.filter((g) => g.isBoss));
 		else if (!shouldBoss() && regularHat.length == 0) regularHat.push(...opt.games.filter((g) => !g.isBoss));
-		minigameHat = regularHat.concat(bossHat);
+		microgameHat = regularHat.concat(bossHat);
 
-		// now choose a random minigame based on if should boss or not
+		// now choose a random microgame based on if should boss or not
 		randomGame = k.choose(shouldBoss() ? bossHat : regularHat);
-		minigameHat.splice(minigameHat.indexOf(randomGame), 1); // remove it from hat
+		microgameHat.splice(microgameHat.indexOf(randomGame), 1); // remove it from hat
 
 		return randomGame;
 	};
@@ -132,7 +132,7 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games, inputFilter: "a
 		speed: 1,
 		difficulty: 1,
 		timePaused: false,
-		minigameHistory: [],
+		microgameHistory: [],
 		queuedSounds: [],
 		winState: undefined,
 		curGame: undefined,
@@ -199,7 +199,7 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games, inputFilter: "a
 		},
 		finishGame() {
 			if (wareEngine.winState == undefined) {
-				throw new Error("Finished minigame without setting the win condition!! Please call ctx.win() or ctx.lose() before calling ctx.finish()");
+				throw new Error("Finished microgame without setting the win condition!! Please call ctx.win() or ctx.lose() before calling ctx.finish()");
 			}
 
 			wareEngine.nextGame();
@@ -229,13 +229,13 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games, inputFilter: "a
 
 				wareEngine.curContext.setRGB(getGameColor(wareEngine.curGame, wareEngine.curContext));
 				cursor.fadeAway = gameHidesMouse(wareEngine.curGame);
-				wareEngine.minigameHistory[wareEngine.score - 1] = getGameID(wareEngine.curGame);
+				wareEngine.microgameHistory[wareEngine.score - 1] = getGameID(wareEngine.curGame);
 				wareEngine.curGame.start(wareEngine.curContext);
 				wareEngine.timeLeft = wareEngine.curDuration != undefined ? wareEngine.curDuration / wareEngine.speed : undefined;
 				wareEngine.difficulty = calculateDifficulty();
 				currentBomb = null;
 
-				// behaviour that manages minigame
+				// behaviour that manages microgame
 				wareEngine.curContext.onUpdate(() => {
 					if (!wareEngine.timeLeft) return;
 					if (wareEngine.timePaused) return;
@@ -303,7 +303,7 @@ export function kaplayware(opt: KAPLAYwareOpts = { games: games, inputFilter: "a
 		k.quickWatch("ware.score", wareEngine.score);
 		k.quickWatch("ware.time", wareEngine.timeLeft?.toFixed(2));
 		k.quickWatch("ware.speed", wareEngine.speed.toFixed(2));
-		k.quickWatch("ware.gamehat", minigameHat.length);
+		k.quickWatch("ware.gamehat", microgameHat.length);
 		k.quickWatch("k.objects", k.debug.numObjects());
 	});
 

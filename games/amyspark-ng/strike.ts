@@ -1,6 +1,6 @@
-import { Minigame } from "../../src/types/Minigame";
+import { Microgame } from "../../src/types/Microgame";
 
-const strikeGame: Minigame = {
+const strikeGame: Microgame = {
 	name: "strike",
 	author: "amyspark-ng",
 	prompt: "STRIKE!",

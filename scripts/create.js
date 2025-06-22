@@ -1,7 +1,7 @@
 import * as fs from "fs/promises";
 
 let [author, gamePrompt] = (process.argv[2] ?? "").split(":");
-// verify the gameprompt name, to not break class minigame //
+// make it so its the proper casing to not break any syntax code //
 gamePrompt = gamePrompt.replace(/[\s_\-\.]/g, "");
 
 if (!author || !gamePrompt) {
@@ -20,9 +20,9 @@ const randomNum = (max = 255) => {
 };
 
 const template = `
-import { Minigame } from "../../src/scenes/game/minigameType";
+import { Microgame } from "../../src/types/Microgame";
 
-const ${gamePrompt}Game: Minigame = {
+export const ${gamePrompt}Game: Microcode = {
 	author: "${author}",
 	prompt: "${gamePrompt.toUpperCase() + "!"}",
 	input: "keys",
@@ -36,10 +36,7 @@ const ${gamePrompt}Game: Minigame = {
 			ctx.pos(),
 		]);
 	},
-};
-
-export default ${gamePrompt}Game;
-`.trim();
+};`.trim();
 
 const isDir = (path) =>
 	fs

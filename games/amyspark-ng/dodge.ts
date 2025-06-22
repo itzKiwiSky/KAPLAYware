@@ -1,6 +1,6 @@
-import { Minigame } from "../../src/types/Minigame";
+import { Microgame } from "../../src/types/Microgame";
 
-const dodgeGame: Minigame = {
+const dodgeGame: Microgame = {
 	name: "dodge",
 	author: "amyspark-ng",
 	prompt: "DODGE!",
@@ -137,7 +137,7 @@ const dodgeGame: Minigame = {
 			});
 		}
 
-		// TODO: Fix the ground of thi minigame
+		// TODO: Fix the ground of this microgame
 		function addGround() {
 			const ground = game.add([
 				ctx.sprite("ground", { tiled: true }),

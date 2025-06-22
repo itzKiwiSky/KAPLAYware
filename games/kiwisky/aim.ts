@@ -1,7 +1,7 @@
 import { GameObj } from "kaplay";
-import { Minigame } from "../../src/types/Minigame";
+import { Microgame } from "../../src/types/Microgame";
 
-const aimGame: Minigame = {
+const aimGame: Microgame = {
 	name: "aim",
 	author: "kiwisky",
 	prompt: "AIM!",

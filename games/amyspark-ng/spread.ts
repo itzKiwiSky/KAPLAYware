@@ -1,7 +1,7 @@
 import { Outline, Vec2 } from "kaplay";
-import { Minigame } from "../../src/types/Minigame";
+import { Microgame } from "../../src/types/Microgame";
 
-const spreadGame: Minigame = {
+const spreadGame: Microgame = {
 	name: "spread",
 	author: "amyspark-ng",
 	prompt: "SPREAD!",

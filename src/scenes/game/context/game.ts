@@ -3,16 +3,16 @@ import { gameAPIs } from "../api";
 import { forAllCurrentAndFuture, getGameID, isDefaultAsset, mergeWithRef, overload2, pickKeysInObj } from "../utils";
 import { WareApp } from "../app";
 import { Kaplayware } from "../kaplayware";
-import { MinigameAPI, MinigameCtx, StartCtx } from "./types";
+import { MicrogameAPI, MicrogameCtx, StartCtx } from "./types";
 import { addConfetti } from "../objects/confetti";
 import k from "../../../engine";
-import { Minigame } from "../../../types/Minigame";
+import { Microgame } from "../../../types/Microgame";
 
 /** Create the basic context, is a modified kaplay context
  * @param game Needs game for things like sprite() and play()
  * @param wareApp Needs wareApp to access hierarchy and props
  */
-export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
+export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 	const pickedCtx = pickKeysInObj(k, [...gameAPIs]);
 
 	const startCtx: StartCtx = {
@@ -271,11 +271,11 @@ export function createStartCtx(game: Minigame, wareApp: WareApp): StartCtx {
 	return startCtx;
 }
 
-/** Create the minigame API, minigame exclusive functions
+/** Create the microgame API, microgame exclusive functions
  * @param wareApp Needs wareApp to access the object hierarchy
  * @param wareEngine Is optional for "preview" mode, if not wareEngine will skip win() lose() and finish() calls
  */
-export function createMinigameAPI(wareApp: WareApp, wareEngine?: Kaplayware): MinigameAPI {
+export function createMicrogameAPI(wareApp: WareApp, wareEngine?: Kaplayware): MicrogameAPI {
 	return {
 		getCamAngle: () => wareApp.cameraObj.angle,
 		setCamAngle: (val: number) => wareApp.cameraObj.angle = val,
@@ -345,13 +345,13 @@ export function createMinigameAPI(wareApp: WareApp, wareEngine?: Kaplayware): Mi
 	};
 }
 
-/** Creates the final, merged and usable context for a minigame
- * @param game The minigame to create the context for
+/** Creates the final, merged and usable context for a microgame
+ * @param game The microgame to create the context for
  * @param wareApp The ware-app
  * @param wareEngine The ware engine, is optional for "preview" mode
  */
-export function createGameCtx(game: Minigame, wareApp: WareApp, wareEngine?: Kaplayware): MinigameCtx {
+export function createGameCtx(game: Microgame, wareApp: WareApp, wareEngine?: Kaplayware): MicrogameCtx {
 	const startCtx = createStartCtx(game, wareApp);
-	const api = createMinigameAPI(wareApp, wareEngine);
+	const api = createMicrogameAPI(wareApp, wareEngine);
 	return mergeWithRef(startCtx, api);
 }

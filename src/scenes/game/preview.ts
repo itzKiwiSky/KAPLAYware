@@ -1,4 +1,4 @@
-import { Minigame } from "../../types/Minigame";
+import { Microgame } from "../../types/Microgame";
 import { getGameDuration } from "./utils";
 
 // export function createPreviewWare() {
@@ -6,11 +6,11 @@ import { getGameDuration } from "./utils";
 
 // 	return {
 // 		containerRoot: wareApp.rootObj,
-// 		runGame(minigame: Minigame) {
-// 			const ctx = createGameCtx(wareApp, minigame);
-// 			ctx.timeLeft = getGameDuration(minigame, ctx);
+// 		runGame(microgame: Microgame) {
+// 			const ctx = createGameCtx(wareApp, microgame);
+// 			ctx.timeLeft = getGameDuration(microgame, ctx);
 // 			wareApp.currentContext = ctx;
-// 			minigame.start(ctx);
+// 			microgame.start(ctx);
 // 		},
 // 	};
 // }

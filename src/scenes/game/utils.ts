@@ -1,15 +1,15 @@
 import { Color, GameObj, KEventController, Tag } from "kaplay";
-import { MinigameCtx, MinigameInput } from "./context/types";
+import { MicrogameCtx, MicrogameInput } from "./context/types";
 import games, { modules } from "./games";
 import k from "../../engine";
-import { Minigame } from "../../types/Minigame";
+import { Microgame } from "../../types/Microgame";
 
-export const getGameID = (g: Minigame) => {
+export const getGameID = (g: Microgame) => {
 	const gamePath = Object.keys(modules).find((pathKey: string) => (modules[pathKey] as any).default == g);
 	const filename = gamePath.split("/")[gamePath.split("/").length - 1].replace(".ts", "");
 	return `${g.author}:${filename}`;
 };
-export const getGameByID = (id: string) => games.find((minigame) => `${minigame.author}:${minigame.prompt}` == id);
+export const getGameByID = (id: string) => games.find((microgame) => `${microgame.author}:${microgame.prompt}` == id);
 
 /**
  * Returns a copy of the object where it'll only have the keys you pass as param
@@ -41,7 +41,7 @@ export function mergeWithRef<T extends any, R extends any>(obj1: T, obj2: R) {
 	return result;
 }
 
-export const getInputMessage = (g: Minigame) => {
+export const getInputMessage = (g: Microgame) => {
 	const input = getGameInput(g);
 	let message = "";
 
@@ -58,21 +58,21 @@ export const getInputMessage = (g: Minigame) => {
 	else if (input == "keys") return input;
 };
 
-/** Gets the input of the minigame
- * @param g The minigame
- * @returns A {@link MinigameInput `MinigameInput`}
+/** Gets the input of the microgame
+ * @param g The microgame
+ * @returns A {@link MicrogameInput `MicrogameInput`}
  */
-export function getGameInput(g: Minigame): MinigameInput {
+export function getGameInput(g: Microgame): MicrogameInput {
 	if (g.isBoss == true) return "both";
 	else if (g.isBoss == false && g.input == "mouse" || g.input == "mouse (hidden)") return "mouse";
 	else return "keys";
 }
 
-/** Gets the duration of the minigame
- * @param g The minigame
- * @param context The context of the minigame
+/** Gets the duration of the microgame
+ * @param g The microgame
+ * @param context The context of the microgame
  */
-export const getGameDuration = (g: Minigame, context: MinigameCtx): number | undefined => {
+export const getGameDuration = (g: Microgame, context: MicrogameCtx): number | undefined => {
 	if (g.isBoss == true) return undefined;
 	else if (g.isBoss == false) {
 		let duration = 0;
@@ -82,17 +82,17 @@ export const getGameDuration = (g: Minigame, context: MinigameCtx): number | und
 	}
 };
 
-/** Gets the color of the minigame
- * @param g The minigame
- * @param context The context of the minigame
+/** Gets the color of the microgame
+ * @param g The microgame
+ * @param context The context of the microgame
  */
-export const getGameColor = (g: Minigame, context: MinigameCtx): Color => {
+export const getGameColor = (g: Microgame, context: MicrogameCtx): Color => {
 	if (typeof g.rgb == "function") return g.rgb(context);
 	else if ("r" in g.rgb) return g.rgb;
 	else if (g.rgb[0]) return k.Color.fromArray(g.rgb);
 };
 
-export const gameHidesMouse = (g: Minigame) => {
+export const gameHidesMouse = (g: Microgame) => {
 	if (g.isBoss) return g.hideMouse;
 	else if (g.isBoss == false) return g.input == "mouse (hidden)" || g.input == "keys";
 };

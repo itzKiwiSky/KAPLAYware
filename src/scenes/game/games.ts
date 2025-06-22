@@ -1,4 +1,4 @@
-import { Minigame } from "../../types/Minigame";
+import { Microgame } from "../../types/Microgame";
 import { getGameID } from "./utils";
 
 export const modules = import.meta.glob("../../../games/*/*.ts", { eager: true });
@@ -8,11 +8,11 @@ const exclude = new Set([]);
 /** The imported games */
 const games = Object.values(modules)
 	.map((module: any) => module.default)
-	.filter((game) => !exclude.has(getGameID(game))) as Minigame[];
+	.filter((game) => !exclude.has(getGameID(game))) as Microgame[];
 
 const onlyInclude = new Set([
-	DEV_MINIGAME, // Passed arg from npm run dev {yourname}:{gamename}
-	...(import.meta.env?.VITE_ONLY_MINIGAMES ?? "").trim().split("\n").map((s: string) => s.trim()),
+	DEV_MICROGAME, // Passed arg from npm run dev {yourname}:{gamename}
+	...(import.meta.env?.VITE_ONLY_MICROGAME ?? "").trim().split("\n").map((s: string) => s.trim()),
 ].filter((id) => games.some((game) => getGameID(game) === id)));
 
 export default onlyInclude.size

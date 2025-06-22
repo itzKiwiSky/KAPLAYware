@@ -1,6 +1,6 @@
 import k from "../../../engine";
 import { WareApp } from "../app";
-import { MinigameInput } from "../context/types";
+import { MicrogameInput } from "../context/types";
 
 export function addTextPrompt(wareApp: WareApp, promptText: string, speed = 1) {
 	const promptObj = wareApp.rootObj.add([
@@ -52,7 +52,7 @@ export function addTextPrompt(wareApp: WareApp, promptText: string, speed = 1) {
 	return promptObj;
 }
 
-export function addInputPrompt(wareApp: WareApp, input: MinigameInput, speed = 1) {
+export function addInputPrompt(wareApp: WareApp, input: MicrogameInput, speed = 1) {
 	const prompt = wareApp.rootObj.add([k.z(2)]);
 
 	const inputBg = prompt.add([
