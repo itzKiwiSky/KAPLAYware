@@ -22,7 +22,8 @@ const randomNum = (max = 255) => {
 const template = `
 import { Microgame } from "../../src/types/Microgame";
 
-export const ${gamePrompt}Game: Microcode = {
+export const ${gamePrompt}Game: Microgame = {
+	name: "${gamePrompt}",
 	author: "${author}",
 	prompt: "${gamePrompt.toUpperCase() + "!"}",
 	input: "keys",
