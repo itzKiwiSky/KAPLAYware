@@ -1,13 +1,15 @@
 import k from "../../../engine";
+import { addInputPrompt, addTextPrompt } from "../objects/prompts";
 import { TransitionDefinition } from "./makeTransition";
 
 /** The cool "chill guy" transition for first pack of games */
-export const chillTransition: TransitionDefinition = (parent, camera, stageManager, wareApp, wareEngine) => {
-	const { tween, wait, play, createConductor } = wareApp.transCtx;
+export const chillTransition: TransitionDefinition = (ctx, parent, camera, stageManager, wareApp) => {
+	const { tween, wait, play, createConductor } = ctx;
+	let opts = stageManager.opts;
 
-	const conductor = createConductor(140 * wareEngine.speed);
+	const conductor = createConductor(140 * opts.speed);
 	conductor.onUpdate(() => {
-		conductor.bpm = 140 * wareEngine.speed;
+		conductor.bpm = 140 * opts.speed;
 	});
 
 	parent.add([k.sprite("trans1-bg")]);
@@ -22,7 +24,7 @@ export const chillTransition: TransitionDefinition = (parent, camera, stageManag
 		k.pos(65, 290),
 		k.anchor("center"),
 	]);
-	coffee.play("hot", { speed: 8 * wareEngine.speed, loop: true });
+	coffee.play("hot", { speed: 8 * opts.speed, loop: true });
 
 	const flowerpot = parent.add([
 		k.sprite("trans1-flowerpot"),
@@ -47,13 +49,13 @@ export const chillTransition: TransitionDefinition = (parent, camera, stageManag
 
 		flower.rise = () => {
 			flower.canBeat = false;
-			tween(0, 1, 1 / wareEngine.speed, (p) => flower.scale.y = p, k.easings.easeOutElastic).onEnd(() => flower.canBeat = true);
+			tween(0, 1, 1 / opts.speed, (p) => flower.scale.y = p, k.easings.easeOutElastic).onEnd(() => flower.canBeat = true);
 		};
 
 		flower.bury = () => {
 			flower.untag("flower");
 			flower.canBeat = false;
-			tween(1, 0, 0.25 / wareEngine.speed, (p) => flower.scale.y = p).onEnd(() => flower.destroy());
+			tween(1, 0, 0.25 / opts.speed, (p) => flower.scale.y = p).onEnd(() => flower.destroy());
 		};
 
 		flower.rise();
@@ -65,12 +67,12 @@ export const chillTransition: TransitionDefinition = (parent, camera, stageManag
 			flowerX += flowerGap + flower.width;
 		});
 
-		flower.frame = wareEngine.difficulty - 1;
+		flower.frame = opts.difficulty - 1;
 		return flower;
 	}
 
 	// adds the hearts
-	for (let i = 0; i < (stageManager.stages[0] == "lose" ? wareEngine.lives + 1 : wareEngine.lives); i++) {
+	for (let i = 0; i < (stageManager.stages[0] == "lose" ? opts.lives + 1 : opts.lives); i++) {
 		let shake = 0;
 
 		const heart = parent.add([
@@ -102,8 +104,8 @@ export const chillTransition: TransitionDefinition = (parent, camera, stageManag
 		};
 
 		heart.kill = () => {
-			tween(heart.color, k.BLACK, 0.75 / wareEngine.speed, (p) => heart.color = p);
-			heart.fadeOut(0.75 / wareEngine.speed).onEnd(() => heart.destroy());
+			tween(heart.color, k.BLACK, 0.75 / opts.speed, (p) => heart.color = p);
+			heart.fadeOut(0.75 / opts.speed).onEnd(() => heart.destroy());
 		};
 	}
 
@@ -172,30 +174,30 @@ export const chillTransition: TransitionDefinition = (parent, camera, stageManag
 		return fallingPage;
 	}
 
-	let fallingPage = addCalendarPage(wareEngine.score - 1);
+	let fallingPage = addCalendarPage(opts.score - 1);
 
 	conductor.onBeat((beat) => {
 		parent.get("flower").forEach((flower) => {
 			if (!flower.canBeat) return;
 
-			if (wareEngine.difficulty == 1) {
-				tween(0.6, 1, 0.35 / wareEngine.speed, (p) => flower.scale.y = p, k.easings.easeOutBack);
+			if (opts.difficulty == 1) {
+				tween(0.6, 1, 0.35 / opts.speed, (p) => flower.scale.y = p, k.easings.easeOutBack);
 			}
 			else {
 				if (beat % 2 == 0) {
 					if (flower.id % 2 == 0) {
-						tween(1, 0.6, 0.35 / wareEngine.speed, (p) => flower.scale.y = p, k.easings.easeOutBack);
+						tween(1, 0.6, 0.35 / opts.speed, (p) => flower.scale.y = p, k.easings.easeOutBack);
 					}
 					else {
-						tween(0.6, 1, 0.35 / wareEngine.speed, (p) => flower.scale.y = p, k.easings.easeOutBack);
+						tween(0.6, 1, 0.35 / opts.speed, (p) => flower.scale.y = p, k.easings.easeOutBack);
 					}
 				}
 				else {
 					if (flower.id % 2 != 0) {
-						tween(1, 0.6, 0.35 / wareEngine.speed, (p) => flower.scale.y = p, k.easings.easeOutBack);
+						tween(1, 0.6, 0.35 / opts.speed, (p) => flower.scale.y = p, k.easings.easeOutBack);
 					}
 					else {
-						tween(0.6, 1, 0.35 / wareEngine.speed, (p) => flower.scale.y = p, k.easings.easeOutBack);
+						tween(0.6, 1, 0.35 / opts.speed, (p) => flower.scale.y = p, k.easings.easeOutBack);
 					}
 				}
 			}
@@ -203,80 +205,83 @@ export const chillTransition: TransitionDefinition = (parent, camera, stageManag
 	});
 
 	function zoomOut() {
-		tween(ZOOM_Y, k.center().y, 0.5 / wareEngine.speed, (p) => camera.pos.y = p, k.easings.easeOutQuint);
-		tween(ZOOM_SCALE, k.vec2(1), 0.5 / wareEngine.speed, (p) => camera.scale = p, k.easings.easeOutQuint);
+		tween(ZOOM_Y, k.center().y, 0.5 / opts.speed, (p) => camera.pos.y = p, k.easings.easeOutQuint);
+		tween(ZOOM_SCALE, k.vec2(1), 0.5 / opts.speed, (p) => camera.scale = p, k.easings.easeOutQuint);
 	}
 
 	function zoomIn() {
-		tween(camera.pos.y, ZOOM_Y, 1 / wareEngine.speed, (p) => camera.pos.y = p, k.easings.easeOutQuint);
-		tween(camera.scale, ZOOM_SCALE, 1 / wareEngine.speed, (p) => camera.scale = p, k.easings.easeOutQuint);
+		tween(camera.pos.y, ZOOM_Y, 1 / opts.speed, (p) => camera.pos.y = p, k.easings.easeOutQuint);
+		tween(camera.scale, ZOOM_SCALE, 1 / opts.speed, (p) => camera.scale = p, k.easings.easeOutQuint);
 	}
 
-	let oldDifficulty = wareEngine.difficulty;
 	stageManager.onStart(() => {
+		opts = stageManager.opts; // re defines the opts
 		conductor.time = 0; // desyncing
-		coffee.play("hot", { speed: 8 * wareEngine.speed, loop: true });
+		coffee.play("hot", { speed: 8 * opts.speed, loop: true });
 	});
 
 	stageManager.defineStage("prep", () => {
-		play("prepJingle", { speed: wareEngine.speed });
+		play("prepJingle", { speed: opts.speed });
 		chillguy.frame = 0;
 		screen.frame = 0;
 		chillcat.frame = 0;
 		chillbutterfly.frame = 0;
 
-		const prepConductor = createConductor(140 * wareEngine.speed);
+		const prepConductor = createConductor(140 * opts.speed);
 		fallingPage.destroy();
-		fallingPage = addCalendarPage(wareEngine.score - 1);
+		fallingPage = addCalendarPage(opts.score - 1);
 
 		// page funny
-		tween(fallingPage.scale.y, 1.8, 0.35 / wareEngine.speed, (p) => fallingPage.scale.y = p, k.easings.easeOutExpo).onEnd(() => {
+		tween(fallingPage.scale.y, 1.8, 0.35 / opts.speed, (p) => fallingPage.scale.y = p, k.easings.easeOutExpo).onEnd(() => {
 			fallingPage.scale.y = 0.5;
 			fallingPage.pos.y += calendar.height;
 			const Xpos = fallingPage.pos.x;
 			fallingPage.onUpdate(() => {
-				const xWave = k.wave(Xpos - 20, Xpos + 20, k.time() * wareEngine.speed * 2);
+				const xWave = k.wave(Xpos - 20, Xpos + 20, k.time() * opts.speed * 2);
 				fallingPage.pos.x = k.lerp(fallingPage.pos.x, xWave, 0.5);
 			});
-			tween(fallingPage.pos.y, fallingPage.pos.y + 50, 0.4 / wareEngine.speed, (p) => fallingPage.pos.y = p, k.easings.easeOutCubic);
-			tween(fallingPage.opacity, 0, 0.4 / wareEngine.speed, (p) => fallingPage.opacity = p, k.easings.linear);
+			tween(fallingPage.pos.y, fallingPage.pos.y + 50, 0.4 / opts.speed, (p) => fallingPage.pos.y = p, k.easings.easeOutCubic);
+			tween(fallingPage.opacity, 0, 0.4 / opts.speed, (p) => fallingPage.opacity = p, k.easings.linear);
 		});
 
-		const newPage = addCalendarPage(wareEngine.score);
+		const newPage = addCalendarPage(opts.score);
 		newPage.z = fallingPage.z - 1;
 
 		// TODO: when there are 3 flowers they don't beat anymore
 
 		// tween the first one here bc conductor doesn't do beat 0
 		const hearts = parent.get("heart");
-		tween(k.vec2(1.5), k.vec2(1), 0.35 / wareEngine.speed, (p) => hearts[0].scale = p, k.easings.easeOutQuint);
+		tween(k.vec2(1.5), k.vec2(1), 0.35 / opts.speed, (p) => hearts[0].scale = p, k.easings.easeOutQuint);
 		prepConductor.onBeat((beat) => {
 			if (beat == 1) {
-				stageManager.callInput();
+				addInputPrompt(wareApp, opts.input, opts.speed, ctx);
 			}
 			else if (beat == 2) {
-				stageManager.callPrompt();
+				const prompt = typeof opts.prompt == "string" ? opts.prompt : "";
+				const promptObj = addTextPrompt(wareApp, prompt, opts.speed, ctx);
+				if (typeof opts.prompt == "function") opts.prompt(opts.ctx, promptObj);
+
 				// set gamebox
 				wareApp.boxObj.width = screen.width;
 				wareApp.boxObj.height = screen.height;
 				wareApp.boxObj.pos = screen.pos;
-				tween(1, 0, 0.5 / wareEngine.speed, (p) => screen.opacity = p, k.easings.easeOutQuint);
+				tween(1, 0, 0.5 / opts.speed, (p) => screen.opacity = p, k.easings.easeOutQuint);
 			}
 
 			const heartIdx = beat % (hearts.length);
 			const heartToBeat = hearts[heartIdx];
-			tween(k.vec2(1.5), k.vec2(1), 0.35 / wareEngine.speed, (p) => heartToBeat.scale = p, k.easings.easeOutQuint);
+			tween(k.vec2(1.5), k.vec2(1), 0.35 / opts.speed, (p) => heartToBeat.scale = p, k.easings.easeOutQuint);
 
 			if (beat == 3) {
 				zoomIn();
 				tween(
 					k.vec2(wareApp.boxObj.width, wareApp.boxObj.height),
 					k.vec2(k.width(), k.height()),
-					0.5 / wareEngine.speed,
+					0.5 / opts.speed,
 					(p) => [wareApp.boxObj.width, wareApp.boxObj.height] = [p.x, p.y],
 					k.easings.easeOutQuint,
 				);
-				tween(wareApp.boxObj.pos, k.center(), 0.5 / wareEngine.speed, (p) => wareApp.boxObj.pos = p, k.easings.easeOutQuint).onEnd(() => {
+				tween(wareApp.boxObj.pos, k.center(), 0.5 / opts.speed, (p) => wareApp.boxObj.pos = p, k.easings.easeOutQuint).onEnd(() => {
 					prepConductor.destroy();
 					stageManager.finishStage("prep");
 				});
@@ -285,7 +290,7 @@ export const chillTransition: TransitionDefinition = (parent, camera, stageManag
 
 		// adds the first flower in case there isn't one
 		if (!parent.get("flower")[0] && !parent.get("piranha")[0]) {
-			for (let i = 0; i < wareEngine.difficulty; i++) {
+			for (let i = 0; i < opts.difficulty; i++) {
 				addFlower();
 			}
 		}
@@ -294,37 +299,37 @@ export const chillTransition: TransitionDefinition = (parent, camera, stageManag
 	stageManager.defineStage("win", () => {
 		screen.opacity = 0;
 		zoomOut();
-		tween(0, 1, 0.5 / wareEngine.speed, (p) => screen.opacity = p, k.easings.easeOutQuint);
-		tween(wareApp.boxObj.pos, screen.pos, 0.5 / wareEngine.speed, (p) => screen.pos = p, k.easings.easeOutQuint);
+		tween(0, 1, 0.5 / opts.speed, (p) => screen.opacity = p, k.easings.easeOutQuint);
+		tween(wareApp.boxObj.pos, screen.pos, 0.5 / opts.speed, (p) => screen.pos = p, k.easings.easeOutQuint);
 		tween(
 			k.vec2(wareApp.boxObj.width, wareApp.boxObj.height),
 			k.vec2(screen.width, screen.height),
-			0.5 / wareEngine.speed,
+			0.5 / opts.speed,
 			(p) => [wareApp.boxObj.width, wareApp.boxObj.height] = [p.x, p.y],
 			k.easings.easeOutQuint,
 		);
 
-		const winConductor = createConductor(140 * wareEngine.speed);
+		const winConductor = createConductor(140 * opts.speed);
 		const hearts = parent.get("heart");
 		winConductor.onBeat(() => {
 		});
 
-		const sound = play("winJingle", { speed: wareEngine.speed });
+		const sound = play("winJingle", { speed: opts.speed });
 		chillguy.frame = 1;
 		screen.frame = 1;
 		chillcat.frame = 1;
 		chillbutterfly.frame = 1;
-		wait(sound.duration() / wareEngine.speed, () => {
+		wait(sound.duration() / opts.speed, () => {
 			stageManager.finishStage("win");
 		});
 	});
 
 	stageManager.defineStage("lose", () => {
-		tween(ZOOM_Y, k.center().y, 0.5 / wareEngine.speed, (p) => camera.pos.y = p, k.easings.easeOutQuint);
-		tween(ZOOM_SCALE, k.vec2(1), 0.5 / wareEngine.speed, (p) => camera.scale = p, k.easings.easeOutQuint);
-		tween(0, 1, 0.25 / wareEngine.speed, (p) => screen.opacity = p, k.easings.easeOutQuint);
+		tween(ZOOM_Y, k.center().y, 0.5 / opts.speed, (p) => camera.pos.y = p, k.easings.easeOutQuint);
+		tween(ZOOM_SCALE, k.vec2(1), 0.5 / opts.speed, (p) => camera.scale = p, k.easings.easeOutQuint);
+		tween(0, 1, 0.25 / opts.speed, (p) => screen.opacity = p, k.easings.easeOutQuint);
 
-		const sound = play("loseJingle", { speed: wareEngine.speed });
+		const sound = play("loseJingle", { speed: opts.speed });
 		chillguy.frame = 2;
 		screen.frame = 2;
 		chillcat.frame = 2;
@@ -336,13 +341,13 @@ export const chillTransition: TransitionDefinition = (parent, camera, stageManag
 			if (index < arr.length - 1) heart.shake(7);
 		});
 
-		wait(sound.duration() / wareEngine.speed, () => {
+		wait(sound.duration() / opts.speed, () => {
 			stageManager.finishStage("lose");
 		});
 	});
 
 	stageManager.defineStage("speed", () => {
-		const sound = play("speedJingle", { speed: wareEngine.speed });
+		const sound = play("speedJingle", { speed: opts.speed });
 
 		const overlay = parent.add([
 			k.rect(k.width(), k.height()),
@@ -351,11 +356,11 @@ export const chillTransition: TransitionDefinition = (parent, camera, stageManag
 		]);
 
 		overlay.onUpdate(() => {
-			const HUE = (k.time() * (wareEngine.speed * 10)) % 1;
+			const HUE = (k.time() * (opts.speed * 10)) % 1;
 			overlay.color = k.lerp(overlay.color, k.hsl2rgb(HUE, 0.7, 0.8), 0.1);
 		});
 
-		wait(sound.duration() / wareEngine.speed, () => {
+		wait(sound.duration() / opts.speed, () => {
 			overlay.destroy();
 			stageManager.finishStage("speed");
 		});
@@ -376,7 +381,7 @@ export const chillTransition: TransitionDefinition = (parent, camera, stageManag
 	}
 
 	stageManager.defineStage("bossPrep", () => {
-		const sound = play("bossJingle", { speed: wareEngine.speed });
+		const sound = play("bossJingle", { speed: opts.speed });
 
 		const bossText = parent.add([
 			k.text("BOSS"),
@@ -385,42 +390,42 @@ export const chillTransition: TransitionDefinition = (parent, camera, stageManag
 		]);
 
 		cleanFlowers();
-		wait(sound.duration() / wareEngine.speed, () => {
+		wait(sound.duration() / opts.speed, () => {
 			stageManager.finishStage("bossPrep");
 			bossText.destroy();
 		});
 	});
 
 	stageManager.defineStage("bossWin", () => {
-		const sound = play("bossWinJingle", { speed: wareEngine.speed });
+		const sound = play("bossWinJingle", { speed: opts.speed });
 
 		bossPrepCleanup();
-		tween(ZOOM_Y, k.center().y, 0.5 / wareEngine.speed, (p) => camera.pos.y = p, k.easings.easeOutQuint);
-		tween(ZOOM_SCALE, k.vec2(1), 0.5 / wareEngine.speed, (p) => camera.scale = p, k.easings.easeOutQuint);
-		tween(0, 1, 0.25 / wareEngine.speed, (p) => screen.opacity = p, k.easings.easeOutQuint);
+		tween(ZOOM_Y, k.center().y, 0.5 / opts.speed, (p) => camera.pos.y = p, k.easings.easeOutQuint);
+		tween(ZOOM_SCALE, k.vec2(1), 0.5 / opts.speed, (p) => camera.scale = p, k.easings.easeOutQuint);
+		tween(0, 1, 0.25 / opts.speed, (p) => screen.opacity = p, k.easings.easeOutQuint);
 		chillguy.frame = 1;
 		screen.frame = 1;
 		chillcat.frame = 1;
 		chillbutterfly.frame = 1;
 
-		wait(sound.duration() / wareEngine.speed, () => {
+		wait(sound.duration() / opts.speed, () => {
 			stageManager.finishStage("bossWin");
 		});
 	});
 
 	stageManager.defineStage("bossLose", () => {
-		const sound = play("loseJingle", { speed: wareEngine.speed });
+		const sound = play("loseJingle", { speed: opts.speed });
 
 		bossPrepCleanup();
-		tween(ZOOM_Y, k.center().y, 0.5 / wareEngine.speed, (p) => camera.pos.y = p, k.easings.easeOutQuint);
-		tween(ZOOM_SCALE, k.vec2(1), 0.5 / wareEngine.speed, (p) => camera.scale = p, k.easings.easeOutQuint);
-		tween(0, 1, 0.25 / wareEngine.speed, (p) => screen.opacity = p, k.easings.easeOutQuint);
+		tween(ZOOM_Y, k.center().y, 0.5 / opts.speed, (p) => camera.pos.y = p, k.easings.easeOutQuint);
+		tween(ZOOM_SCALE, k.vec2(1), 0.5 / opts.speed, (p) => camera.scale = p, k.easings.easeOutQuint);
+		tween(0, 1, 0.25 / opts.speed, (p) => screen.opacity = p, k.easings.easeOutQuint);
 		chillguy.frame = 2;
 		screen.frame = 2;
 		chillcat.frame = 2;
 		chillbutterfly.frame = 2;
 
-		wait(sound.duration() / wareEngine.speed, () => {
+		wait(sound.duration() / opts.speed, () => {
 			stageManager.finishStage("bossLose");
 		});
 	});

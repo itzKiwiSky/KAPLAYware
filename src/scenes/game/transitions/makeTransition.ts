@@ -2,6 +2,10 @@ import { AreaComp, GameObj, KEvent, KEventController, PosComp, RotateComp, Scale
 import { WareApp } from "../app";
 import k from "../../../engine";
 import { Kaplayware } from "../kaplayware";
+import { Microgame } from "../../../types/Microgame";
+import { createTransCtx, TransCtx } from "../context/trans";
+import { MicrogameCtx, MicrogameInput } from "../context/types";
+import { addTextPrompt } from "../objects/prompts";
 
 const baseStages = ["prep", "win", "lose", "bossPrep", "bossWin", "bossLose", "speed"] as const;
 /** The many stages an animation can go through */
@@ -15,6 +19,7 @@ type StateObject = {
 	endEv: KEvent<[TransitionStage]>;
 	/** The last stages the transition was called with */
 	stages: TransitionStage[];
+	opts: WareTransOpt;
 	/** Runs when the first stage runs */
 	onStart(action: () => void): void;
 	/** Defines a stage of the transition */
@@ -32,6 +37,8 @@ type StateObject = {
 /** A defined transition */
 export type Transition = {
 	readonly stages: TransitionStage[];
+	/** The context used (timer functions) */
+	readonly ctx: TransCtx;
 	/** Callback for when a stage starts */
 	onStageStart(stage: TransitionStage, action: () => void): KEventController;
 	/** Callback for when a stage ends */
@@ -42,18 +49,30 @@ export type Transition = {
 	onInputPromptTime(action: () => void): KEventController;
 	/** Callback for when all stages are over */
 	onTransitionEnd(action: () => void): KEventController;
-	trigger(stages: TransitionStage[]): void;
+	trigger(stages: TransitionStage[], opts: WareTransOpt): void;
+};
+
+/** Options for the transition */
+export type WareTransOpt = {
+	speed: number;
+	input: MicrogameInput;
+	difficulty: 1 | 2 | 3;
+	lives: number;
+	score: number;
+	prompt: Microgame["prompt"];
+	ctx?: MicrogameCtx;
 };
 
 /** A transition function, is the one that plays the songs and adds the objects and such */
-export type TransitionDefinition = (parent: ParentObject, camera: CameraObject, stageManager: StateObject, wareApp: WareApp, wareEngine: Kaplayware) => void;
+export type TransitionDefinition = (ctx: TransCtx, parent: ParentObject, camera: CameraObject, stageManager: StateObject, wareApp: WareApp) => void;
 
 /** Runs one time and creates a transition for actual use inside the KAPLAYWARE engine
  * @param transAction (clave) Gets called after creating all the events and such
  * @param wareApp The ware app necessary to add trans camera and such
  * @param wareEngine The ware engine necessary to pass into the transition so it can use speed, lives etc etc
  */
-export function createTransition(transAction: TransitionDefinition, wareApp: WareApp, wareEngine: Kaplayware): Transition {
+export function createTransition(transAction: TransitionDefinition, wareApp: WareApp): Transition {
+	const ctx = createTransCtx();
 	const startEv = new k.KEvent<[TransitionStage]>();
 	const endEv = new k.KEvent<[TransitionStage]>();
 	const promptEv = new k.KEvent();
@@ -66,6 +85,7 @@ export function createTransition(transAction: TransitionDefinition, wareApp: War
 		startEv: new k.KEvent<[TransitionStage]>(),
 		endEv: new k.KEvent<[TransitionStage]>(),
 		stages: [],
+		opts: { difficulty: 1, lives: 3, score: 1, speed: 1, input: "keys", prompt: "do" },
 		onStart(action) {
 			this.startEv.add((stage) => {
 				if (stage == this.stages[0]) action();
@@ -107,15 +127,19 @@ export function createTransition(transAction: TransitionDefinition, wareApp: War
 		}
 	});
 
-	// run the transition definition
-	transAction(parent, camera, stageManager, wareApp, wareEngine);
+	// run the transition definition (only runs once)
+	transAction(ctx, parent, camera, stageManager, wareApp);
 	// console.log("WARE: Creating Transition for the first time");
 
 	return {
 		get stages() {
 			return stageManager.stages;
 		},
-		trigger(stages: TransitionStage[]) {
+		get ctx() {
+			return ctx;
+		},
+		trigger(stages: TransitionStage[], opts: WareTransOpt) {
+			stageManager.opts = opts;
 			stageManager.stages = stages;
 			stageManager.enterStage(stages[0]);
 			camera.paused = false;

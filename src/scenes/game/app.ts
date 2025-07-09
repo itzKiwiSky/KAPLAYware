@@ -1,7 +1,5 @@
 import { AudioPlay, Color, KEventController, TimerController, TweenController, Vec2 } from "kaplay";
 import k from "../../engine";
-import { Conductor, createConductor } from "../../plugins/conductor";
-import { createTransCtx, TransCtx } from "./context/trans";
 
 /** Creates a cute little object that contains a buncha game objects that can hold, a ware instance
  * @returns An object with a lot of objects
@@ -80,6 +78,9 @@ export function createGameContainer() {
 /** The ReturnType of {@link createGameContainer `createGameContainer()`} */
 type GameContainer = ReturnType<typeof createGameContainer>;
 
+// NOTE: When adding an event to the app use the most-possible root version of it
+// so the pauses are handled by the app itself and not if the object happened to be paused
+
 /** Object that contains all the properties that a bare-bones instance should have */
 export type WareApp = {
 	readonly rootObj: GameContainer["root"];
@@ -89,9 +90,6 @@ export type WareApp = {
 	readonly sceneObj: GameContainer["scene"];
 	/** Is attached to mask */
 	readonly cameraObj: GameContainer["camera"];
-
-	/** The current transition context that can be paused */
-	readonly transCtx: TransCtx;
 
 	draws: {
 		paused: boolean;
@@ -122,18 +120,16 @@ export type WareApp = {
 	};
 
 	timers: {
-		tween: typeof k["tween"];
-		loop: typeof k["loop"];
-		wait: typeof k["wait"];
 		paused: boolean;
 		readonly length: number;
+		add<T extends TimerController | TweenController>(ev: T): T;
 		cancel(): void;
 	};
 
 	backgroundColor: Color;
+	/** Wheter all the events, inputs, sounds in the app should be paused */
 	paused: boolean;
 
-	createConductor: typeof createConductor;
 	clearAll(): void;
 	resetCamera(): void;
 	handleQuickWatch(): void;
@@ -144,7 +140,7 @@ export function createWareApp(): WareApp {
 	const gameContainer = createGameContainer();
 
 	/** Wheter EVERYTHING should be paused */
-	let gamePaused = false;
+	let appPaused = false;
 
 	let events: KEventController[] = [];
 	let eventsPaused = false;
@@ -162,10 +158,6 @@ export function createWareApp(): WareApp {
 	let inputs: KEventController[] = [];
 	let inputsPaused = false;
 
-	let conductors: Conductor[] = [];
-
-	const transCtx = createTransCtx();
-
 	const app = {
 		get rootObj() {
 			return gameContainer.root;
@@ -178,10 +170,6 @@ export function createWareApp(): WareApp {
 		},
 		get cameraObj() {
 			return gameContainer.camera;
-		},
-
-		get transCtx() {
-			return transCtx;
 		},
 
 		draws: {
@@ -258,20 +246,9 @@ export function createWareApp(): WareApp {
 			get length() {
 				return timers.length;
 			},
-			loop(t, action, maxLoops, waitFirst) {
-				const l = gameContainer.scene.loop(t, action, maxLoops, waitFirst);
-				timers.push(l);
-				return l;
-			},
-			wait(n, action) {
-				const w = gameContainer.scene.wait(n, action);
-				timers.push(w);
-				return w;
-			},
-			tween(from, to, duration, setValue, easeFunc) {
-				const t = gameContainer.scene.tween(from, to, duration, setValue, easeFunc);
-				timers.push(t);
-				return t;
+			add(ev) {
+				timers.push(ev);
+				return ev;
 			},
 			cancel() {
 				timers.forEach((t) => t.cancel());
@@ -330,18 +307,16 @@ export function createWareApp(): WareApp {
 
 		backgroundColor: k.rgb(),
 		get paused() {
-			return gamePaused;
+			return appPaused;
 		},
 		set paused(val: boolean) {
-			gamePaused = val;
-			(this as WareApp).events.paused = gamePaused;
-			(this as WareApp).draws.paused = gamePaused;
-			(this as WareApp).timers.paused = gamePaused;
-			(this as WareApp).inputs.paused = gamePaused;
-			(this as WareApp).sounds.paused = gamePaused;
-			(this as WareApp).transCtx.paused = gamePaused;
-			(this as WareApp).rootObj.paused = gamePaused;
-			conductors.forEach((c) => c.paused = gamePaused);
+			appPaused = val;
+			(this as WareApp).events.paused = appPaused;
+			(this as WareApp).draws.paused = appPaused;
+			(this as WareApp).timers.paused = appPaused;
+			(this as WareApp).inputs.paused = appPaused;
+			(this as WareApp).sounds.paused = appPaused;
+			(this as WareApp).rootObj.paused = appPaused;
 		},
 		clearAll(this: WareApp) {
 			this.events.cancel();
@@ -360,16 +335,11 @@ export function createWareApp(): WareApp {
 		},
 		handleQuickWatch(this: WareApp) {
 			k.quickWatch("app.paused", `${this.paused}`);
-			k.quickWatch("app.events", `${this.events.length} (${!this.events.paused})`);
-			k.quickWatch("app.draws", `${this.draws.length} (${!this.draws.paused})`);
-			k.quickWatch("app.sound", `${this.sounds.length} (${!this.sounds.paused})`);
-			k.quickWatch("app.input", `${this.inputs.length} (${!this.inputs.paused})`);
-			k.quickWatch("app.timers", `${this.timers.length} (${!this.timers.paused})`);
-		},
-		createConductor(this: WareApp, bpm, startPaused = false) {
-			const conductor = createConductor(bpm, startPaused);
-			conductors.push(conductor);
-			return conductor;
+			k.quickWatch("app.events", `${this.events.length} (paused: ${this.events.paused})`);
+			k.quickWatch("app.draws", `${this.draws.length} (paused: ${this.draws.paused})`);
+			k.quickWatch("app.sound", `${this.sounds.length} (paused: ${this.sounds.paused})`);
+			k.quickWatch("app.input", `${this.inputs.length} (paused: ${this.inputs.paused})`);
+			k.quickWatch("app.timers", `${this.timers.length} (paused: ${this.timers.paused})`);
 		},
 	} satisfies WareApp;
 

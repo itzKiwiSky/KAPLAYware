@@ -83,7 +83,7 @@ export type MicrogameAPI = {
 	/** The final duration of your microgame */
 	readonly duration: number;
 	/** The final prompt of  your microgame */
-	readonly prompt: string;
+	// readonly prompt: string; // TODO: figure out eventually
 };
 
 /** The context for the allowed functions in a microgame */

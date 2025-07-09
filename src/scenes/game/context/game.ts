@@ -7,6 +7,7 @@ import { MicrogameAPI, MicrogameCtx, StartCtx } from "./types";
 import { addConfetti } from "../objects/confetti";
 import k from "../../../engine";
 import { Microgame } from "../../../types/Microgame";
+import { WareEngine } from "../ware";
 
 /** Create the basic context, is a modified kaplay context
  * @param game Needs game for things like sprite() and play()
@@ -97,22 +98,22 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 			return {
 				...comp,
 				fadeOut(time: number, easeFunc = k.easings.linear) {
-					return wareApp.timers.tween(
+					return wareApp.timers.add(k.tween(
 						this.opacity,
 						0,
 						time,
 						(a) => this.opacity = a,
 						easeFunc,
-					);
+					));
 				},
 				fadeIn(time: number, easeFunc = k.easings.linear) {
-					return wareApp.timers.tween(
+					return wareApp.timers.add(k.tween(
 						0,
 						this.opacity,
 						time,
 						(a) => this.opacity = a,
 						easeFunc,
-					);
+					));
 				},
 			};
 		},
@@ -125,13 +126,13 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 		},
 		// timer controllers
 		tween(from, to, duration, setValue, easeFunc) {
-			return wareApp.timers.tween(from, to, duration, setValue, easeFunc);
+			return wareApp.timers.add(k.tween(from, to, duration, setValue, easeFunc));
 		},
 		wait(n, action) {
-			return wareApp.timers.wait(n, action);
+			return wareApp.timers.add(k.wait(n, action));
 		},
 		loop(t, action, maxLoops, waitFirst) {
-			return wareApp.timers.loop(t, action, maxLoops, waitFirst);
+			return wareApp.timers.add(k.loop(t, action, maxLoops, waitFirst));
 		},
 		// general event controllers
 		onCollide(t1, t2, action) {
@@ -184,7 +185,7 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 	};
 
 	startCtx["onUpdate"] = overload2((action: () => void): KEventController => {
-		const obj = wareApp.sceneObj.add([{ update: action }]);
+		const obj = k.add([{ update: action }]);
 		const ev: KEventController = {
 			get paused() {
 				return obj.paused;
@@ -201,7 +202,7 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 	});
 
 	startCtx["onDraw"] = overload2((action: () => void): KEventController => {
-		const obj = wareApp.sceneObj.add([{ draw: action }]);
+		const obj = k.add([{ draw: action }]);
 		const ev: KEventController = {
 			get paused() {
 				return obj.hidden;
@@ -238,7 +239,7 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 	});
 
 	startCtx["onClick"] = overload2((action: () => void) => {
-		const ev = wareApp.sceneObj.onMousePress(action);
+		const ev = k.onMousePress(action);
 		return wareApp.inputs.add(ev);
 	}, (tag: Tag, action: (obj: GameObj) => void) => {
 		const events: KEventController[] = [];
@@ -275,7 +276,7 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
  * @param wareApp Needs wareApp to access the object hierarchy
  * @param wareEngine Is optional for "preview" mode, if not wareEngine will skip win() lose() and finish() calls
  */
-export function createMicrogameAPI(wareApp: WareApp, wareEngine?: Kaplayware): MicrogameAPI {
+export function createMicrogameAPI(wareApp: WareApp, wareEngine?: WareEngine): MicrogameAPI {
 	return {
 		getCamAngle: () => wareApp.cameraObj.angle,
 		setCamAngle: (val: number) => wareApp.cameraObj.angle = val,
@@ -305,16 +306,13 @@ export function createMicrogameAPI(wareApp: WareApp, wareEngine?: Kaplayware): M
 			return wareEngine.onTimeOutEvents.add(action);
 		},
 		win() {
-			if (!wareEngine) return;
-			wareEngine.winGame();
+			wareEngine.winState = true;
 		},
 		lose() {
-			if (!wareEngine) return;
-			wareEngine.loseGame();
+			wareEngine.winState = false;
 		},
 		finish() {
-			if (!wareEngine) return;
-			wareEngine.finishGame();
+			// wareEngine.;
 		},
 		addConfetti(opts) {
 			const confetti = addConfetti(opts);
@@ -337,10 +335,7 @@ export function createMicrogameAPI(wareApp: WareApp, wareEngine?: Kaplayware): M
 			return wareEngine.timeLeft ?? 20;
 		},
 		get duration() {
-			return wareEngine.curDuration;
-		},
-		get prompt() {
-			return wareEngine.curPrompt;
+			return wareEngine.curDuration ?? 20;
 		},
 	};
 }
@@ -350,7 +345,7 @@ export function createMicrogameAPI(wareApp: WareApp, wareEngine?: Kaplayware): M
  * @param wareApp The ware-app
  * @param wareEngine The ware engine, is optional for "preview" mode
  */
-export function createGameCtx(game: Microgame, wareApp: WareApp, wareEngine?: Kaplayware): MicrogameCtx {
+export function createGameCtx(game: Microgame, wareApp: WareApp, wareEngine: WareEngine): MicrogameCtx {
 	const startCtx = createStartCtx(game, wareApp);
 	const api = createMicrogameAPI(wareApp, wareEngine);
 	return mergeWithRef(startCtx, api);

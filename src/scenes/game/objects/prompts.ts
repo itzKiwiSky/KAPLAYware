@@ -1,8 +1,10 @@
 import k from "../../../engine";
 import { WareApp } from "../app";
+import { TransCtx } from "../context/trans";
 import { MicrogameInput } from "../context/types";
 
-export function addTextPrompt(wareApp: WareApp, promptText: string, speed = 1) {
+// TODO: not a big fan of passing transCtx here
+export function addTextPrompt(wareApp: WareApp, promptText: string, speed = 1, transCtx: TransCtx) {
 	const promptObj = wareApp.rootObj.add([
 		k.color(k.WHITE),
 		k.fixed(),
@@ -39,10 +41,10 @@ export function addTextPrompt(wareApp: WareApp, promptText: string, speed = 1) {
 		});
 
 		// the jumpy
-		wareApp.transCtx.tween(0, 1.2, 0.25 / speed, (p) => promptObj.scale.x = p, k.easings.easeOutExpo);
-		wareApp.transCtx.tween(0, 0.9, 0.25 / speed, (p) => promptObj.scale.y = p, k.easings.easeOutExpo).onEnd(() => {
-			wareApp.transCtx.tween(promptObj.scale, k.vec2(1), 0.25 / speed, (p) => promptObj.scale = p, k.easings.easeOutElastic).onEnd(() => {
-				wareApp.transCtx.tween(1, 0, 0.25 / speed, (p) => {
+		transCtx.tween(0, 1.2, 0.25 / speed, (p) => promptObj.scale.x = p, k.easings.easeOutExpo);
+		transCtx.tween(0, 0.9, 0.25 / speed, (p) => promptObj.scale.y = p, k.easings.easeOutExpo).onEnd(() => {
+			transCtx.tween(promptObj.scale, k.vec2(1), 0.25 / speed, (p) => promptObj.scale = p, k.easings.easeOutElastic).onEnd(() => {
+				transCtx.tween(1, 0, 0.25 / speed, (p) => {
 					promptObj.opacity = p;
 				}).onEnd(() => promptObj.destroy());
 			});
@@ -52,7 +54,7 @@ export function addTextPrompt(wareApp: WareApp, promptText: string, speed = 1) {
 	return promptObj;
 }
 
-export function addInputPrompt(wareApp: WareApp, input: MicrogameInput, speed = 1) {
+export function addInputPrompt(wareApp: WareApp, input: MicrogameInput, speed = 1, transCtx: TransCtx) {
 	const prompt = wareApp.rootObj.add([k.z(2)]);
 
 	const inputBg = prompt.add([
@@ -73,11 +75,11 @@ export function addInputPrompt(wareApp: WareApp, input: MicrogameInput, speed = 
 	prompt.onUpdate(() => {
 		inputBg.angle += 0.1 * speed;
 	});
-	wareApp.transCtx.tween(k.vec2(0), k.vec2(1), 0.25 / speed, (p) => inputBg.scale = p, k.easings.easeOutExpo);
-	wareApp.transCtx.tween(k.vec2(0), k.vec2(1), 0.25 / speed, (p) => inputPrompt.scale = p, k.easings.easeOutElastic);
+	transCtx.tween(k.vec2(0), k.vec2(1), 0.25 / speed, (p) => inputBg.scale = p, k.easings.easeOutExpo);
+	transCtx.tween(k.vec2(0), k.vec2(1), 0.25 / speed, (p) => inputPrompt.scale = p, k.easings.easeOutElastic);
 
-	wareApp.transCtx.wait(0.5 / speed, () => {
-		wareApp.transCtx.tween(k.vec2(1), k.vec2(0), 0.25 / speed, (p) => inputBg.scale = p, k.easings.easeOutExpo).onEnd(() => {
+	transCtx.wait(0.5 / speed, () => {
+		transCtx.tween(k.vec2(1), k.vec2(0), 0.25 / speed, (p) => inputBg.scale = p, k.easings.easeOutExpo).onEnd(() => {
 			prompt.destroy();
 		});
 	});
