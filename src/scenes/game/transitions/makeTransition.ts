@@ -3,7 +3,7 @@ import { WareApp } from "../app";
 import k from "../../../engine";
 import { Kaplayware } from "../kaplayware";
 import { Microgame } from "../../../types/Microgame";
-import { createTransCtx, TransCtx } from "../context/trans";
+import { createTransCtx, TransCtx } from "./trans";
 import { MicrogameCtx, MicrogameInput } from "../context/types";
 import { addTextPrompt } from "../objects/prompts";
 

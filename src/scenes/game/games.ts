@@ -12,6 +12,11 @@ const games = Object.values(modules)
 	.map((module: any) => module.default)
 	.filter((game) => !exclude.has(getGameID(game))) as Microgame[];
 
+// TODO: Find a better place for this
+for (const g of games) {
+	if (!g.isBoss) g.isBoss = false;
+}
+
 const onlyInclude = new Set([
 	window.DEV_MICROGAME, // Passed arg from npm run dev {yourname}:{gamename}
 	...(import.meta.env?.VITE_ONLY_MICROGAME ?? "").trim().split("\n").map((s: string) => s.trim()),

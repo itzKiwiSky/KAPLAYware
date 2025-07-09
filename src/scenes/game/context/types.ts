@@ -1,5 +1,5 @@
 import { assets } from "@kaplayjs/crew";
-import { Asset, Color, CompList, GameObj, GameObjRaw, KEventController, MergeComps, SpriteComp, SpriteCompOpt, SpriteData, TweenController, Vec2 } from "kaplay";
+import { Asset, Color, KEventController, SpriteComp, SpriteCompOpt, SpriteData, TweenController, Vec2 } from "kaplay";
 import { gameAPIs } from "../api";
 import { ConfettiOpt } from "../objects/confetti";
 import k from "../../../engine";
@@ -46,7 +46,10 @@ export type MicrogameAPI = {
 	getCamAngle(): number;
 	setCamPos(val: Vec2): Vec2;
 	getCamPos(): Vec2;
-	shakeCam(val?: number): void;
+	/** Shakes the camera randomly
+	 * @param intensity How much? (default: 14)
+	 */
+	shakeCam(intensity?: number): void;
 	/** Flashes the screen
 	 * @param flashColor The color the flash will be
 	 * @param time How long the flash will be on screen
@@ -83,7 +86,7 @@ export type MicrogameAPI = {
 	/** The final duration of your microgame */
 	readonly duration: number;
 	/** The final prompt of  your microgame */
-	// readonly prompt: string; // TODO: figure out eventually
+	readonly prompt: string;
 };
 
 /** The context for the allowed functions in a microgame */

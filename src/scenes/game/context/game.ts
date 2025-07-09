@@ -1,13 +1,14 @@
-import { Color, GameObj, KEventController, Key, Tag } from "kaplay";
+import { Color, GameObj, KEventController, Tag } from "kaplay";
 import { gameAPIs } from "../api";
 import { forAllCurrentAndFuture, getGameID, isDefaultAsset, mergeWithRef, overload2, pickKeysInObj } from "../utils";
 import { WareApp } from "../app";
-import { Kaplayware } from "../kaplayware";
 import { MicrogameAPI, MicrogameCtx, StartCtx } from "./types";
 import { addConfetti } from "../objects/confetti";
 import k from "../../../engine";
 import { Microgame } from "../../../types/Microgame";
 import { WareEngine } from "../ware";
+
+// TODO: This context folder is pissing me off... I am the original       amyspark-ng
 
 /** Create the basic context, is a modified kaplay context
  * @param game Needs game for things like sprite() and play()
@@ -57,7 +58,7 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 			return level;
 		},
 		burp(options) {
-			return startCtx["play"](k._k.audio.burpSnd, options);
+			return startCtx["play"](k._k.game.defaultAssets.burp, options);
 		},
 		drawSprite(opt) {
 			if (!isDefaultAsset(opt.sprite)) opt.sprite = `${getGameID(game)}-${opt.sprite}`;
@@ -81,11 +82,11 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 			return {
 				id: "fixed",
 				add() {
-					this.parent = wareApp.rootObj;
+					this.parent = wareApp.maskObj;
 				},
 				set fixed(val: boolean) {
 					fixed = val;
-					if (fixed == true) this.parent = wareApp.rootObj;
+					if (fixed == true) this.parent = wareApp.maskObj;
 					else this.parent = wareApp.sceneObj;
 				},
 				get fixed() {
@@ -123,6 +124,9 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 			// what about mousepos?
 			// stuff like that
 			return wareApp.inputs.add(k.onMouseMove(action));
+		},
+		onButtonPress(btn, action) {
+			return wareApp.inputs.add(k.onButtonPress(btn, action));
 		},
 		// timer controllers
 		tween(from, to, duration, setValue, easeFunc) {
@@ -182,92 +186,102 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 		timer(maxLoopsPerFrame) {
 			return k.timer(maxLoopsPerFrame);
 		},
+
+		onButtonDown: overload2((action: (btn: any) => void) => {
+			return wareApp.inputs.add(k.onButtonDown(action));
+		}, (btn: any, action: (btn: any) => void) => {
+			return wareApp.inputs.add(k.onButtonDown(btn, action));
+		}),
+
+		onButtonRelease: overload2((action: (btn: any) => void) => {
+			return wareApp.inputs.add(k.onButtonRelease(action));
+		}, (btn: any, action: (btn: any) => void) => {
+			return wareApp.inputs.add(k.onButtonRelease(btn, action));
+		}),
+
+		onUpdate: overload2((action: () => void): KEventController => {
+			const obj = k.add([{ update: action }]);
+			const ev: KEventController = {
+				get paused() {
+					return obj.paused;
+				},
+				set paused(p) {
+					obj.paused = p;
+				},
+				cancel: () => obj.destroy(),
+			};
+			wareApp.events.add(ev);
+			return ev;
+		}, (tag: Tag, action: (obj: GameObj) => void) => {
+			return wareApp.events.add(k.on("update", tag, action));
+		}),
+		onDraw: overload2((action: () => void): KEventController => {
+			const obj = wareApp.sceneObj.add([{ draw: action }]);
+			const ev: KEventController = {
+				get paused() {
+					return obj.hidden;
+				},
+				set paused(p) {
+					obj.hidden = p;
+				},
+				cancel: () => obj.destroy(),
+			};
+			return wareApp.draws.add(ev);
+		}, (tag: Tag, action: (obj: GameObj) => void) => {
+			let paused = false;
+			const evs: KEventController[] = [];
+			const listener = forAllCurrentAndFuture(wareApp.sceneObj, tag, (obj) => {
+				const drawEv = obj.on("draw", () => action(obj));
+				evs.push(drawEv);
+			});
+
+			const ev: KEventController = {
+				get paused() {
+					return paused;
+				},
+				set paused(val: boolean) {
+					paused = val;
+					listener.paused = paused;
+				},
+				cancel() {
+					listener.cancel();
+					evs.forEach((ev) => ev.cancel());
+				},
+			};
+
+			return wareApp.draws.add(ev);
+		}),
+		onClick: overload2((action: () => void) => {
+			const ev = k.onMousePress(action);
+			return wareApp.inputs.add(ev);
+		}, (tag: Tag, action: (obj: GameObj) => void) => {
+			const events: KEventController[] = [];
+			let paused: boolean = false;
+
+			const listener = forAllCurrentAndFuture(wareApp.sceneObj, tag, (obj) => {
+				if (!obj.area) {
+					throw new Error(
+						"onClick() requires the object to have area() component",
+					);
+				}
+				events.push(obj.onClick(() => action(obj)));
+			});
+			const ev: KEventController = {
+				get paused() {
+					return paused;
+				},
+				set paused(val: boolean) {
+					paused = val;
+					listener.paused = paused;
+				},
+				cancel() {
+					events.forEach((ev) => ev.cancel());
+					listener.cancel();
+				},
+			};
+			return wareApp.inputs.add(ev);
+		}),
 	};
-
-	startCtx["onUpdate"] = overload2((action: () => void): KEventController => {
-		const obj = k.add([{ update: action }]);
-		const ev: KEventController = {
-			get paused() {
-				return obj.paused;
-			},
-			set paused(p) {
-				obj.paused = p;
-			},
-			cancel: () => obj.destroy(),
-		};
-		wareApp.events.add(ev);
-		return ev;
-	}, (tag: Tag, action: (obj: GameObj) => void) => {
-		return wareApp.events.add(k.on("update", tag, action));
-	});
-
-	startCtx["onDraw"] = overload2((action: () => void): KEventController => {
-		const obj = k.add([{ draw: action }]);
-		const ev: KEventController = {
-			get paused() {
-				return obj.hidden;
-			},
-			set paused(p) {
-				obj.hidden = p;
-			},
-			cancel: () => obj.destroy(),
-		};
-		return wareApp.draws.add(ev);
-	}, (tag: Tag, action: (obj: GameObj) => void) => {
-		let paused = false;
-		const evs: KEventController[] = [];
-		const listener = forAllCurrentAndFuture(wareApp.sceneObj, tag, (obj) => {
-			const drawEv = obj.on("draw", () => action(obj));
-			evs.push(drawEv);
-		});
-
-		const ev: KEventController = {
-			get paused() {
-				return paused;
-			},
-			set paused(val: boolean) {
-				paused = val;
-				listener.paused = paused;
-			},
-			cancel() {
-				listener.cancel();
-				evs.forEach((ev) => ev.cancel());
-			},
-		};
-
-		return wareApp.draws.add(ev);
-	});
-
-	startCtx["onClick"] = overload2((action: () => void) => {
-		const ev = k.onMousePress(action);
-		return wareApp.inputs.add(ev);
-	}, (tag: Tag, action: (obj: GameObj) => void) => {
-		const events: KEventController[] = [];
-		let paused: boolean = false;
-
-		const listener = forAllCurrentAndFuture(wareApp.sceneObj, tag, (obj) => {
-			if (!obj.area) {
-				throw new Error(
-					"onClick() requires the object to have area() component",
-				);
-			}
-			events.push(obj.onClick(() => action(obj)));
-		});
-		const ev: KEventController = {
-			get paused() {
-				return paused;
-			},
-			set paused(val: boolean) {
-				paused = val;
-				listener.paused = paused;
-			},
-			cancel() {
-				events.forEach((ev) => ev.cancel());
-				listener.cancel();
-			},
-		};
-		return wareApp.inputs.add(ev);
-	});
 
 	return startCtx;
 }
@@ -285,6 +299,12 @@ export function createMicrogameAPI(wareApp: WareApp, wareEngine?: WareEngine): M
 		getCamScale: () => wareApp.cameraObj.scale,
 		setCamScale: (val) => wareApp.cameraObj.scale = val,
 		shakeCam: (val: number = 12) => wareApp.cameraObj.shake += val,
+		getRGB: () => wareApp.backgroundColor,
+		setRGB: (val) => wareApp.backgroundColor = val,
+		onTimeout: (action) => wareEngine.onTimeOutEvents.add(action),
+		win: () => wareEngine.winGame(),
+		lose: () => wareEngine.winGame(),
+		finish: () => wareEngine.finishGame(),
 		flashCam: (flashColor: Color = k.WHITE, timeOut: number = 1, opacity: number) => {
 			const r = wareApp.boxObj.add([
 				k.pos(k.center()),
@@ -297,22 +317,6 @@ export function createMicrogameAPI(wareApp: WareApp, wareEngine?: WareEngine): M
 			const f = r.fadeOut(timeOut);
 			f.onEnd(() => k.destroy(r));
 			return f;
-		},
-		getRGB: () => wareApp.backgroundColor,
-		setRGB: (val) => wareApp.backgroundColor = val,
-
-		// TODO: Make this in a way that nothing happens if runs on wareEngine
-		onTimeout: (action) => {
-			return wareEngine.onTimeOutEvents.add(action);
-		},
-		win() {
-			wareEngine.winState = true;
-		},
-		lose() {
-			wareEngine.winState = false;
-		},
-		finish() {
-			// wareEngine.;
 		},
 		addConfetti(opts) {
 			const confetti = addConfetti(opts);
@@ -336,6 +340,9 @@ export function createMicrogameAPI(wareApp: WareApp, wareEngine?: WareEngine): M
 		},
 		get duration() {
 			return wareEngine.curDuration ?? 20;
+		},
+		get prompt() {
+			return wareEngine.curPrompt ?? "";
 		},
 	};
 }

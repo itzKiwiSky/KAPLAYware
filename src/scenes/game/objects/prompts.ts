@@ -1,6 +1,6 @@
 import k from "../../../engine";
 import { WareApp } from "../app";
-import { TransCtx } from "../context/trans";
+import { TransCtx } from "../transitions/trans";
 import { MicrogameInput } from "../context/types";
 
 // TODO: not a big fan of passing transCtx here

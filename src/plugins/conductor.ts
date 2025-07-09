@@ -1,4 +1,4 @@
-import { AudioPlay, KAPLAYCtx, KEventController } from "kaplay";
+import { AudioPlay, GameObj, KAPLAYCtx, KEventController } from "kaplay";
 import k from "../engine";
 
 export type Conductor = {
@@ -8,7 +8,7 @@ export type Conductor = {
 	readonly beatInterval: number;
 	destroy(): void;
 	onBeat(action: (beat: number, beatTime: number) => void): KEventController;
-	onUpdate(action: () => void): KEventController;
+	onUpdate: GameObj["onUpdate"];
 };
 
 /** Small conductor class for managing beat hit behaviour
@@ -30,9 +30,9 @@ export function createConductor(bpm: number, startPaused: boolean = false): Cond
 	let time = 0;
 	let beatInterval = 60 / bpm;
 	let paused = startPaused;
-	const updateEv = new k.KEvent();
-	const update = k.onUpdate(() => updateEv.trigger());
-	updateEv.add(() => {
+	const obj = k.add([]);
+
+	obj.onUpdate(() => {
 		if (paused) return;
 		beatInterval = 60 / bpm;
 		time = (time + k.dt()) % 60;
@@ -71,11 +71,9 @@ export function createConductor(bpm: number, startPaused: boolean = false): Cond
 			return time;
 		},
 		destroy() {
-			update.cancel();
+			obj.destroy();
 			beatHitEv.clear();
 		},
-		onUpdate(action) {
-			return updateEv.add(action);
-		},
+		onUpdate: (action) => obj.onUpdate(action),
 	};
 }

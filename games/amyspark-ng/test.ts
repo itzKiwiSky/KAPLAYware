@@ -52,9 +52,16 @@ const testGame: Microgame = {
 			bean.trigger("eventName", true);
 		});
 
+		ctx.onButtonPress("right", () => {
+			ctx.shakeCam();
+		});
+
 		ctx.onButtonPress("action", () => {
+			ctx.debug.log("PRESSING ACTION");
+			if (ctx.winState != undefined) return;
 			ctx.lose();
 			ctx.wait(1, () => {
+				console.log(ctx.winState);
 				ctx.finish();
 			});
 		});

@@ -18,6 +18,7 @@ export type WareEngine = {
 	winState: boolean | undefined;
 	paused: boolean;
 	curDuration: number;
+	curPrompt: string;
 	/** Basically there's this microgame hat, when you pick a microgame, that microgame gets taken out of the hat, when there's no more microgames just add more again to the hat */
 	getRandomGame(games?: Microgame[]): Microgame;
 	getDifficulty(score?: number): 1 | 2 | 3;
@@ -26,6 +27,11 @@ export type WareEngine = {
 	shouldSpeedUp(score?: number, speed?: number, lastGame?: Microgame): boolean;
 	shouldBoss(): boolean;
 	isGameOver(): boolean;
+	handleQuickWatch(): void;
+	winGame(): void;
+	loseGame(): void;
+	/** Is re-set after, runs when the game should be over (ctx.finish()) */
+	finishGame(): void;
 };
 
 export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
@@ -38,14 +44,15 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 		lives: 3,
 		score: 1, // first prep will show 0 turn into 1
 		lastGame: null,
-		difficulty: 3,
-		curDuration: 0,
+		difficulty: 1,
+		curDuration: 20,
+		curPrompt: "",
 		microgameHistory: [],
 		onTimeOutEvents: new k.KEvent(),
-		paused: true,
-		speed: 0,
-		timeLeft: 0,
-		timePaused: true,
+		paused: false,
+		speed: 1,
+		timeLeft: 20,
+		timePaused: false,
 		winState: undefined,
 		getRandomGame(games = window.microgames) {
 			let randomGame: Microgame = null;
@@ -103,5 +110,16 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 		increaseSpeed(this: WareEngine) {
 			return k.clamp(this.speed + this.speed * 0.07, 0, MAX_SPEED);
 		},
+		handleQuickWatch(this: WareEngine) {
+			// k.quickWatch("ware.scenePaused", wareEngine.scenePaused);
+			// k.quickWatch("ware.objects", wareApp.sceneObj.get("*", { recursive: true }).length);
+			k.quickWatch("ware.score", this.score);
+			k.quickWatch("ware.time", this.timeLeft?.toFixed(2));
+			k.quickWatch("ware.speed", this.speed.toFixed(2));
+			k.quickWatch("ware.gamehat", microgameHat.length);
+		},
+		winGame() {},
+		loseGame() {},
+		finishGame() {},
 	};
 }

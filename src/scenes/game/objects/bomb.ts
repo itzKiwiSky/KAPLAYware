@@ -1,3 +1,4 @@
+import { GameObjRaw, InternalGameObjRaw } from "kaplay";
 import k from "../../../engine";
 import { Conductor, createConductor } from "../../../plugins/conductor";
 import { WareApp } from "../app";
@@ -11,18 +12,27 @@ export function addBomb(wareApp: WareApp) {
 
 	const bomb = wareApp.rootObj.add([{
 		tick,
+		extinguish,
+		lit,
+		explode,
+		conductor: createConductor(140, true),
 		get hasExploded() {
 			return hasExploded;
 		},
 		get beatsLeft() {
 			return beatsLeft;
 		},
-		extinguish: extinguish,
-		lit,
-		explode,
 	}]);
 
-	let conductor: Conductor = null;
+	Object.defineProperty(bomb, "paused", {
+		get() {
+			return (bomb as unknown as InternalGameObjRaw)._paused;
+		},
+		set(v: boolean) {
+			(bomb as unknown as InternalGameObjRaw)._paused = v;
+			bomb.conductor.paused = v;
+		},
+	});
 
 	const bombSpr = bomb.add([
 		k.sprite("bomb"),
@@ -61,7 +71,7 @@ export function addBomb(wareApp: WareApp) {
 
 	function destroy() {
 		bomb.destroy();
-		conductor?.destroy();
+		bomb.conductor.destroy();
 	}
 
 	let movingFuse = false;
@@ -72,12 +82,11 @@ export function addBomb(wareApp: WareApp) {
 		cord.width = width;
 		cordtip.pos.x = width;
 
-		if (conductor) conductor.paused = wareApp.paused;
 		if (beatsLeft == 0 && !movingFuse) {
 			if (cordstart.exists()) cordstart.destroy();
 			cordtip.opacity = 0;
 			movingFuse = true;
-			wareApp.timers.tween(fuse.pos.y, fuse.pos.y - 30, conductor.beatInterval, (p) => fuse.pos.y = p);
+			wareApp.timers.add(k.tween(fuse.pos.y, fuse.pos.y - 30, bomb.conductor.beatInterval, (p) => fuse.pos.y = p));
 		}
 	});
 
@@ -96,7 +105,7 @@ export function addBomb(wareApp: WareApp) {
 		if (beatsLeft > 0) {
 			beatsLeft--;
 			const tweenMult = 2 - beatsLeft + 1; // goes from 1 to 3;
-			wareApp.timers.tween(k.vec2(1).add(0.33 * tweenMult), k.vec2(1).add((0.33 * tweenMult) / 2), 0.5 / 3, (p) => bombSpr.scale = p, k.easings.easeOutQuint);
+			wareApp.timers.add(k.tween(k.vec2(1).add(0.33 * tweenMult), k.vec2(1).add((0.33 * tweenMult) / 2), 0.5 / 3, (p) => bombSpr.scale = p, k.easings.easeOutQuint));
 			wareApp.sounds.play("tick", { detune: 25 * 2 - beatsLeft });
 			if (beatsLeft == 2) bombSpr.color = k.YELLOW;
 			else if (beatsLeft == 1) bombSpr.color = k.RED.lerp(k.YELLOW, 0.5);
@@ -107,8 +116,9 @@ export function addBomb(wareApp: WareApp) {
 
 	/** Will start a conductor which will explode the bomb in 4 beats (tick, tick, tick, BOOM!) */
 	function lit(bpm = 140) {
-		conductor = wareApp.transCtx.createConductor(bpm);
-		conductor.onBeat((beat, beatTime) => {
+		bomb.conductor.bpm = bpm;
+		bomb.conductor.paused = false;
+		bomb.conductor.onBeat((beat, beatTime) => {
 			tick();
 			if (beat == 4) destroy();
 		});
@@ -116,7 +126,7 @@ export function addBomb(wareApp: WareApp) {
 
 	/** Turns off the bomb */
 	function extinguish() {
-		conductor.destroy();
+		bomb.conductor.destroy();
 		fuse.fadeOut(0.5 / 3).onEnd(() => fuse.destroy());
 	}
 

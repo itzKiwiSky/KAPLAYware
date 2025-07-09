@@ -19,6 +19,7 @@ export function createGameContainer() {
 		k.rect(gameBox.width, gameBox.height),
 		k.pos(-gameBox.width / 2, -gameBox.height / 2),
 		k.mask("intersect"),
+		k.anchor("center"),
 	]);
 
 	const shakeCameraObject = maskObj.add([
@@ -84,12 +85,14 @@ type GameContainer = ReturnType<typeof createGameContainer>;
 /** Object that contains all the properties that a bare-bones instance should have */
 export type WareApp = {
 	readonly rootObj: GameContainer["root"];
-	/** Is attached to root */
+	/** Is attached to treeRoot */
 	readonly boxObj: GameContainer["box"];
-	/** Is attached to camera */
-	readonly sceneObj: GameContainer["scene"];
+	/** Is attached to wareRoot (serves for fixed) */
+	readonly maskObj: GameContainer["mask"];
 	/** Is attached to mask */
 	readonly cameraObj: GameContainer["camera"];
+	/** Is attached to camera */
+	readonly sceneObj: GameContainer["scene"];
 
 	draws: {
 		paused: boolean;
@@ -139,7 +142,7 @@ export type WareApp = {
 export function createWareApp(): WareApp {
 	const gameContainer = createGameContainer();
 
-	/** Wheter EVERYTHING should be paused */
+	/** Wheter the app should be paused */
 	let appPaused = false;
 
 	let events: KEventController[] = [];
@@ -165,6 +168,9 @@ export function createWareApp(): WareApp {
 		get boxObj() {
 			return gameContainer.box;
 		},
+		get maskObj() {
+			return gameContainer.mask;
+		},
 		get sceneObj() {
 			return gameContainer.scene;
 		},
@@ -185,6 +191,7 @@ export function createWareApp(): WareApp {
 			},
 			add(ev) {
 				draws.push(ev);
+				ev.paused = this.paused;
 				return ev;
 			},
 			cancel() {
@@ -206,6 +213,7 @@ export function createWareApp(): WareApp {
 			},
 			add(ev) {
 				events.push(ev);
+				ev.paused = this.paused;
 				return ev;
 			},
 			cancel() {
@@ -227,6 +235,7 @@ export function createWareApp(): WareApp {
 			},
 			add(ev) {
 				inputs.push(ev);
+				ev.paused = this.paused;
 				return ev;
 			},
 			cancel() {
@@ -248,6 +257,7 @@ export function createWareApp(): WareApp {
 			},
 			add(ev) {
 				timers.push(ev);
+				ev.paused = this.paused;
 				return ev;
 			},
 			cancel() {
