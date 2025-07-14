@@ -32,6 +32,8 @@ interface BaseMicrogame {
 	author: string;
 	/** The name of the minigame, used for identification.  */
 	name: string;
+	/** The pack of the minigame, used for identification.  */
+	pack: string;
 	/** The RGB (color) code for the game's background
 	 *
 	 * You can use a regular array of numbers like so:
