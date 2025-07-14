@@ -1,7 +1,8 @@
-import { Microgame } from "../../src/types/Microgame";
+import { Microgame } from "../../../src/types/Microgame";
 
 const fishGame: Microgame = {
 	name: "fish",
+	pack: "community",
 	author: "erik",
 	prompt: "FISH!",
 	input: "keys",

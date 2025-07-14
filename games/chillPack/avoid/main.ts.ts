@@ -1,8 +1,9 @@
-import { Microgame } from "../../src/types/Microgame";
+import { Microgame } from "../../../src/types/Microgame";
 
 const avoidGame: Microgame = {
 	prompt: "AVOID!",
 	name: "avoid",
+	pack: "chill",
 	author: "amyspark-ng",
 	rgb: (ctx) => ctx.mulfok.BLUE,
 	duration: 6,

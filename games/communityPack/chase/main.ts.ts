@@ -1,9 +1,10 @@
 import { assets } from "@kaplayjs/crew";
-import { Microgame } from "../../src/types/Microgame";
+import { Microgame } from "../../../src/types/Microgame";
 import { GameObj, Vec2 } from "kaplay";
 
 const newGame: Microgame = {
 	name: "chase",
+	pack: "community",
 	author: "nanopoison",
 	prompt: "CHASE!",
 	input: "keys",

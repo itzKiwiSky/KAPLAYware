@@ -1,9 +1,10 @@
 import { GameObj, Vec2 } from "kaplay";
-import { Microgame } from "../../src/types/Microgame";
+import { Microgame } from "../../../src/types/Microgame";
 
 // almost 300 lines of pure unadultered pain that took me a whole day to write
 const sortGame: Microgame = {
 	name: "sort",
+	pack: "chill",
 	prompt: "SORT!",
 	author: "amyspark-ng",
 	duration: (ctx) => ctx.difficulty == 3 ? 7 : 6,

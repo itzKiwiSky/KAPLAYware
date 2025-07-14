@@ -1,9 +1,10 @@
 import { AreaComp, Color } from "kaplay";
-import { Microgame } from "../../src/types/Microgame";
+import { Microgame } from "../../../src/types/Microgame";
 
 // all art made by me (amyspark-ng) hehe
 const colorGame: Microgame = {
 	name: "choose",
+	pack: "community",
 	author: "luizbills",
 	prompt: "CHOOSE!",
 	rgb: (ctx) => ctx.mulfok.BLUE,

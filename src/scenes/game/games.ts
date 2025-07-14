@@ -3,7 +3,15 @@ import { getGameID } from "./utils";
 
 window.microgames = [];
 
-export const modules = import.meta.glob("../../../games/*/*.ts", { eager: true });
+// TODO: ASSET REFACTORING
+/*
+ * have to make it so each minigame asset is properly loaded (may have to change a buncha of the loadSprite code)
+ * how do games that are not built in work?
+ * get the code below properly working
+ * fix the function thing that creates a new minigame
+ */
+
+export const modules = import.meta.glob("../../../games/*/*/main.ts", { eager: true });
 
 const exclude = new Set([]);
 

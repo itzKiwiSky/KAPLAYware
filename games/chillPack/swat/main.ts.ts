@@ -1,7 +1,8 @@
-import { Microgame } from "../../src/types/Microgame";
+import { Microgame } from "../../../src/types/Microgame";
 
 const swatGame: Microgame = {
 	name: "swat",
+	pack: "chill",
 	author: "amyspark-ng",
 	prompt: "SWAT!",
 	rgb: (ctx) => ctx.mulfok.LIGHT_BROWN,

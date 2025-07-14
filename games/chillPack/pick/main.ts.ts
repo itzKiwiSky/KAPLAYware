@@ -1,11 +1,11 @@
-import k from "../../src/engine";
-import { Microgame } from "../../src/types/Microgame";
+import { Microgame } from "../../../src/types/Microgame";
 
 const pickGame: Microgame = {
 	name: "pick",
+	pack: "chill",
 	author: "amyspark-ng",
 	prompt: "PICK!",
-	rgb: k.WHITE,
+	rgb: (ctx) => ctx.WHITE,
 	duration: 6,
 	input: "keys",
 	urlPrefix: "games/amyspark-ng/assets/",

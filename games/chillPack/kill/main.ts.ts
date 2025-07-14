@@ -1,5 +1,5 @@
 import { LoadSpriteOpt, Vec2 } from "kaplay";
-import { Microgame } from "../../src/types/Microgame";
+import { Microgame } from "../../../src/types/Microgame";
 
 // TODO: Do the whole squid cool game
 const killGame: Microgame = {

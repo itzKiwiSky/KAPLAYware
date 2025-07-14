@@ -1,7 +1,8 @@
-import { Microgame } from "../../src/types/Microgame";
+import { Microgame } from "../../../src/types/Microgame";
 
 const transformGame: Microgame = {
 	name: "transform",
+	pack: "community",
 	author: "ricjones",
 	prompt: "TRANSFORM!",
 	input: "keys",

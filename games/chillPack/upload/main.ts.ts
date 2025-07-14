@@ -1,8 +1,9 @@
 import { Vec2 } from "kaplay";
-import { Microgame } from "../../src/types/Microgame";
+import { Microgame } from "../../../src/types/Microgame";
 
 const uploadGame: Microgame = {
 	name: "upload",
+	pack: "chill",
 	author: "amyspark-ng",
 	prompt: "UPLOAD!",
 	rgb: (ctx) => ctx.mulfok.DARK_BLUE,

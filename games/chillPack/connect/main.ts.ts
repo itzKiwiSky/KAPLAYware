@@ -1,8 +1,9 @@
 import { GameObj } from "kaplay";
-import { Microgame } from "../../src/types/Microgame";
+import { Microgame } from "../../../src/types/Microgame";
 
 const connectGame: Microgame = {
 	name: "connect",
+	pack: "chill",
 	author: "amyspark-ng",
 	prompt: "CONNECT!",
 	input: "mouse",

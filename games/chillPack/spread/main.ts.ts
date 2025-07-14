@@ -1,8 +1,9 @@
 import { Outline, Vec2 } from "kaplay";
-import { Microgame } from "../../src/types/Microgame";
+import { Microgame } from "../../../src/types/Microgame";
 
 const spreadGame: Microgame = {
 	name: "spread",
+	pack: "chill",
 	author: "amyspark-ng",
 	prompt: "SPREAD!",
 	duration: 20,

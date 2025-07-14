@@ -1,8 +1,9 @@
 import { Vec2 } from "kaplay";
-import { Microgame } from "../../src/types/Microgame";
+import { Microgame } from "../../../src/types/Microgame";
 
 const tapGame: Microgame = {
 	name: "tap",
+	pack: "chill",
 	author: "amyspark-ng",
 	prompt: "TAP!",
 	rgb: [0, 0, 0],

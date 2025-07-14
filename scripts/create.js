@@ -20,7 +20,7 @@ const randomNum = (max = 255) => {
 };
 
 const template = `
-import { Microgame } from "../../src/types/Microgame";
+import { Microgame } from "../../../src/types/Microgame";
 
 const ${gamePrompt}Game: Microgame = {
 	name: "${gamePrompt}",

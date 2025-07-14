@@ -1,8 +1,9 @@
 import { Vec2 } from "kaplay";
-import { Microgame } from "../../src/types/Microgame";
+import { Microgame } from "../../../src/types/Microgame";
 
 const getGame: Microgame = {
 	name: "get",
+	pack: "chill",
 	author: "amyspark-ng",
 	prompt: "GET!",
 	rgb: (ctx) => ctx.mulfok.GREEN,

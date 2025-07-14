@@ -1,6 +1,6 @@
 import { Vec2 } from "kaplay";
-import { Microgame } from "../../src/types/Microgame";
-import { MicrogameCtx } from "../../src/scenes/game/context/types";
+import { MicrogameCtx } from "../../../src/scenes/game/context/types";
+import { Microgame } from "../../../src/types/Microgame";
 
 function getHexagonShape(ctx: MicrogameCtx) {
 	// some cool math
@@ -104,6 +104,7 @@ function addComboText(ctx: MicrogameCtx) {
 
 const clickGame: Microgame = {
 	name: "click",
+	pack: "chill",
 	author: "amyspark-ng", // of course
 	prompt: "CLICK!",
 	rgb: [41, 24, 52],

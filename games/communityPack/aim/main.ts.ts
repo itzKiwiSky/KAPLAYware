@@ -1,8 +1,9 @@
 import { GameObj } from "kaplay";
-import { Microgame } from "../../src/types/Microgame";
+import { Microgame } from "../../../src/types/Microgame";
 
 const aimGame: Microgame = {
 	name: "aim",
+	pack: "community",
 	author: "kiwisky",
 	prompt: "AIM!",
 	rgb: [141, 183, 255],
