@@ -8,12 +8,12 @@ const pickGame: Microgame = {
 	rgb: (ctx) => ctx.WHITE,
 	duration: 6,
 	input: "keys",
-	urlPrefix: "games/amyspark-ng/assets/",
+	urlPrefix: "games/chillPack/pick/",
 	load(ctx) {
-		ctx.loadSprite("hand", "sprites/pick/hand.png", { sliceY: 1, sliceX: 3 });
-		ctx.loadSprite("booger", "sprites/pick/booger.png", { sliceY: 1, sliceX: 3 });
-		ctx.loadSprite("nosetop", "sprites/pick/nosetop.png", { sliceY: 1, sliceX: 3 });
-		ctx.loadSprite("nosebot", "sprites/pick/nosebot.png", { sliceY: 1, sliceX: 3 });
+		ctx.loadSprite("hand", "sprites/hand.png", { sliceY: 1, sliceX: 3 });
+		ctx.loadSprite("booger", "sprites/booger.png", { sliceY: 1, sliceX: 3 });
+		ctx.loadSprite("nosetop", "sprites/nosetop.png", { sliceY: 1, sliceX: 3 });
+		ctx.loadSprite("nosebot", "sprites/nosebot.png", { sliceY: 1, sliceX: 3 });
 		ctx.loadSound("sniff", "sounds/sniff.mp3");
 		ctx.loadSound("splat", "sounds/splat.mp3");
 		ctx.loadSound("pick", "sounds/pick.ogg");

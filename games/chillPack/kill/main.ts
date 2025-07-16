@@ -4,23 +4,24 @@ import { Microgame } from "../../../src/types/Microgame";
 // TODO: Do the whole squid cool game
 const killGame: Microgame = {
 	name: "kill",
+	pack: "chillPack",
 	author: "amyspark-ng",
 	prompt: "KILL!",
 	hideMouse: true,
 	isBoss: true,
 	rgb: (ctx) => ctx.mulfok.DARK_VIOLET,
-	urlPrefix: "games/amyspark-ng/assets/",
+	urlPrefix: "games/chillPack/kill/",
 	load(ctx) {
-		ctx.loadSprite("boss", "sprites/kill/boss.png");
+		ctx.loadSprite("boss", "sprites/boss.png");
 		const defaultAnims: LoadSpriteOpt = { sliceX: 2, sliceY: 1, anims: { "idle": { from: 0, to: 1, loop: true } } };
-		ctx.loadSprite("aim", "sprites/kill/aim.png");
-		ctx.loadSprite("tentacle", "sprites/kill/tentacle.png", defaultAnims);
-		ctx.loadSprite("spaceship", "sprites/kill/spaceship.png", defaultAnims);
-		ctx.loadSprite("explosion", "sprites/kill/explosion.png", defaultAnims);
-		ctx.loadSprite("bullet", "sprites/kill/bullet.png", defaultAnims);
-		ctx.loadSprite("heart", "sprites/kill/heart.png");
-		ctx.loadSprite("frame", "sprites/kill/frame.png");
-		ctx.loadSprite("bar", "sprites/kill/bar.png");
+		ctx.loadSprite("aim", "sprites/aim.png");
+		ctx.loadSprite("tentacle", "sprites/tentacle.png", defaultAnims);
+		ctx.loadSprite("spaceship", "sprites/spaceship.png", defaultAnims);
+		ctx.loadSprite("explosion", "sprites/explosion.png", defaultAnims);
+		ctx.loadSprite("bullet", "sprites/bullet.png", defaultAnims);
+		ctx.loadSprite("heart", "sprites/heart.png");
+		ctx.loadSprite("frame", "sprites/frame.png");
+		ctx.loadSprite("bar", "sprites/bar.png");
 		ctx.loadSound("drama", "sounds/drama.ogg");
 		ctx.loadSound("shoot", "sounds/bullet.wav");
 		ctx.loadSound("bosshurt", "sounds/bosshurt.wav");
@@ -94,7 +95,7 @@ const killGame: Microgame = {
 					]);
 
 					bullet.onCollide("boss", () => {
-						boss.hurt(25);
+						boss.hp -= 25
 						bullet.destroy();
 					});
 
@@ -117,7 +118,7 @@ const killGame: Microgame = {
 		let ogBarWidth = bar.width;
 
 		const livesText = ctx.add([
-			ctx.text(spaceship.hp().toString(), { align: "center" }),
+			ctx.text(spaceship.hp.toString(), { align: "center" }),
 			ctx.pos(717, 566),
 			ctx.anchor("center"),
 			ctx.scale(1.5),
@@ -164,8 +165,8 @@ const killGame: Microgame = {
 		// # now define behaviour for stuff
 		boss.onUpdate(() => {
 			boss.pos.x = ctx.wave(ctx.center().x - 50, ctx.center().x + 50, ctx.time());
-			const HP = boss.dead ? 0 : boss.hp();
-			const maxHP = boss.maxHP() as number;
+			const HP = boss.dead ? 0 : boss.hp;
+			const maxHP = boss.maxHP as number;
 			bar.width = (HP / maxHP) * ogBarWidth;
 		});
 

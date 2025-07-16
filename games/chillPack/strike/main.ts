@@ -8,14 +8,14 @@ const strikeGame: Microgame = {
 	rgb: (ctx) => ctx.WHITE,
 	input: "mouse (hidden)",
 	duration: 5,
-	urlPrefix: "games/amyspark-ng/assets/",
+	urlPrefix: "games/chillPack/strike/",
 	load(ctx) {
-		ctx.loadSprite("gato", "sprites/strike/gato.png");
-		ctx.loadSprite("markbola", "sprites/strike/markola.png");
-		ctx.loadSprite("racket", "sprites/strike/cosa.png");
-		ctx.loadSound("steelsting", "sounds/steelsting.mp3");
+		ctx.loadSprite("gato", "sprites/gato.png");
+		ctx.loadSprite("markbola", "sprites/markola.png");
+		ctx.loadSprite("racket", "sprites/cosa.png");
 		ctx.loadSound("cheer", "sounds/applause.ogg");
 		ctx.loadSound("ballhit", "sounds/ballhit.mp3");
+		ctx.loadSound("steelsting", "../assets/sounds/steelsting.mp3");
 	},
 	// TODO: Make more juicy, make more clear when one should be careful of the ball, do the remake
 	start(ctx) {

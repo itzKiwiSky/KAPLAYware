@@ -9,11 +9,11 @@ const uploadGame: Microgame = {
 	rgb: (ctx) => ctx.mulfok.DARK_BLUE,
 	duration: 4,
 	input: "mouse",
-	urlPrefix: "games/amyspark-ng/assets/",
+	urlPrefix: "games/chillPack/upload/",
 	load(ctx) {
-		ctx.loadSprite("os", "sprites/upload/os.png");
-		ctx.loadSprite("window", "sprites/upload/window.png", { sliceX: 5, sliceY: 1 });
-		ctx.loadSprite("drop", "sprites/upload/drop.png");
+		ctx.loadSprite("os", "sprites/os.png");
+		ctx.loadSprite("window", "sprites/window.png", { sliceX: 5, sliceY: 1 });
+		ctx.loadSprite("drop", "sprites/drop.png");
 		ctx.loadSound("notification", "sounds/notification.mp3");
 	},
 	// TODO: Touch up file spawning

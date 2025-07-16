@@ -8,21 +8,20 @@ const dodgeGame: Microgame = {
 	input: "keys",
 	duration: (ctx) => ctx.difficulty == 1 || ctx.difficulty == 2 ? 6 : 8,
 	rgb: [255, 255, 255],
-	urlPrefix: "games/amyspark-ng/assets/",
+	urlPrefix: "games/chillPack/dodge/",
 	load(ctx) {
-		ctx.loadSprite("dino", "sprites/dodge/dino.png", { sliceX: 5, sliceY: 1 });
-		ctx.loadSprite("ptero", "sprites/dodge/ptero.png", { sliceX: 2, sliceY: 1 });
-		ctx.loadSprite("cactus", "sprites/dodge/cactus.png");
-		ctx.loadSprite("cloud", "sprites/dodge/cloud.png");
-		ctx.loadSprite("ground", "sprites/dodge/ground.png");
-		ctx.loadSprite("sand", "sprites/dodge/sand.png");
-		ctx.loadSprite("comet", "sprites/dodge/comet.png");
-		ctx.loadSprite("gameover", "sprites/dodge/gameover.png");
-		ctx.loadSprite("kaboom", "sprites/dodge/kaboom.png");
-		ctx.loadSprite("wifi", "sprites/dodge/wifi.png");
+		ctx.loadSprite("dino", "sprites/dino.png", { sliceX: 5, sliceY: 1 });
+		ctx.loadSprite("ptero", "sprites/ptero.png", { sliceX: 2, sliceY: 1 });
+		ctx.loadSprite("cactus", "sprites/cactus.png");
+		ctx.loadSprite("cloud", "sprites/cloud.png");
+		ctx.loadSprite("ground", "sprites/ground.png");
+		ctx.loadSprite("sand", "sprites/sand.png");
+		ctx.loadSprite("comet", "sprites/comet.png");
+		ctx.loadSprite("gameover", "sprites/gameover.png");
+		ctx.loadSprite("kaboom", "sprites/kaboom.png");
+		ctx.loadSprite("wifi", "sprites/wifi.png");
 		ctx.loadSound("jump", "sounds/dino-jump.wav");
 		ctx.loadSound("explosion", "sounds/explosion.wav");
-		ctx.loadSound("wifi", "sounds/explosion.wav");
 	},
 	// TODO: Touch up (add the browser overlya)
 	start(ctx) {
@@ -279,7 +278,7 @@ const dodgeGame: Microgame = {
 			ctx.get("*").forEach((obj) => obj.destroy());
 
 			ctx.win();
-			ctx.play("wifi", { detune: ctx.rand(-50, 50) });
+			ctx.play("explosion", { detune: ctx.rand(-50, 50) });
 			ctx.add([
 				ctx.sprite("wifi"),
 				ctx.color(PRIMARY_COLOR),

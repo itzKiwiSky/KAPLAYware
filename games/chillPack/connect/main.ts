@@ -9,12 +9,12 @@ const connectGame: Microgame = {
 	input: "mouse",
 	rgb: (ctx) => ctx.mulfok.DARK_PURPLE,
 	duration: (ctx) => ctx.difficulty == 3 ? 7 : 5,
-	urlPrefix: "games/amyspark-ng/assets",
+	urlPrefix: "games/chillPack/connect/",
 	colorDependant: true,
 	load(ctx) {
-		ctx.loadSprite("plug", "/sprites/connect/plug.png");
-		ctx.loadSprite("box", "/sprites/connect/box.png");
-		ctx.loadSound("plug", "/sounds/switch.mp3");
+		ctx.loadSprite("plug", "sprites/plug.png");
+		ctx.loadSprite("box", "sprites/box.png");
+		ctx.loadSound("plug", "sounds/switch.mp3");
 	},
 	// TODO: Do the remake
 	start(ctx) {

@@ -9,10 +9,10 @@ const spreadGame: Microgame = {
 	duration: 20,
 	rgb: (ctx) => ctx.mulfok.BROWN,
 	input: "mouse (hidden)",
-	urlPrefix: "games/amyspark-ng/assets/",
+	urlPrefix: "games/chillPack/spread/",
 	load(ctx) {
-		ctx.loadSprite("bg", "sprites/spread/jambackground.png");
-		ctx.loadSprite("coffee", "sprites/spread/coffee.png", {
+		ctx.loadSprite("bg", "sprites/jambackground.png");
+		ctx.loadSprite("coffee", "sprites/coffee.png", {
 			sliceX: 3,
 			sliceY: 3,
 			anims: {
@@ -20,10 +20,10 @@ const spreadGame: Microgame = {
 				"idlesad": { from: 4, to: 7, loop: true },
 			},
 		});
-		ctx.loadSprite("knife", "sprites/spread/knife.png");
-		ctx.loadSprite("knifejam", "sprites/spread/knifejam.png");
+		ctx.loadSprite("knife", "sprites/knife.png");
+		ctx.loadSprite("knifejam", "sprites/knifejam.png");
 
-		ctx.loadSprite("bread", "sprites/spread/bread.png", {
+		ctx.loadSprite("bread", "sprites/bread.png", {
 			sliceX: 6,
 			sliceY: 1,
 			anims: {
@@ -33,9 +33,9 @@ const spreadGame: Microgame = {
 				},
 			},
 		});
-		ctx.loadSprite("breadderp", "sprites/spread/breadderp.png");
+		ctx.loadSprite("breadderp", "sprites/breadderp.png");
 
-		ctx.loadSpriteAtlas("sprites/spread/bread.png", {
+		ctx.loadSpriteAtlas("sprites/bread.png", {
 			"jammedbread": {
 				width: 240,
 				height: 234,
@@ -44,8 +44,8 @@ const spreadGame: Microgame = {
 			},
 		});
 
+		ctx.loadSound("scrape", "../assets/sounds/scrape.ogg");
 		ctx.loadSound("crunch", "sounds/crunch.mp3");
-		ctx.loadSound("scrape", "sounds/scrape.ogg");
 	},
 	start(ctx) {
 		ctx.add([ctx.sprite("bg")]);

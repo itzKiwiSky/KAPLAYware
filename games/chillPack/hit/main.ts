@@ -8,15 +8,15 @@ const hitGame: Microgame = {
 	rgb: (ctx) => ctx.mulfok.DARK_PINK,
 	input: "mouse (hidden)",
 	duration: 5,
-	urlPrefix: "games/amyspark-ng/assets/",
+	urlPrefix: "games/chillPack/hit/",
 	load(ctx) {
-		ctx.loadSprite("table", "sprites/hit/table.png");
-		ctx.loadSprite("static", "sprites/hit/static.png", { sliceX: 2, sliceY: 1 });
-		ctx.loadSprite("news", "sprites/hit/news.png", { sliceX: 2, sliceY: 1 });
-		ctx.loadSprite("sports", "sprites/hit/sports.png", { sliceX: 2, sliceY: 1 });
-		ctx.loadSprite("products", "sprites/hit/products.png", { sliceX: 2, sliceY: 1 });
-		ctx.loadSprite("hand", "sprites/hit/hand.png");
-		ctx.loadSound("hit", "sounds/knock.ogg");
+		ctx.loadSprite("table", "sprites/table.png");
+		ctx.loadSprite("static", "sprites/static.png", { sliceX: 2, sliceY: 1 });
+		ctx.loadSprite("news", "sprites/news.png", { sliceX: 2, sliceY: 1 });
+		ctx.loadSprite("sports", "sprites/sports.png", { sliceX: 2, sliceY: 1 });
+		ctx.loadSprite("products", "sprites/products.png", { sliceX: 2, sliceY: 1 });
+		ctx.loadSprite("hand", "sprites/hand.png");
+		ctx.loadSound("hit", "../assets/sounds/knock.ogg");
 		ctx.loadSound("static", "sounds/static.ogg");
 		ctx.loadSound("tvsound", "sounds/tvsound.mp3");
 	},

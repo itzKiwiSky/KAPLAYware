@@ -9,14 +9,14 @@ const getGame: Microgame = {
 	rgb: (ctx) => ctx.mulfok.GREEN,
 	duration: (ctx) => ctx.difficulty == 3 ? 3.5 : 4,
 	input: "keys",
-	urlPrefix: "games/amyspark-ng/assets/",
+	urlPrefix: "games/chillPack/get/",
 	load(ctx) {
-		ctx.loadSprite("grass", "sprites/get/grass.png");
-		ctx.loadSprite("trunk", "sprites/get/trunk.png");
-		ctx.loadSprite("bush", "sprites/get/bush.png");
-		ctx.loadSprite("badapple", "sprites/get/badapple.png"); // cool reference (not related to reference at all)
-		ctx.loadSound("crunch", "sounds/crunch.mp3");
-		ctx.loadSound("rustle", "sounds/bushrustle.mp3");
+		ctx.loadSprite("grass", "sprites/grass.png");
+		ctx.loadSprite("trunk", "sprites/trunk.png");
+		ctx.loadSprite("bush", "sprites/bush.png");
+		ctx.loadSprite("badapple", "sprites/badapple.png"); // cool reference (not related to reference at all)
+		ctx.loadSound("crunch", "../assets/sounds/crunch.mp3");
+		ctx.loadSound("rustle", "../assets/sounds/bushrustle.mp3");
 	},
 	start(ctx) {
 		const SPEED = 400 * ctx.speed;
@@ -30,10 +30,10 @@ const getGame: Microgame = {
 			const magnitude = ctx.difficulty == 1
 				? 150
 				: ctx.difficulty == 2
-				? 250
-				: ctx.difficulty == 3
-				? 300
-				: 0;
+					? 250
+					: ctx.difficulty == 3
+						? 300
+						: 0;
 
 			const X = ctx.center().x + magnitude * Math.cos(randAngle);
 			const Y = ctx.center().y + magnitude * Math.sin(randAngle);

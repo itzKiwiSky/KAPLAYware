@@ -8,12 +8,12 @@ const knockGame: Microgame = {
 	input: "mouse",
 	rgb: [74, 48, 82],
 	duration: (ctx) => ctx.difficulty == 3 ? 4.5 : 4,
-	urlPrefix: "games/amyspark-ng/assets/",
+	urlPrefix: "games/chillPack/knock/",
 	load(ctx) {
-		ctx.loadSprite("angry", "sprites/knock/angry.png");
-		ctx.loadSprite("text", "sprites/knock/text.png");
-		ctx.loadSprite("door", "sprites/knock/door.png", { sliceX: 2, sliceY: 1 });
-		ctx.loadSound("knock", "sounds/knock.ogg");
+		ctx.loadSprite("angry", "sprites/angry.png");
+		ctx.loadSprite("text", "sprites/text.png");
+		ctx.loadSprite("door", "sprites/door.png", { sliceX: 2, sliceY: 1 });
+		ctx.loadSound("knock", "../assets/sounds/knock.ogg");
 		ctx.loadSound("escape", "sounds/cartoonescape.ogg");
 		ctx.loadSound("door", "sounds/door.ogg");
 	},

@@ -8,17 +8,17 @@ const dontGame: Microgame = {
 	rgb: (ctx) => ctx.mulfok.VOID_VIOLET,
 	duration: 3,
 	input: "keys",
-	urlPrefix: "games/amyspark-ng/assets/",
+	urlPrefix: "games/chillPack/dont/",
 	load(ctx) {
-		ctx.loadSprite("explosion", "sprites/dont/explosion.png", { sliceX: 7, sliceY: 1, anims: { "a": { from: 0, to: 6 } } });
-		ctx.loadSprite("button", "sprites/dont/button.png", { sliceX: 2, sliceY: 1 });
-		ctx.loadSprite("earth", "sprites/dont/earth.png");
-		ctx.loadSprite("frame", "sprites/dont/frame.png");
-		ctx.loadSprite("marky", "sprites/dont/marky.png");
-		ctx.loadSprite("moon", "sprites/dont/moon.png");
-		ctx.loadSprite("shooting", "sprites/dont/shooting.png");
-		ctx.loadSprite("stars", "sprites/dont/stars.png");
-		ctx.loadSound("explode", "sounds/explode.mp3");
+		ctx.loadSprite("explosion", "sprites/explosion.png", { sliceX: 7, sliceY: 1, anims: { "a": { from: 0, to: 6 } } });
+		ctx.loadSprite("button", "sprites/button.png", { sliceX: 2, sliceY: 1 });
+		ctx.loadSprite("earth", "sprites/earth.png");
+		ctx.loadSprite("frame", "sprites/frame.png");
+		ctx.loadSprite("marky", "sprites/marky.png");
+		ctx.loadSprite("moon", "sprites/moon.png");
+		ctx.loadSprite("shooting", "sprites/shooting.png");
+		ctx.loadSprite("stars", "sprites/stars.png");
+		ctx.loadSound("explode", "../assets/sounds/explode.mp3");
 	},
 	start(ctx) {
 		// positions itself

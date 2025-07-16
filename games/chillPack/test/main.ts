@@ -8,7 +8,7 @@ const testGame: Microgame = {
 	input: "keys",
 	rgb: [255, 255, 255],
 	duration: 4,
-	urlPrefix: "games/assets/",
+	urlPrefix: "games/chillPack/assets/",
 	load(ctx) {
 		ctx.loadSprite("kasquare", "sprites/kasquare.png");
 	},

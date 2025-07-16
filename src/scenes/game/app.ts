@@ -19,7 +19,6 @@ export function createGameContainer() {
 		k.rect(gameBox.width, gameBox.height),
 		k.pos(-gameBox.width / 2, -gameBox.height / 2),
 		k.mask("intersect"),
-		k.anchor("center"),
 	]);
 
 	const shakeCameraObject = maskObj.add([

@@ -10,24 +10,24 @@ const sortGame: Microgame = {
 	duration: (ctx) => ctx.difficulty == 3 ? 7 : 6,
 	rgb: [166, 133, 159],
 	input: "mouse",
-	urlPrefix: "games/amyspark-ng/assets/",
+	urlPrefix: "games/chillPack/sort/",
 	load(ctx) {
-		ctx.loadSprite("bg", "sprites/sort/background.png");
-		ctx.loadSprite("machineback", "sprites/sort/machineback.png");
-		ctx.loadSprite("machinefront", "sprites/sort/machinefront.png");
-		ctx.loadSprite("conveyor", "sprites/sort/conveyor.png", { sliceX: 2, sliceY: 1 });
-		ctx.loadSprite("boxback", "sprites/sort/boxback.png");
-		ctx.loadSprite("boxfront", "sprites/sort/boxfront.png");
-		ctx.loadSprite("circle", "sprites/sort/circle.png");
-		ctx.loadSprite("circle-o", "sprites/sort/circle-o.png");
-		ctx.loadSprite("triangle", "sprites/sort/triangle.png");
-		ctx.loadSprite("triangle-o", "sprites/sort/triangle-o.png");
-		ctx.loadSprite("littleguy", "sprites/sort/littleguy.png", { sliceX: 3, sliceY: 1 });
-		ctx.loadSprite("daystext", "sprites/sort/daystext.png", { sliceX: 3, sliceY: 1 });
-		ctx.loadSound("buzzer", "sounds/buzzer.mp3");
+		ctx.loadSprite("bg", "sprites/background.png");
+		ctx.loadSprite("machineback", "sprites/machineback.png");
+		ctx.loadSprite("machinefront", "sprites/machinefront.png");
+		ctx.loadSprite("conveyor", "sprites/conveyor.png", { sliceX: 2, sliceY: 1 });
+		ctx.loadSprite("boxback", "sprites/boxback.png");
+		ctx.loadSprite("boxfront", "sprites/boxfront.png");
+		ctx.loadSprite("circle", "sprites/circle.png");
+		ctx.loadSprite("circle-o", "sprites/circle-o.png");
+		ctx.loadSprite("triangle", "sprites/triangle.png");
+		ctx.loadSprite("triangle-o", "sprites/triangle-o.png");
+		ctx.loadSprite("littleguy", "sprites/littleguy.png", { sliceX: 3, sliceY: 1 });
+		ctx.loadSprite("daystext", "sprites/daystext.png", { sliceX: 3, sliceY: 1 });
+		ctx.loadSound("buzzer", "../assets/sounds/buzzer.mp3");
+		ctx.loadSound("confetti", "../assets/sounds/confetti.mp3");
 		ctx.loadSound("conveyor", "sounds/conveyor.ogg");
 		ctx.loadSound("box", "sounds/box.ogg");
-		ctx.loadSound("confetti", "sounds/confetti.mp3");
 	},
 	start(ctx) {
 		ctx.add([ctx.sprite("bg"), ctx.z(-5), ctx.pos(ctx.center()), ctx.anchor("center")]);

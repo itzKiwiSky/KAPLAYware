@@ -8,15 +8,12 @@ const mineGame: Microgame = {
 	rgb: (ctx) => ctx.mulfok.VOID_VIOLET,
 	input: "mouse (hidden)",
 	duration: 5,
-	urlPrefix: "games/amyspark-ng/assets/",
+	urlPrefix: "games/chillPack/mine/",
 	load(ctx) {
-		ctx.loadSound("bling", "sounds/bling.mp3");
-		ctx.loadSound("rockhit", "sounds/rockhit.mp3");
-		ctx.loadSound("avalanche", "sounds/avalanche.mp3");
-		ctx.loadSprite("pickaxe", "sprites/mine/pickaxe.png");
-		ctx.loadSprite("bg", "sprites/mine/background.png");
-		ctx.loadSprite("peddle", "sprites/mine/peddle.png");
-		ctx.loadSprite("rocks", "sprites/mine/rocks.png", {
+		ctx.loadSprite("pickaxe", "sprites/pickaxe.png");
+		ctx.loadSprite("bg", "sprites/background.png");
+		ctx.loadSprite("peddle", "sprites/peddle.png");
+		ctx.loadSprite("rocks", "sprites/rocks.png", {
 			sliceX: 7,
 			sliceY: 1,
 			anims: {
@@ -27,6 +24,9 @@ const mineGame: Microgame = {
 				},
 			},
 		});
+		ctx.loadSound("bling", "sounds/bling.mp3");
+		ctx.loadSound("rockhit", "sounds/rockhit.mp3");
+		ctx.loadSound("avalanche", "sounds/avalanche.mp3");
 	},
 	start(ctx) {
 		ctx.add([ctx.sprite("bg")]);

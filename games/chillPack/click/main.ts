@@ -111,13 +111,13 @@ const clickGame: Microgame = {
 	input: "mouse",
 	playsOwnMusic: true,
 	duration: 4,
-	urlPrefix: "games/amyspark-ng/assets/",
+	urlPrefix: "games/chillPack/click/",
 	load(ctx) {
-		ctx.loadSprite("hexagon", "sprites/click/hexagon.png");
-		ctx.loadSprite("background", "sprites/click/background.png");
-		ctx.loadSound("music", "sounds/clicker.ogg");
+		ctx.loadSprite("hexagon", "sprites/hexagon.png");
+		ctx.loadSprite("background", "sprites/background.png");
+		ctx.loadSound("clicker", "sounds/clicker.ogg");
 		ctx.loadSound("fullcombo", "sounds/clickeryfullcombo.ogg");
-		ctx.loadSound("explode", "sounds/explode.mp3");
+		ctx.loadSound("explode", "../assets/sounds/explode.mp3");
 		ctx.loadSound("clickpress", "sounds/clickPress.ogg");
 	},
 	start(ctx) {
@@ -128,7 +128,7 @@ const clickGame: Microgame = {
 		let secondTimer = 0;
 
 		addBackground(ctx);
-		ctx.play("music", { speed: ctx.speed });
+		ctx.play("clicker", { speed: ctx.speed });
 
 		const scoreText = ctx.add([
 			ctx.text(`0/${SCORE_TO_WIN}`),

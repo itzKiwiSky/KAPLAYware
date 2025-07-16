@@ -8,15 +8,15 @@ const swatGame: Microgame = {
 	rgb: (ctx) => ctx.mulfok.LIGHT_BROWN,
 	duration: (ctx) => ctx.difficulty == 3 ? 5 : 4,
 	input: "mouse (hidden)",
-	urlPrefix: "games/amyspark-ng/assets/",
+	urlPrefix: "games/chillPack/swat/",
 	load(ctx) {
-		ctx.loadSprite("manopla", "sprites/swat/manopla.png");
-		ctx.loadSprite("shock", "sprites/swat/shock.png");
-		ctx.loadSprite("fly", "sprites/swat/fly.png");
-		ctx.loadSprite("table", "sprites/swat/table.png");
-		ctx.loadSprite("flowervase", "sprites/swat/flowervase.png", { sliceX: 2, sliceY: 1 });
-		ctx.loadSprite("picture", "sprites/swat/picture.png", { sliceX: 2, sliceY: 1 });
-		ctx.loadSprite("lightbulb", "sprites/swat/lightbulb.png", { sliceX: 2, sliceY: 1 });
+		ctx.loadSprite("manopla", "sprites/manopla.png");
+		ctx.loadSprite("shock", "sprites/shock.png");
+		ctx.loadSprite("fly", "sprites/fly.png");
+		ctx.loadSprite("table", "sprites/table.png");
+		ctx.loadSprite("flowervase", "sprites/flowervase.png", { sliceX: 2, sliceY: 1 });
+		ctx.loadSprite("picture", "sprites/picture.png", { sliceX: 2, sliceY: 1 });
+		ctx.loadSprite("lightbulb", "sprites/lightbulb.png", { sliceX: 2, sliceY: 1 });
 		ctx.loadSound("slap", "sounds/slap.mp3");
 		ctx.loadSound("bzz", "sounds/bzz.mp3");
 		ctx.loadSound("breakglass", "sounds/breakglass.ogg");
