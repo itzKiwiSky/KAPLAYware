@@ -8,7 +8,7 @@ const testGame: Microgame = {
 	input: "keys",
 	rgb: [255, 255, 255],
 	duration: 4,
-	urlPrefix: "games/amyspark-ng/assets/",
+	urlPrefix: "games/assets/",
 	load(ctx) {
 		ctx.loadSprite("kasquare", "sprites/kasquare.png");
 	},

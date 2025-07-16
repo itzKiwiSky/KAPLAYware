@@ -74,7 +74,7 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 		clearPrevious();
 
 		// chooses the next minigame
-		const microgame = getGameByID("amyspark-ng:test");
+		const microgame = ware.getRandomGame()
 		const ctx = createGameCtx(microgame, app, ware);
 		const duration = getGameDuration(microgame, ctx);
 

@@ -9,16 +9,16 @@ const tapGame: Microgame = {
 	rgb: [0, 0, 0],
 	input: "mouse (hidden)",
 	duration: 8,
-	urlPrefix: "games/amyspark-ng/assets/",
+	urlPrefix: "games/chillPack/tap/",
 	load(ctx) {
-		ctx.loadSprite("screenframe", "sprites/tap/screenframe.png");
-		ctx.loadSprite("screen", "sprites/tap/screen.png");
-		ctx.loadSprite("hand", "sprites/tap/hand.png", { sliceX: 2, sliceY: 1 });
-		ctx.loadSprite("bananas", "sprites/tap/banana.png");
-		ctx.loadSound("monkey", "sounds/monkey.mp3");
-		ctx.loadSound("sadmonkey", "sounds/sadmonkey.mp3");
-		ctx.loadSound("buzzer", "sounds/buzzer.mp3");
-		ctx.loadSound("tap", "sounds/tap.wav");
+		ctx.loadSprite("screenframe", "sprites/screenframe.png");
+		ctx.loadSprite("screen", "sprites/screen.png");
+		ctx.loadSprite("hand", "sprites/hand.png", { sliceX: 2, sliceY: 1 });
+		ctx.loadSprite("bananas", "sprites/banana.png");
+		ctx.loadSound("monkey", "games/assets/sounds/monkey.mp3");
+		ctx.loadSound("sadmonkey", "games/assets/sounds/sadmonkey.mp3");
+		ctx.loadSound("buzzer", "games/assets/sounds/buzzer.mp3");
+		ctx.loadSound("tap", "games/assets/sounds/tap.wav");
 	},
 	start(ctx) {
 		const screenframe = ctx.add([ctx.sprite("screenframe")]);
@@ -28,10 +28,10 @@ const tapGame: Microgame = {
 		const numbers = ctx.difficulty == 1
 			? [0, 1, 2, 3, 4]
 			: ctx.difficulty == 2
-			? [0, 1, 2, 3, 4, 5, 6]
-			: ctx.difficulty == 3
-			? [0, 1, 2, 3, 4, 5, 6, 7, 8]
-			: [];
+				? [0, 1, 2, 3, 4, 5, 6]
+				: ctx.difficulty == 3
+					? [0, 1, 2, 3, 4, 5, 6, 7, 8]
+					: [];
 
 		const numbersHit: number[] = [0];
 		let lost = false;

@@ -118,8 +118,8 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 			k.quickWatch("ware.speed", this.speed.toFixed(2));
 			k.quickWatch("ware.gamehat", microgameHat.length);
 		},
-		winGame() {},
-		loseGame() {},
-		finishGame() {},
+		winGame() { },
+		loseGame() { },
+		finishGame() { },
 	};
 }

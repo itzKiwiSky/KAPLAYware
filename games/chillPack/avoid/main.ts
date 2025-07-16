@@ -8,7 +8,7 @@ const avoidGame: Microgame = {
 	rgb: (ctx) => ctx.mulfok.BLUE,
 	duration: 6,
 	input: "keys",
-	urlPrefix: "games/amyspark-ng/assets/",
+	urlPrefix: "games/chillPack/avoid/",
 	load(ctx) {
 		ctx.loadSound("squash", "sounds/squash.mp3");
 		ctx.loadSound("stomp", "sounds/stomp.wav");
