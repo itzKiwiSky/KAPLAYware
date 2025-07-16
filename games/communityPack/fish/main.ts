@@ -9,7 +9,7 @@ const fishGame: Microgame = {
 	rgb: [109, 128, 250],
 	duration: (ctx) => 10 - ctx.difficulty / 2,
 	playsOwnMusic: true,
-	urlPrefix: "games/erik/assets/",
+	urlPrefix: "games/communityPack/fish/assets/",
 	load(ctx) {
 		ctx.loadSprite("alert", "sprites/fish/alert.png");
 		ctx.loadSprite("bobber", "sprites/fish/bobber.png");

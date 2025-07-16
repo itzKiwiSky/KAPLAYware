@@ -1,4 +1,4 @@
-import { AreaComp, Color } from "kaplay";
+import { Color } from "kaplay";
 import { Microgame } from "../../../src/types/Microgame";
 
 // all art made by me (amyspark-ng) hehe
@@ -8,7 +8,7 @@ const colorGame: Microgame = {
 	author: "luizbills",
 	prompt: "CHOOSE!",
 	rgb: (ctx) => ctx.mulfok.BLUE,
-	urlPrefix: "games/luizbills/assets/",
+	urlPrefix: "games/communityPack/choose/assets/",
 	input: "mouse (hidden)",
 	duration: 6,
 	colorDependant: true,

@@ -7,31 +7,30 @@ const aimGame: Microgame = {
 	author: "kiwisky",
 	prompt: "AIM!",
 	rgb: [141, 183, 255],
-	urlPrefix: "games/kiwisky/assets/",
+	urlPrefix: "games/communityPack/aim/",
 	input: "mouse (hidden)",
 	duration: 6,
 	load(ctx) {
-		ctx.loadSprite("balloon", "aim/balloon.png", {
+		ctx.loadSprite("balloon", "balloon.png", {
 			sliceX: 6,
 			sliceY: 1,
 		});
-		ctx.loadSprite("explosivoon", "aim/bomb.png");
-		ctx.loadSprite("aim", "aim/aim.png");
-		ctx.loadSprite("cloud", "aim/cloud.png");
-		ctx.loadSprite("mountain", "aim/mountain.png");
-
-		ctx.loadSound("pop", "aim/sounds/balloon_pop.mp3");
-		ctx.loadSound("explode", "aim/sounds/explosion.wav");
+		ctx.loadSprite("explosivoon", "assets/bomb.png");
+		ctx.loadSprite("aim", "assets/aim.png");
+		ctx.loadSprite("cloud", "assets/cloud.png");
+		ctx.loadSprite("mountain", "assets/mountain.png");
+		ctx.loadSound("pop", "assets/balloon_pop.mp3");
+		ctx.loadSound("explode", "../assets/sounds/explosion.wav");
 	},
 	// TODO: Touch up some stuff
 	start(ctx) {
 		const balloons: number = ctx.difficulty == 1
 			? ctx.randi(3, 4)
 			: ctx.difficulty == 2
-			? ctx.randi(5, 6)
-			: ctx.difficulty == 3
-			? ctx.randi(7, 9)
-			: 1;
+				? ctx.randi(5, 6)
+				: ctx.difficulty == 3
+					? ctx.randi(7, 9)
+					: 1;
 
 		let hittedBalloons: GameObj[] = [];
 
@@ -206,7 +205,7 @@ const aimGame: Microgame = {
 						ctx.lose();
 						ctx.wait(0.6, () => {
 							ctx.get("*").forEach((obj, i, a) => {
-								ctx.play("pop" + ctx.randi(1, 3));
+								ctx.play("pop", { detune: ctx.rand(0, 100) });
 								ctx.addKaboom(obj.pos);
 								obj.destroy();
 							});

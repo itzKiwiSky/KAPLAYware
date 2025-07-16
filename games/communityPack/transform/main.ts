@@ -7,7 +7,7 @@ const transformGame: Microgame = {
 	prompt: "TRANSFORM!",
 	input: "keys",
 	rgb: (ctx) => ctx.mulfok.DARK_VIOLET,
-	urlPrefix: "games/ricjones/assets/",
+	urlPrefix: "games/communityPack/transform/assets/",
 	duration: undefined,
 	load(ctx) {
 		ctx.loadSound("jump", "jump_37.wav");
