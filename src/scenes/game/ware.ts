@@ -1,9 +1,17 @@
-import { KEvent, KEventController } from "kaplay";
+import { KEvent } from "kaplay";
 import { Microgame } from "../../types/Microgame";
-import { MicrogameCtx } from "./context/types";
-import { KAPLAYwareOpts } from "./kaplayware";
+import { MicrogameInput } from "./context/types";
 import k from "../../engine";
 import { TransitionStage } from "./transitions/makeTransition";
+
+/** Certain options to instantiate kaplayware (ware-engine) */
+export type KAPLAYwareOpts = {
+	/** What games will be available generally */
+	games?: Microgame[];
+	/** What input should be determined? */
+	inputFilter?: MicrogameInput | "any";
+	// mods here
+};
 
 export type WareEngine = {
 	lives: number;
@@ -41,8 +49,8 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 	let microgameHat: Microgame[] = [];
 
 	return {
-		lives: 3,
-		score: 1, // first prep will show 0 turn into 1
+		lives: 4,
+		score: 0, // will increase to 1 when it starts and trans will show 0 to 1
 		lastGame: null,
 		difficulty: 1,
 		curDuration: 20,
@@ -72,7 +80,8 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 			return randomGame;
 		},
 		getDifficulty(score = this.score) {
-			return Math.max(1, (Math.floor(score / 10) + 1) % 4) as 1 | 2 | 3;
+			return 3
+			// return Math.max(1, (Math.floor(score / 10) + 1) % 4) as 1 | 2 | 3;
 		},
 		shouldSpeedUp(this: WareEngine, score = this.score, speed = this.speed, lastGame = this.lastGame) {
 			const realScore = score + 1;
@@ -115,7 +124,9 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 			// k.quickWatch("ware.objects", wareApp.sceneObj.get("*", { recursive: true }).length);
 			k.quickWatch("ware.score", this.score);
 			k.quickWatch("ware.time", this.timeLeft?.toFixed(2));
+			k.quickWatch("ware.lives", this.lives);
 			k.quickWatch("ware.speed", this.speed.toFixed(2));
+			k.quickWatch("ware.winState", this.winState)
 			k.quickWatch("ware.gamehat", microgameHat.length);
 		},
 		winGame() { },

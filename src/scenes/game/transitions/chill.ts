@@ -42,8 +42,8 @@ export const chillTransition: TransitionDefinition = (ctx, parent, camera, stage
 			"flower",
 			{
 				canBeat: true,
-				rise() {},
-				bury() {},
+				rise() { },
+				bury() { },
 			},
 		]);
 
@@ -71,42 +71,46 @@ export const chillTransition: TransitionDefinition = (ctx, parent, camera, stage
 		return flower;
 	}
 
-	// adds the hearts
-	for (let i = 0; i < (stageManager.stages[0] == "lose" ? opts.lives + 1 : opts.lives); i++) {
-		let shake = 0;
+	function addHearts() {
+		parent.get("heart").forEach((c) => c.destroy())
 
-		const heart = parent.add([
-			k.sprite("trans1-heart"),
-			k.pos(220, 60),
-			k.scale(),
-			k.color(),
-			k.anchor("center"),
-			k.opacity(),
-			k.rotate(),
-			"heart",
-			{
-				kill() {},
-				shake(val: number = 14) {},
-			},
-		]);
+		// adds the hearts
+		for (let i = 0; i < (stageManager.stages[0] == "lose" ? opts.lives + 1 : opts.lives); i++) {
+			let shake = 0;
 
-		heart.pos.x += (heart.width * 1.15) * i;
-		let pos = heart.pos;
+			const heart = parent.add([
+				k.sprite("trans1-heart"),
+				k.pos(220, 60),
+				k.scale(),
+				k.color(),
+				k.anchor("center"),
+				k.opacity(),
+				k.rotate(),
+				"heart",
+				{
+					kill() { },
+					shake(val: number = 14) { },
+				},
+			]);
 
-		heart.onUpdate(() => {
-			shake = k.lerp(shake, 0, 0.5);
-			const newPos = pos.add(k.Vec2.fromAngle(k.rand(0, 360)).scale(shake));
-			heart.pos = newPos;
-		});
+			heart.pos.x += (heart.width * 1.15) * i;
+			let pos = heart.pos;
 
-		heart.shake = (val: number = 14) => {
-			shake = val;
-		};
+			heart.onUpdate(() => {
+				shake = k.lerp(shake, 0, 0.5);
+				const newPos = pos.add(k.Vec2.fromAngle(k.rand(0, 360)).scale(shake));
+				heart.pos = newPos;
+			});
 
-		heart.kill = () => {
-			tween(heart.color, k.BLACK, 0.75 / opts.speed, (p) => heart.color = p);
-			heart.fadeOut(0.75 / opts.speed).onEnd(() => heart.destroy());
-		};
+			heart.shake = (val: number = 14) => {
+				shake = val;
+			};
+
+			heart.kill = () => {
+				tween(heart.color, k.BLACK, 0.75 / opts.speed, (p) => heart.color = p);
+				heart.fadeOut(0.75 / opts.speed).onEnd(() => heart.destroy());
+			};
+		}
 	}
 
 	// TODO: Fix all the screen stuff when the new transition comes out
@@ -218,6 +222,7 @@ export const chillTransition: TransitionDefinition = (ctx, parent, camera, stage
 		opts = stageManager.opts; // re defines the opts
 		conductor.time = 0; // desyncing
 		coffee.play("hot", { speed: 8 * opts.speed, loop: true });
+		addHearts()
 	});
 
 	stageManager.defineStage("prep", () => {

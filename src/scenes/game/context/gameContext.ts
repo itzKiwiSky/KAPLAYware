@@ -22,20 +22,19 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 		add: (comps) => wareApp.sceneObj.add(comps),
 		sprite(spr, opt) {
 			const hasAt = (t: any) => typeof t == "string" && t.startsWith("@");
-			const getSpriteThing = (t: any) => hasAt(t) ? t : `${getGameID(game)}-${t}`;
-			const spriteComp = k.sprite(getSpriteThing(spr), opt);
+			const getSpriteName = (t: any) => hasAt(t) ? t : `${getGameID(game)}-${t}`;
+			const spriteComp = k.sprite(getSpriteName(spr), opt);
 
-			return {
-				...spriteComp,
+			return mergeWithRef(spriteComp, {
 				set sprite(val: string) {
-					spriteComp.sprite = getSpriteThing(val);
+					spriteComp.sprite = getSpriteName(val);
 				},
 
 				get sprite() {
 					if (spriteComp.sprite.startsWith(getGameID(game))) return spriteComp.sprite.replace(`${getGameID(game)}-`, "");
 					else return spriteComp.sprite;
 				},
-			};
+			})
 		},
 		play(src, options) {
 			// if sound name is string, check for @, else just send it
@@ -303,7 +302,7 @@ export function createMicrogameAPI(wareApp: WareApp, wareEngine?: WareEngine): M
 		setRGB: (val) => wareApp.backgroundColor = val,
 		onTimeout: (action) => wareEngine.onTimeOutEvents.add(action),
 		win: () => wareEngine.winGame(),
-		lose: () => wareEngine.winGame(),
+		lose: () => wareEngine.loseGame(),
 		finish: () => wareEngine.finishGame(),
 		flashCam: (flashColor: Color = k.WHITE, timeOut: number = 1, opacity: number) => {
 			const r = wareApp.boxObj.add([

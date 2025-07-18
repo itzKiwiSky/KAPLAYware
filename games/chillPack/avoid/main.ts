@@ -13,11 +13,11 @@ const avoidGame: Microgame = {
 		ctx.loadSound("squash", "sounds/squash.mp3");
 		ctx.loadSound("stomp", "sounds/stomp.wav");
 		ctx.loadSound("crawl", "sounds/crawl.ogg");
-		ctx.loadSprite("floor", "sprites/avoid/floor.png");
-		ctx.loadSprite("cloudsBack", "sprites/avoid/cloudsback.png");
-		ctx.loadSprite("cloudsFront", "sprites/avoid/cloudsfront.png");
-		ctx.loadSprite("dirt", "sprites/avoid/dirt.png");
-		ctx.loadSprite("foot", "sprites/avoid/foot.png", {
+		ctx.loadSprite("floor", "sprites/floor.png");
+		ctx.loadSprite("cloudsBack", "sprites/cloudsback.png");
+		ctx.loadSprite("cloudsFront", "sprites/cloudsfront.png");
+		ctx.loadSprite("dirt", "sprites/dirt.png");
+		ctx.loadSprite("foot", "sprites/foot.png", {
 			sliceX: 2,
 			sliceY: 1,
 			anims: {
@@ -28,7 +28,7 @@ const avoidGame: Microgame = {
 				},
 			},
 		});
-		ctx.loadSprite("mark", "sprites/avoid/mark.png", {
+		ctx.loadSprite("mark", "sprites/mark.png", {
 			sliceX: 11,
 			sliceY: 1,
 			anims: {

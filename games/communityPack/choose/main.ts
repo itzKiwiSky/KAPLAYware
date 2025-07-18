@@ -124,7 +124,8 @@ const colorGame: Microgame = {
 			const cursorPaint = brushCursor.add([
 				ctx.sprite("brushpaint"),
 				ctx.color(),
-				ctx.opacity(0),
+				ctx.z(2),
+				ctx.opacity(1),
 				ctx.pos(-30, 25),
 				ctx.anchor("center"),
 			]);

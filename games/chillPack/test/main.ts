@@ -5,7 +5,7 @@ const testGame: Microgame = {
 	pack: "chill",
 	author: "amyspark-ng",
 	prompt: "TEST!",
-	input: "keys",
+	input: "mouse",
 	rgb: [255, 255, 255],
 	duration: 4,
 	urlPrefix: "games/chillPack/assets/",
@@ -15,9 +15,28 @@ const testGame: Microgame = {
 	start(ctx) {
 		const bean = ctx.add([
 			ctx.sprite("@bean"),
-			ctx.pos(ctx.center().x + 50, 0),
-			"bean",
+			ctx.area(),
 		]);
+
+		const kasquare = ctx.add([
+			ctx.sprite("kasquare"),
+			ctx.area(),
+			ctx.scale(0.25),
+			ctx.pos(ctx.center().sub(100)),
+			{
+				draw() {
+					if (this.isHovering()) {
+						ctx.drawText({
+							text: this.sprite
+						})
+					}
+				}
+			}
+		]);
+
+		bean.onClick(() => {
+			ctx.debug.log("OIJDWQIJWIJOWF")
+		})
 
 		const ghosty = ctx.add([
 			ctx.sprite("@ghosty"),

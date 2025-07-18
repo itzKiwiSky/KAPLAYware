@@ -11,7 +11,7 @@ import "./scenes/game/GameoverScene";
 
 import goGame from "../src/scenes/game/GameScene";
 
-k.setVolume(0.5);
+k.setVolume(0.1);
 k.setCursor("none");
 k.loadRoot("./");
 

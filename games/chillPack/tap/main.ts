@@ -15,7 +15,7 @@ const tapGame: Microgame = {
 		ctx.loadSprite("screen", "sprites/screen.png");
 		ctx.loadSprite("hand", "sprites/hand.png", { sliceX: 2, sliceY: 1 });
 		ctx.loadSprite("bananas", "sprites/banana.png");
-		ctx.loadSound("monkey", "games/assets/sounds/monkey.mp3");
+		ctx.loadSound("monkey", "sounds/monkey.mp3");
 		ctx.loadSound("sadmonkey", "sounds/sadmonkey.mp3");
 		ctx.loadSound("tap", "sounds/tap.wav");
 		ctx.loadSound("buzzer", "../assets/sounds/buzzer.mp3");

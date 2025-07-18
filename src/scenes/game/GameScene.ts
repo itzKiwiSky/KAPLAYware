@@ -1,13 +1,12 @@
 import k from "../../engine";
 import cursor from "../../plugins/cursor";
 import { createWareApp } from "./app";
-import { createGameCtx } from "./context/game";
-import { KAPLAYwareOpts } from "./kaplayware";
+import { createGameCtx } from "./context/gameContext";
 import { addBomb, WareBomb } from "./objects/bomb";
 import chillTransition from "./transitions/chill";
 import { createTransition } from "./transitions/makeTransition";
 import { gameHidesMouse, getGameByID, getGameColor, getGameDuration, getGameID, getGameInput } from "./utils";
-import { createWareEngine } from "./ware";
+import { createWareEngine, KAPLAYwareOpts } from "./ware";
 
 k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 	const app = createWareApp();
@@ -53,8 +52,8 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 		app.clearAll();
 		app.resetCamera();
 		app.sceneObj.removeAll();
-		// fixed objs are added to root so they're not affected by camera (parent of sceneObj)
-		app.rootObj.get("fixed").forEach((obj) => obj.destroy());
+		// fixed objs are added to the mask so they're not affected by camera (parent of sceneObj)
+		app.maskObj.get("fixed").forEach((obj) => obj.destroy());
 		currentBomb?.destroy();
 		k.setGravity(0);
 	}
@@ -77,52 +76,44 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 		const microgame = ware.getRandomGame()
 		const ctx = createGameCtx(microgame, app, ware);
 		const duration = getGameDuration(microgame, ctx);
+		const stages = ware.getTransitionStages()
 
-		// prepares
-		ctx.setRGB(getGameColor(microgame, ctx));
-		ware.microgameHistory[ware.score - 1] = getGameID(microgame);
-		ware.difficulty = ware.getDifficulty();
-		ware.timeLeft = duration != undefined ? duration / ware.speed : undefined;
-		ware.curDuration = duration;
-		if (typeof microgame.prompt == "string") ware.curPrompt = microgame.prompt;
-		else ware.curPrompt = microgame.name; // TODO: figure it out fine fine
-		cursor.fadeAway = gameHidesMouse(microgame);
-		currentBomb = null;
-		microgame.start(ctx); // IMPORTANT: starts the game
+		transition.onStageStart("prep", () => {
+			// prepares
+			ctx.setRGB(getGameColor(microgame, ctx));
+			ware.microgameHistory[ware.score - 1] = getGameID(microgame);
+			ware.difficulty = ware.getDifficulty();
+			ware.timeLeft = duration != undefined ? duration / ware.speed : undefined;
+			ware.curDuration = duration;
+			if (typeof microgame.prompt == "string") ware.curPrompt = microgame.prompt;
+			else ware.curPrompt = microgame.name; // TODO: figure it out fine fine
+			cursor.fadeAway = gameHidesMouse(microgame);
+			currentBomb = null;
+			microgame.start(ctx); // IMPORTANT: starts the game
 
-		// behaviour that manages microgame
-		ctx.onUpdate(() => {
-			if (!ware.timeLeft) return;
-			if (ware.timePaused) return;
-			// bomb and such is not necessary bcause time is undefined
-			if (ware.timeLeft == undefined) return;
-			if (ware.timeLeft > 0) ware.timeLeft -= k.dt();
-			ware.timeLeft = k.clamp(ware.timeLeft, 0, 20);
+			// behaviour that manages microgame
+			ctx.onUpdate(() => {
+				if (!ware.timeLeft) return;
+				if (ware.timePaused) return;
+				// bomb and such is not necessary bcause time is undefined
+				if (ware.timeLeft == undefined) return;
+				if (ware.timeLeft > 0) ware.timeLeft -= k.dt();
+				ware.timeLeft = k.clamp(ware.timeLeft, 0, 20);
 
-			// When there's 4 beats left
-			const beatInterval = 60 / (140 * ware.speed);
-			if (ware.timeLeft <= beatInterval * 4 && currentBomb == null) {
-				currentBomb = addBomb(app);
-				currentBomb.lit(140 * ware.speed);
-			}
+				// When there's 4 beats left
+				const beatInterval = 60 / (140 * ware.speed);
+				if (ware.timeLeft <= beatInterval * 4 && currentBomb == null) {
+					currentBomb = addBomb(app);
+					currentBomb.lit(140 * ware.speed);
+				}
 
-			if (ware.timeLeft <= 0 && !ware.timePaused) {
-				ware.timePaused = true;
-				ware.onTimeOutEvents.trigger();
-				if (!currentBomb.hasExploded) currentBomb.explode();
-			}
-		});
-
-		// makes the transition happen
-		transition.trigger(ware.getTransitionStages(), {
-			difficulty: ware.difficulty,
-			lives: ware.lives,
-			score: ware.score,
-			speed: ware.speed,
-			input: getGameInput(microgame),
-			prompt: microgame.prompt,
-			ctx: ctx,
-		});
+				if (ware.timeLeft <= 0 && !ware.timePaused) {
+					ware.timePaused = true;
+					ware.onTimeOutEvents.trigger();
+					if (!currentBomb.hasExploded) currentBomb.explode();
+				}
+			});
+		})
 
 		transition.onStageStart("speed", () => ware.speed = ware.increaseSpeed());
 		transition.onTransitionEnd(() => {
@@ -133,6 +124,17 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 			transition.ctx.cancel(); // clear the transCtx
 			cursor.canPoint = true;
 			cursor.fadeAway = gameHidesMouse(microgame);
+		});
+
+		// makes the transition happen and kickstarts the whole process
+		transition.trigger(stages, {
+			difficulty: ware.difficulty,
+			lives: ware.lives,
+			score: ware.score,
+			speed: ware.speed,
+			input: getGameInput(microgame),
+			prompt: microgame.prompt,
+			ctx: ctx,
 		});
 
 		ware.winState = undefined; // reset it after transition so it does the win and lose

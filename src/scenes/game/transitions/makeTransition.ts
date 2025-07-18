@@ -1,11 +1,9 @@
-import { AreaComp, GameObj, KEvent, KEventController, PosComp, RotateComp, ScaleComp, StateComp } from "kaplay";
+import { GameObj, KEvent, KEventController, PosComp, RotateComp, ScaleComp, StateComp } from "kaplay";
 import { WareApp } from "../app";
 import k from "../../../engine";
-import { Kaplayware } from "../kaplayware";
 import { Microgame } from "../../../types/Microgame";
 import { createTransCtx, TransCtx } from "./trans";
 import { MicrogameCtx, MicrogameInput } from "../context/types";
-import { addTextPrompt } from "../objects/prompts";
 
 const baseStages = ["prep", "win", "lose", "bossPrep", "bossWin", "bossLose", "speed"] as const;
 /** The many stages an animation can go through */
@@ -85,7 +83,7 @@ export function createTransition(transAction: TransitionDefinition, wareApp: War
 		startEv: new k.KEvent<[TransitionStage]>(),
 		endEv: new k.KEvent<[TransitionStage]>(),
 		stages: [],
-		opts: { difficulty: 1, lives: 3, score: 1, speed: 1, input: "keys", prompt: "do" },
+		opts: { difficulty: 1, lives: 4, score: 1, speed: 1, input: "keys", prompt: "do" },
 		onStart(action) {
 			this.startEv.add((stage) => {
 				if (stage == this.stages[0]) action();
@@ -111,6 +109,10 @@ export function createTransition(transAction: TransitionDefinition, wareApp: War
 			inputEv.trigger();
 		},
 	};
+
+	startEv.add((stage) => {
+		console.log("RUNNING THIS FROM MAKETRANSITION.TS A STAGE HAS STARTRED")
+	})
 
 	// when a stage over is called, go to the next one
 	stageManager.endEv.add((stage) => {
