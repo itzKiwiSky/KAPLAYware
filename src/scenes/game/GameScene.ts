@@ -55,6 +55,7 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 		// fixed objs are added to the mask so they're not affected by camera (parent of sceneObj)
 		app.maskObj.get("fixed").forEach((obj) => obj.destroy());
 		currentBomb?.destroy();
+		ware.onTimeOutEvents.clear()
 		k.setGravity(0);
 	}
 
@@ -83,6 +84,7 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 			ctx.setRGB(getGameColor(microgame, ctx));
 			ware.microgameHistory[ware.score - 1] = getGameID(microgame);
 			ware.difficulty = ware.getDifficulty();
+			if (window.DEV_SPEED) ware.speed = window.DEV_SPEED
 			ware.timeLeft = duration != undefined ? duration / ware.speed : undefined;
 			ware.curDuration = duration;
 			if (typeof microgame.prompt == "string") ware.curPrompt = microgame.prompt;
@@ -115,7 +117,10 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 			});
 		})
 
-		transition.onStageStart("speed", () => ware.speed = ware.increaseSpeed());
+		transition.onStageStart("speed", () => {
+			if (!window.DEV_SPEED) ware.speed = ware.increaseSpeed()
+		})
+
 		transition.onTransitionEnd(() => {
 			// when the transition is unpause the scene and start counting the time (also cancel transition events)
 			app.paused = false;
@@ -137,18 +142,26 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 			ctx: ctx,
 		});
 
-		ware.winState = undefined; // reset it after transition so it does the win and lose
+		ware.winState = undefined;
 		ware.onTimeOutEvents.add(() => app.inputs.paused = true); // pauses inputs when the time is over
 	}
 
-	ware.winGame = () => ware.winState = true;
-	ware.loseGame = () => ware.winState = false;
+	ware.winGame = () => {
+		ware.winState = true
+		currentBomb?.extinguish()
+	};
+
+	ware.loseGame = () => {
+		ware.winState = false;
+	}
+
 	ware.finishGame = () => {
 		// this runs when someone calls the game to be over (ctx.finish())
 		if (ware.winState == undefined) throw new Error("Finished microgame without setting the win condition!! Please call ctx.win() or ctx.lose() before calling ctx.finish()");
 		runNextGame();
 	};
 
+	ware.score = 8
 	runNextGame();
 
 	// start the game around here

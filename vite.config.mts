@@ -28,5 +28,7 @@ export default defineConfig(async () => ({
 	},
 	define: {
 		DEV_MICROGAME: process.env.DEV_MICROGAME,
+		DEV_SPEED: process.env.DEV_SPEED,
+		DEV_DIFFICULTY: process.env.DEV_DIFFICULTY,
 	},
 }));

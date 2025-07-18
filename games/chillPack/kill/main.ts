@@ -54,9 +54,6 @@ const killGame: Microgame = {
 			ctx.area({ scale: ctx.vec2(0.5) }),
 			"boss",
 			"ignorepoint",
-			{
-				dead: false,
-			},
 		]);
 
 		const leftTentacle = gameObjs.add([
@@ -176,7 +173,6 @@ const killGame: Microgame = {
 		});
 
 		boss.onDeath(() => {
-			boss.dead = true;
 			boss.destroy();
 			ctx.wait(1, () => {
 				ctx.win();

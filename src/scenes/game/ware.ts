@@ -3,6 +3,7 @@ import { Microgame } from "../../types/Microgame";
 import { MicrogameInput } from "./context/types";
 import k from "../../engine";
 import { TransitionStage } from "./transitions/makeTransition";
+import { getGameByID } from "./utils";
 
 /** Certain options to instantiate kaplayware (ware-engine) */
 export type KAPLAYwareOpts = {
@@ -19,7 +20,6 @@ export type WareEngine = {
 	timeLeft: number;
 	speed: number;
 	difficulty: 1 | 2 | 3;
-	lastGame: Microgame;
 	timePaused: boolean;
 	microgameHistory: string[];
 	onTimeOutEvents: KEvent;
@@ -27,6 +27,7 @@ export type WareEngine = {
 	paused: boolean;
 	curDuration: number;
 	curPrompt: string;
+	readonly lastGame: Microgame;
 	/** Basically there's this microgame hat, when you pick a microgame, that microgame gets taken out of the hat, when there's no more microgames just add more again to the hat */
 	getRandomGame(games?: Microgame[]): Microgame;
 	getDifficulty(score?: number): 1 | 2 | 3;
@@ -51,7 +52,6 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 	return {
 		lives: 4,
 		score: 0, // will increase to 1 when it starts and trans will show 0 to 1
-		lastGame: null,
 		difficulty: 1,
 		curDuration: 20,
 		curPrompt: "",
@@ -62,6 +62,9 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 		timeLeft: 20,
 		timePaused: false,
 		winState: undefined,
+		get lastGame() {
+			return getGameByID(this.microgameHistory[this.microgameHistory.length - 1])
+		},
 		getRandomGame(games = window.microgames) {
 			let randomGame: Microgame = null;
 
@@ -80,8 +83,7 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 			return randomGame;
 		},
 		getDifficulty(score = this.score) {
-			return 3
-			// return Math.max(1, (Math.floor(score / 10) + 1) % 4) as 1 | 2 | 3;
+			return Math.max(1, (Math.floor(score / 10) + 1) % 4) as 1 | 2 | 3;
 		},
 		shouldSpeedUp(this: WareEngine, score = this.score, speed = this.speed, lastGame = this.lastGame) {
 			const realScore = score + 1;
@@ -106,6 +108,7 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 			return this.winState == false && this.lives == 0;
 		},
 		getTransitionStages(this: WareEngine) {
+
 			let transitionStages: TransitionStage[] = ["prep"];
 
 			const winThing: TransitionStage = this.lastGame?.isBoss ? (this.winState == true ? "bossWin" : "bossLose") : this.winState == true ? "win" : "lose";
@@ -126,6 +129,7 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 			k.quickWatch("ware.time", this.timeLeft?.toFixed(2));
 			k.quickWatch("ware.lives", this.lives);
 			k.quickWatch("ware.speed", this.speed.toFixed(2));
+			k.quickWatch("ware.difficulty", this.difficulty);
 			k.quickWatch("ware.winState", this.winState)
 			k.quickWatch("ware.gamehat", microgameHat.length);
 		},

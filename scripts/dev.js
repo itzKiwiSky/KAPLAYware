@@ -1,8 +1,20 @@
 import { spawn } from "child_process";
 
 const [author, gamePrompt] = (process.argv[2] ?? "").split(":");
+const speed = process.argv.find((arg) => arg.includes("speed"))?.split("=")[1];
+const difficulty = process.argv.find((arg) => arg.includes("diff"))?.split("=")[1];
 const microgameID = `${author}:${gamePrompt}`;
 const isMicrogameSet = author && gamePrompt;
+
+if (speed) {
+	if (isNaN(speed)) throw new Error("SPEED NOT VALID");
+	else process.env.DEV_SPEED = speed;
+}
+
+if (difficulty) {
+	if (difficulty > 3 || difficulty < 1 || isNaN(difficulty)) throw new Error("DIFFICULTY NOT VALID");
+	else process.env.DEV_DIFFICULTY = difficulty;
+}
 
 if (isMicrogameSet) {
 	process.env.DEV_MICROGAME = `"${microgameID}"`;
