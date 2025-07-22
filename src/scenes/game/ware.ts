@@ -1,14 +1,15 @@
 import { KEvent } from "kaplay";
 import { Microgame } from "../../types/Microgame";
-import { MicrogameInput } from "./context/types";
+import { MicrogameCtx, MicrogameInput } from "./context/types";
 import k from "../../engine";
 import { TransitionStage } from "./transitions/makeTransition";
-import { getGameByID } from "./utils";
+import { getGameByID, getGameColor } from "./utils";
+import { WareApp } from "./app";
 
 /** Certain options to instantiate kaplayware (ware-engine) */
 export type KAPLAYwareOpts = {
 	/** What games will be available generally */
-	games?: Microgame[];
+	availableGames?: Microgame[];
 	/** What input should be determined? */
 	inputFilter?: MicrogameInput | "any";
 	// mods here
@@ -27,16 +28,16 @@ export type WareEngine = {
 	paused: boolean;
 	curDuration: number;
 	curPrompt: string;
-	readonly lastGame: Microgame;
 	/** Basically there's this microgame hat, when you pick a microgame, that microgame gets taken out of the hat, when there's no more microgames just add more again to the hat */
 	getRandomGame(games?: Microgame[]): Microgame;
 	getDifficulty(score?: number): 1 | 2 | 3;
 	getTransitionStages(): TransitionStage[];
-	increaseSpeed(): number;
 	shouldSpeedUp(score?: number, speed?: number, lastGame?: Microgame): boolean;
 	shouldBoss(): boolean;
+	increaseSpeed(): number;
 	isGameOver(): boolean;
 	handleQuickWatch(): void;
+
 	winGame(): void;
 	loseGame(): void;
 	/** Is re-set after, runs when the game should be over (ctx.finish()) */
@@ -48,6 +49,9 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 	const MAX_SPEED = 1.6;
 
 	let microgameHat: Microgame[] = [];
+
+	// when the engine deals a boss minigame the speed divisor should change to a random value
+	let speedDivisor = 5;
 
 	return {
 		lives: 4,
@@ -62,18 +66,15 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 		timeLeft: 20,
 		timePaused: false,
 		winState: undefined,
-		get lastGame() {
-			return getGameByID(this.microgameHistory[this.microgameHistory.length - 1])
-		},
-		getRandomGame(games = window.microgames) {
+		getRandomGame() {
 			let randomGame: Microgame = null;
 
 			const regularHat = microgameHat.filter((g) => !g.isBoss);
 			const bossHat = microgameHat.filter((g) => g.isBoss);
 
 			// first check if there's items available in the hat, if not, push to the arrays above
-			if (this.shouldBoss() && bossHat.length == 0) bossHat.push(...games.filter((g) => g.isBoss));
-			else if (!this.shouldBoss() && regularHat.length == 0) regularHat.push(...games.filter((g) => !g.isBoss));
+			if (this.shouldBoss() && bossHat.length == 0) bossHat.push(...opts.availableGames.filter((g) => g.isBoss));
+			else if (!this.shouldBoss() && regularHat.length == 0) regularHat.push(...opts.availableGames.filter((g) => !g.isBoss));
 			microgameHat = regularHat.concat(bossHat);
 
 			// now choose a random microgame based on if should boss or not
@@ -85,33 +86,22 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 		getDifficulty(score = this.score) {
 			return Math.max(1, (Math.floor(score / 10) + 1) % 4) as 1 | 2 | 3;
 		},
-		shouldSpeedUp(this: WareEngine, score = this.score, speed = this.speed, lastGame = this.lastGame) {
-			const realScore = score + 1;
-			const number = k.randi(4, 6);
-			const division = () => {
-				if (realScore % number == 0) return true;
-				else if (k.chance(0.1) && realScore % 5 == 0) return true;
-				else return false;
-			};
-			if (division() && speed <= MAX_SPEED && !this.shouldBoss()) {
-				if (lastGame && lastGame.isBoss) return false;
-				else return true;
-			}
-			else return false;
-		},
 		shouldBoss(games = window.microgames) {
 			const scoreEqualsBoss = () => this.score % HOW_FREQUENT_BOSS == 0;
 			const onlyBoss = () => games.length == 1 && games[0].isBoss == true;
 			return scoreEqualsBoss() || onlyBoss();
 		},
+		shouldSpeedUp(this: WareEngine, score = this.score, speed = this.speed) {
+			return (score % speedDivisor == 0 && !this.shouldBoss());
+		},
 		isGameOver(this: WareEngine) {
 			return this.winState == false && this.lives == 0;
 		},
 		getTransitionStages(this: WareEngine) {
-
 			let transitionStages: TransitionStage[] = ["prep"];
 
-			const winThing: TransitionStage = this.lastGame?.isBoss ? (this.winState == true ? "bossWin" : "bossLose") : this.winState == true ? "win" : "lose";
+			const lastGame = () => getGameByID(this.microgameHistory[this.microgameHistory.length - 1]);
+			const winThing: TransitionStage = lastGame()?.isBoss ? (this.winState == true ? "bossWin" : "bossLose") : this.winState == true ? "win" : "lose";
 			if (this.winState != undefined) transitionStages.splice(0, 0, winThing);
 			if (this.shouldSpeedUp()) transitionStages.splice(1, 0, "speed");
 			if (this.isGameOver()) transitionStages = ["lose"];
@@ -120,6 +110,7 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 			return transitionStages;
 		},
 		increaseSpeed(this: WareEngine) {
+			speedDivisor = k.randi(3, 6);
 			return k.clamp(this.speed + this.speed * 0.07, 0, MAX_SPEED);
 		},
 		handleQuickWatch(this: WareEngine) {
@@ -130,11 +121,11 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 			k.quickWatch("ware.lives", this.lives);
 			k.quickWatch("ware.speed", this.speed.toFixed(2));
 			k.quickWatch("ware.difficulty", this.difficulty);
-			k.quickWatch("ware.winState", this.winState)
+			k.quickWatch("ware.winState", this.winState);
 			k.quickWatch("ware.gamehat", microgameHat.length);
 		},
-		winGame() { },
-		loseGame() { },
-		finishGame() { },
+		winGame() {},
+		loseGame() {},
+		finishGame() {},
 	};
 }

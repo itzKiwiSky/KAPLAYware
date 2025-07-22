@@ -6,7 +6,7 @@ const spreadGame: Microgame = {
 	pack: "chill",
 	author: "amyspark-ng",
 	prompt: "SPREAD!",
-	duration: 20,
+	duration: 4,
 	rgb: (ctx) => ctx.mulfok.BROWN,
 	input: "mouse (hidden)",
 	urlPrefix: "games/chillPack/spread/",
@@ -44,8 +44,8 @@ const spreadGame: Microgame = {
 			},
 		});
 
-		ctx.loadSound("scrape", "../assets/sounds/scrape.ogg");
-		ctx.loadSound("crunch", "sounds/crunch.mp3");
+		ctx.loadSound("scrape", "sounds/scrape.ogg");
+		ctx.loadSound("crunch", "../assets/sounds/crunch.mp3");
 	},
 	start(ctx) {
 		ctx.add([ctx.sprite("bg")]);
@@ -62,6 +62,7 @@ const spreadGame: Microgame = {
 		const knife = draw.add([
 			ctx.sprite("knife"),
 			ctx.pos(),
+			ctx.z(1),
 			ctx.opacity(1),
 			ctx.anchor(anchor),
 		]);

@@ -11,7 +11,7 @@ import { createWareEngine, KAPLAYwareOpts } from "./ware";
 k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 	const app = createWareApp();
 	const transition = createTransition(chillTransition, app);
-	const ware = createWareEngine(kaplaywareOpt);
+	const ware = createWareEngine({ availableGames: window.microgames });
 	let gamePaused = false;
 	let currentBomb: WareBomb = null;
 
@@ -31,7 +31,7 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 		}
 	});
 
-	k.add([k.z(10)]).onDraw(() => {
+	k.add([k.z(999)]).onDraw(() => {
 		if (!gamePaused) return;
 
 		k.drawRect({
@@ -55,7 +55,7 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 		// fixed objs are added to the mask so they're not affected by camera (parent of sceneObj)
 		app.maskObj.get("fixed").forEach((obj) => obj.destroy());
 		currentBomb?.destroy();
-		ware.onTimeOutEvents.clear()
+		ware.onTimeOutEvents.clear();
 		k.setGravity(0);
 	}
 
@@ -74,17 +74,16 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 		clearPrevious();
 
 		// chooses the next minigame
-		const microgame = ware.getRandomGame()
+		const microgame = ware.getRandomGame();
 		const ctx = createGameCtx(microgame, app, ware);
 		const duration = getGameDuration(microgame, ctx);
-		const stages = ware.getTransitionStages()
+		const stages = ware.getTransitionStages();
 
 		transition.onStageStart("prep", () => {
 			// prepares
 			ctx.setRGB(getGameColor(microgame, ctx));
 			ware.microgameHistory[ware.score - 1] = getGameID(microgame);
 			ware.difficulty = ware.getDifficulty();
-			if (window.DEV_SPEED) ware.speed = window.DEV_SPEED
 			ware.timeLeft = duration != undefined ? duration / ware.speed : undefined;
 			ware.curDuration = duration;
 			if (typeof microgame.prompt == "string") ware.curPrompt = microgame.prompt;
@@ -112,14 +111,15 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 				if (ware.timeLeft <= 0 && !ware.timePaused) {
 					ware.timePaused = true;
 					ware.onTimeOutEvents.trigger();
-					if (!currentBomb.hasExploded) currentBomb.explode();
+					if (!currentBomb.hasExploded && !ware.winState) currentBomb.explode();
 				}
 			});
-		})
+		});
 
 		transition.onStageStart("speed", () => {
-			if (!window.DEV_SPEED) ware.speed = ware.increaseSpeed()
-		})
+			// this changes the speedDivisor thing, check the engine
+			ware.speed = ware.increaseSpeed();
+		});
 
 		transition.onTransitionEnd(() => {
 			// when the transition is unpause the scene and start counting the time (also cancel transition events)
@@ -147,13 +147,14 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 	}
 
 	ware.winGame = () => {
-		ware.winState = true
-		currentBomb?.extinguish()
+		ware.winState = true;
+		currentBomb?.extinguish();
 	};
 
 	ware.loseGame = () => {
 		ware.winState = false;
-	}
+		ware.lives--;
+	};
 
 	ware.finishGame = () => {
 		// this runs when someone calls the game to be over (ctx.finish())
@@ -161,7 +162,6 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 		runNextGame();
 	};
 
-	ware.score = 8
 	runNextGame();
 
 	// start the game around here

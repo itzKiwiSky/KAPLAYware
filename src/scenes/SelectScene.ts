@@ -112,7 +112,7 @@ k.scene("select", () => {
 				movingToGames = true;
 				k.wait(0.1, () => {
 					k.camFade(0.5).onEnd(() => {
-						goGame({ games: selectedGames });
+						goGame({ availableGames: selectedGames });
 					});
 				});
 			});
