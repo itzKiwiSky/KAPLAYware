@@ -265,7 +265,7 @@ const dodgeGame: Microgame = {
 			});
 		});
 
-		ctx.onButtonPress("action", () => {
+		ctx.onButtonPress(["up", "action"], () => {
 			if (timeout || isDead) return;
 			if (dino.isGrounded() && !isDead && !ctx.isButtonDown("down")) {
 				dino.jump(900);

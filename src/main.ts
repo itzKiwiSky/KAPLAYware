@@ -7,7 +7,6 @@ import "./scenes/TitleScene";
 import "./scenes/MenuScene";
 import "./scenes/SelectScene";
 import "../src/scenes/game/GameScene";
-import "./scenes/game/GameoverScene";
 
 import goGame from "../src/scenes/game/GameScene";
 
@@ -15,10 +14,7 @@ k.setVolume(0.1);
 k.setCursor("none");
 k.loadRoot("./");
 
-const INITIAL_SCENE = () => {
-	if (window.DEV_MICROGAME) goGame();
-	else goGame();
-};
+const INITIAL_SCENE = () => goGame();
 
 k.onLoad(() => {
 	if (k.isFocused()) INITIAL_SCENE();

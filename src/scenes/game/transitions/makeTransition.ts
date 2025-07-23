@@ -5,7 +5,7 @@ import { Microgame } from "../../../types/Microgame";
 import { createTransCtx, TransCtx } from "./trans";
 import { MicrogameCtx, MicrogameInput } from "../context/types";
 
-const baseStages = ["prep", "win", "lose", "bossPrep", "bossWin", "bossLose", "speed"] as const;
+const baseStages = ["prep", "win", "lose", "bossPrep", "bossWin", "bossLose", "speed", "gameOver"] as const;
 /** The many stages an animation can go through */
 export type TransitionStage = typeof baseStages[number];
 
@@ -34,6 +34,9 @@ type StateObject = {
 
 /** A defined transition */
 export type Transition = {
+	/** The root where the transition objects are added to */
+	readonly root: GameObj;
+	/** The stages the transition should run */
 	readonly stages: TransitionStage[];
 	/** The context used (timer functions) */
 	readonly ctx: TransCtx;
@@ -110,22 +113,18 @@ export function createTransition(transAction: TransitionDefinition, wareApp: War
 		},
 	};
 
-	startEv.add((stage) => {
-		console.log("RUNNING THIS FROM MAKETRANSITION.TS A STAGE HAS STARTRED")
-	})
-
 	// when a stage over is called, go to the next one
 	stageManager.endEv.add((stage) => {
 		if (stageManager.stages.indexOf(stage) < stageManager.stages.length - 1) stageManager.enterStage(stageManager.stages[stageManager.stages.indexOf(stage) + 1]);
 		else {
+			camera.paused = true;
+			camera.hidden = true;
 			endTransEv.trigger();
 			startEv.clear();
 			endEv.clear();
 			inputEv.clear();
 			promptEv.clear();
 			endTransEv.clear();
-			camera.paused = true;
-			camera.hidden = true;
 		}
 	});
 
@@ -134,6 +133,10 @@ export function createTransition(transAction: TransitionDefinition, wareApp: War
 	// console.log("WARE: Creating Transition for the first time");
 
 	return {
+		get root() {
+			return camera;
+		},
+
 		get stages() {
 			return stageManager.stages;
 		},

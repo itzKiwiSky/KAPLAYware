@@ -125,15 +125,13 @@ const knockGame: Microgame = {
 		});
 
 		ctx.onTimeout(() => {
-			if (ctx.winState == undefined) return;
+			if (ctx.winState == true) return;
 
-			if (knocksLeft > 0) {
-				ctx.lose();
-				beanComeOut();
-				ctx.wait(1 / ctx.speed, () => {
-					ctx.finish();
-				});
-			}
+			ctx.lose();
+			beanComeOut();
+			ctx.wait(1 / ctx.speed, () => {
+				ctx.finish();
+			});
 		});
 	},
 };

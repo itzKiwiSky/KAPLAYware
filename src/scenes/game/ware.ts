@@ -91,8 +91,8 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 			const onlyBoss = () => games.length == 1 && games[0].isBoss == true;
 			return scoreEqualsBoss() || onlyBoss();
 		},
-		shouldSpeedUp(this: WareEngine, score = this.score, speed = this.speed) {
-			return (score % speedDivisor == 0 && !this.shouldBoss());
+		shouldSpeedUp(this: WareEngine) {
+			return (this.score % speedDivisor == 0 && !this.shouldBoss() && this.speed < MAX_SPEED);
 		},
 		isGameOver(this: WareEngine) {
 			return this.winState == false && this.lives == 0;
@@ -104,13 +104,13 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 			const winThing: TransitionStage = lastGame()?.isBoss ? (this.winState == true ? "bossWin" : "bossLose") : this.winState == true ? "win" : "lose";
 			if (this.winState != undefined) transitionStages.splice(0, 0, winThing);
 			if (this.shouldSpeedUp()) transitionStages.splice(1, 0, "speed");
-			if (this.isGameOver()) transitionStages = ["lose"];
+			if (this.isGameOver()) transitionStages = [lastGame().isBoss ? "bossLose" : "lose", "gameOver"];
 			if (this.shouldBoss()) transitionStages.splice(1, 0, "bossPrep"); // this would be before the prep, so it does BOSS! then regular prep
 
 			return transitionStages;
 		},
 		increaseSpeed(this: WareEngine) {
-			speedDivisor = k.randi(3, 6);
+			speedDivisor = k.randi(4, 8);
 			return k.clamp(this.speed + this.speed * 0.07, 0, MAX_SPEED);
 		},
 		handleQuickWatch(this: WareEngine) {

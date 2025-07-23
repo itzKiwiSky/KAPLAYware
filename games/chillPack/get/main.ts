@@ -15,8 +15,8 @@ const getGame: Microgame = {
 		ctx.loadSprite("trunk", "sprites/trunk.png");
 		ctx.loadSprite("bush", "sprites/bush.png");
 		ctx.loadSprite("badapple", "sprites/badapple.png"); // cool reference (not related to reference at all)
+		ctx.loadSound("rustle", "sounds/bushrustle.mp3");
 		ctx.loadSound("crunch", "../assets/sounds/crunch.mp3");
-		ctx.loadSound("rustle", "../assets/sounds/bushrustle.mp3");
 	},
 	start(ctx) {
 		const SPEED = 400 * ctx.speed;
@@ -30,10 +30,10 @@ const getGame: Microgame = {
 			const magnitude = ctx.difficulty == 1
 				? 150
 				: ctx.difficulty == 2
-					? 250
-					: ctx.difficulty == 3
-						? 300
-						: 0;
+				? 250
+				: ctx.difficulty == 3
+				? 300
+				: 0;
 
 			const X = ctx.center().x + magnitude * Math.cos(randAngle);
 			const Y = ctx.center().y + magnitude * Math.sin(randAngle);

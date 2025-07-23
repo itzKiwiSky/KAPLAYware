@@ -126,6 +126,7 @@ export function addBomb(wareApp: WareApp) {
 
 	/** Turns off the bomb */
 	function extinguish() {
+		hasExploded = false;
 		bomb.conductor.destroy();
 		fuse.fadeOut(0.5 / 3).onEnd(() => fuse.destroy());
 	}

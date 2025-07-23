@@ -74,7 +74,7 @@ const sortGame: Microgame = {
 		};
 
 		let machineScale = ctx.vec2(1);
-		const ground = ctx.add([ctx.rect(ctx.width(), 40, { fill: false }), ctx.pos(0, ctx.height()), ctx.area(), ctx.body({ isStatic: true })]);
+		const floor = ctx.add([ctx.rect(ctx.width() * 2, 40, { fill: false }), ctx.pos(-ctx.width() / 2, ctx.height()), ctx.area(), ctx.body({ isStatic: true })]);
 		const light = ctx.add([ctx.rect(50, 50), ctx.color(OffLight), ctx.pos(217, 157)]);
 		const machineback = ctx.add([ctx.sprite("machineback"), ctx.anchor("bot"), ctx.pos(140, 490), ctx.z(0), ctx.scale()]);
 		const conveyor = ctx.add([ctx.sprite("conveyor"), ctx.pos(189, 314), ctx.z(0), { vroom: false }]);
@@ -152,6 +152,7 @@ const sortGame: Microgame = {
 				ctx.sprite(spriteID + "-o"),
 				ctx.anchor("top"),
 				ctx.pos(-25, 75),
+				ctx.z(10),
 			]);
 
 			box.addItem = (item: GameObj) => {
@@ -277,7 +278,7 @@ const sortGame: Microgame = {
 			itemsLeftToSend--;
 		}
 
-		addBox(variant1Sprite, ctx.vec2(560, 520));
+		addBox(variant1Sprite, ctx.vec2(540, 520));
 		addBox(variant2Sprite, ctx.vec2(720, 520));
 	},
 };

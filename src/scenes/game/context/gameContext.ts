@@ -34,7 +34,7 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 					if (spriteComp.sprite.startsWith(getGameID(game))) return spriteComp.sprite.replace(`${getGameID(game)}-`, "");
 					else return spriteComp.sprite;
 				},
-			})
+			});
 		},
 		play(src, options) {
 			// if sound name is string, check for @, else just send it
@@ -184,6 +184,21 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 		// TODO: this probably causes problems with app, maybe make an app timer comp and add it to sceneObj, so it's th same??
 		timer(maxLoopsPerFrame) {
 			return k.timer(maxLoopsPerFrame);
+		},
+
+		isButtonPressed(btn) {
+			if (wareApp.inputs.paused) return false;
+			else return k.isButtonPressed(btn);
+		},
+
+		isButtonDown(btn) {
+			if (wareApp.inputs.paused) return false;
+			else return k.isButtonDown(btn);
+		},
+
+		isButtonReleased(btn) {
+			if (wareApp.inputs.paused) return false;
+			else return k.isButtonReleased(btn);
 		},
 
 		onButtonDown: overload2((action: (btn: any) => void) => {

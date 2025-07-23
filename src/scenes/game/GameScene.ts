@@ -5,7 +5,7 @@ import { createGameCtx } from "./context/gameContext";
 import { addBomb, WareBomb } from "./objects/bomb";
 import chillTransition from "./transitions/chill";
 import { createTransition } from "./transitions/makeTransition";
-import { gameHidesMouse, getGameByID, getGameColor, getGameDuration, getGameID, getGameInput } from "./utils";
+import { gameHidesMouse, getGameColor, getGameDuration, getGameID, getGameInput } from "./utils";
 import { createWareEngine, KAPLAYwareOpts } from "./ware";
 
 k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
@@ -16,6 +16,7 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 	let currentBomb: WareBomb = null;
 
 	k.onUpdate(() => {
+		cursor.canPoint = !app.sceneObj.paused;
 		k.quickWatch("GAME.paused", gamePaused);
 		app.handleQuickWatch();
 		ware.handleQuickWatch();
@@ -73,6 +74,45 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 		transition.ctx.paused = false;
 		clearPrevious();
 
+		// if dead, stops the process in its tracks and only triggers lose, gameOver and the highscores thing
+		if (ware.isGameOver()) {
+			const loseStages = ware.getTransitionStages();
+
+			transition.onTransitionEnd(() => {
+				// usually it hides it but i show it again
+				transition.root.hidden = false;
+
+				// TODO: this is the part where high scores should be added
+
+				k.add([
+					k.rect(k.width(), k.height()),
+					k.opacity(0.5),
+					k.color(k.BLACK),
+				]);
+
+				k.add([
+					k.text("CLICK TO TRY AGAIN"),
+					k.anchor("center"),
+					k.pos(k.center()),
+				]);
+
+				k.onClick(() => {
+					goGame(kaplaywareOpt);
+				});
+			});
+
+			transition.trigger(loseStages, {
+				difficulty: ware.difficulty,
+				lives: ware.lives,
+				score: ware.score,
+				speed: ware.speed,
+				input: "keys",
+				prompt: "",
+			});
+
+			return;
+		}
+
 		// chooses the next minigame
 		const microgame = ware.getRandomGame();
 		const ctx = createGameCtx(microgame, app, ware);
@@ -104,6 +144,7 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 				// When there's 4 beats left
 				const beatInterval = 60 / (140 * ware.speed);
 				if (ware.timeLeft <= beatInterval * 4 && currentBomb == null) {
+					if (ctx.winState == true) return;
 					currentBomb = addBomb(app);
 					currentBomb.lit(140 * ware.speed);
 				}
@@ -111,7 +152,7 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 				if (ware.timeLeft <= 0 && !ware.timePaused) {
 					ware.timePaused = true;
 					ware.onTimeOutEvents.trigger();
-					if (!currentBomb.hasExploded && !ware.winState) currentBomb.explode();
+					if (!currentBomb.hasExploded && !ctx.winState) currentBomb.explode();
 				}
 			});
 		});
@@ -153,6 +194,7 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 
 	ware.loseGame = () => {
 		ware.winState = false;
+		currentBomb?.explode();
 		ware.lives--;
 	};
 

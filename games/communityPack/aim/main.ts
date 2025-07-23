@@ -27,10 +27,10 @@ const aimGame: Microgame = {
 		const balloons: number = ctx.difficulty == 1
 			? ctx.randi(3, 4)
 			: ctx.difficulty == 2
-				? ctx.randi(5, 6)
-				: ctx.difficulty == 3
-					? ctx.randi(7, 9)
-					: 1;
+			? ctx.randi(5, 6)
+			: ctx.difficulty == 3
+			? ctx.randi(7, 9)
+			: 1;
 
 		let hittedBalloons: GameObj[] = [];
 
@@ -79,11 +79,8 @@ const aimGame: Microgame = {
 				ctx.sprite(isExplosive ? "explosivoon" : "balloon"),
 				ctx.pos(),
 				ctx.scale(2, 2),
-				ctx.area({
-					shape: new ctx.Rect(ctx.vec2(8, 9), 32, 32),
-				}),
-				ctx.z(isExplosive ? -9 : -10),
-
+				ctx.z(100),
+				ctx.area({ shape: new ctx.Rect(ctx.vec2(8, 9), 32, 32) }),
 				{
 					speed: ctx.rand(1.2, 1.95),
 					canFly: false,

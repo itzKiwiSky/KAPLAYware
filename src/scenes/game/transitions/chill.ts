@@ -42,8 +42,8 @@ export const chillTransition: TransitionDefinition = (ctx, parent, camera, stage
 			"flower",
 			{
 				canBeat: true,
-				rise() { },
-				bury() { },
+				rise() {},
+				bury() {},
 			},
 		]);
 
@@ -72,7 +72,7 @@ export const chillTransition: TransitionDefinition = (ctx, parent, camera, stage
 	}
 
 	function addHearts() {
-		parent.get("heart").forEach((c) => c.destroy())
+		parent.get("heart").forEach((c) => c.destroy());
 
 		// adds the hearts
 		for (let i = 0; i < (stageManager.stages[0] == "lose" ? opts.lives + 1 : opts.lives); i++) {
@@ -88,8 +88,8 @@ export const chillTransition: TransitionDefinition = (ctx, parent, camera, stage
 				k.rotate(),
 				"heart",
 				{
-					kill() { },
-					shake(val: number = 14) { },
+					kill() {},
+					shake(val: number = 14) {},
 				},
 			]);
 
@@ -222,7 +222,7 @@ export const chillTransition: TransitionDefinition = (ctx, parent, camera, stage
 		opts = stageManager.opts; // re defines the opts
 		conductor.time = 0; // desyncing
 		coffee.play("hot", { speed: 8 * opts.speed, loop: true });
-		addHearts()
+		addHearts();
 	});
 
 	stageManager.defineStage("prep", () => {
@@ -432,6 +432,35 @@ export const chillTransition: TransitionDefinition = (ctx, parent, camera, stage
 
 		wait(sound.duration() / opts.speed, () => {
 			stageManager.finishStage("bossLose");
+		});
+	});
+
+	stageManager.defineStage("gameOver", () => {
+		const sound = play("gameOverJingle");
+
+		const gameoverText = addTextPrompt(wareApp, "GAME OVER", 1, ctx);
+		gameoverText.overrideAnimation = true;
+
+		// the shaky letters
+		let magnitude = 0;
+		let angle = 0;
+		gameoverText.onUpdate(() => {
+			magnitude = k.lerp(magnitude, k.randi(2, 8), 0.1);
+			angle = k.lerp(angle, angle + 1, 0.1) % 360;
+			gameoverText.textTransform = (idx, ch) => ({
+				pos: k.vec2(magnitude * Math.cos(angle * ((idx % 2) + 1) + 1), magnitude * Math.sin(angle * ((idx % 2) + 1) + 1)),
+			});
+		});
+
+		// the jumpy
+		tween(0, 1.2, sound.duration() / 2, (p) => gameoverText.scale.x = p, k.easings.easeOutExpo);
+		tween(0, 0.9, sound.duration() / 2, (p) => gameoverText.scale.y = p, k.easings.easeOutExpo).onEnd(() => {
+			tween(gameoverText.scale, k.vec2(1), sound.duration() / 2, (p) => gameoverText.scale = p, k.easings.easeOutElastic).onEnd(() => {
+			});
+		});
+
+		wait(sound.duration() / opts.speed, () => {
+			stageManager.finishStage("gameOver");
 		});
 	});
 };
