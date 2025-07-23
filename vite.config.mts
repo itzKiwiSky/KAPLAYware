@@ -7,7 +7,7 @@ import { DynamicPublicDirectory } from "vite-multiple-assets";
 // TODO: Remove Tauri related stuff.
 
 // https://vitejs.dev/config/
-export default defineConfig(async () => ({
+export default defineConfig(async ({ mode }) => ({
 	plugins: [
 		viteSingleFile(),
 		DynamicPublicDirectory(["assets/**/*", {
@@ -16,15 +16,43 @@ export default defineConfig(async () => ({
 		}], {
 			ignore: ["**/*.ts"],
 		}) as PluginOption,
+		{
+			name: "kaplayware-plugin",
+			transformIndexHtml: {
+				handler() {
+					if (mode !== "desktop") return;
+
+					return {
+						tags: [
+							{
+								tag: "script",
+								attrs: {
+									src: "%PUBLIC_URL%/__neutralino_globals.js",
+								},
+								injectTo: "head-prepend",
+							},
+							{
+								tag: "script",
+								attrs: {
+									type: "module",
+									src: "./src/desktop.ts",
+								},
+								injectTo: "body-prepend",
+							},
+						],
+					};
+				},
+				order: "pre",
+			},
+		},
 	],
 	server: {
 		allowedHosts: true,
 		hmr: {
-			// TODO: Temporary fix for neutralino will try load
 			overlay: false,
+			middlewareMode: false,
 		},
 		port: 8000,
-		strictPort: true,
 	},
 	publicDir: false,
 	assetsInclude: [],

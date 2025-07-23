@@ -12,9 +12,9 @@
 		"window": {
 			"title": "KAPLAYWare",
 			"width": 800,
-			"height": 500,
-			"minWidth": 400,
-			"minHeight": 200,
+			"height": 600,
+			"minWidth": 800,
+			"minHeight": 600,
 			"icon": "/assets/sprites/logo.png"
 		}
 	},
@@ -29,8 +29,8 @@
 			"devUrl": "http://localhost:8000",
 			"projectPath": "/",
 			"initCommand": "pnpm install",
-			"devCommand": "pnpm run dev",
-			"buildCommand": "pnpm run build"
+			"devCommand": "pnpm run dev --mode desktop",
+			"buildCommand": "pnpm run build --mode desktop"
 		}
 	}
 }
