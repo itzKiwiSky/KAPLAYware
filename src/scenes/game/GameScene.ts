@@ -150,9 +150,9 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 				}
 
 				if (ware.timeLeft <= 0 && !ware.timePaused) {
+					if (!currentBomb.hasExploded && !currentBomb.conductor.paused) currentBomb.explode();
 					ware.timePaused = true;
 					ware.onTimeOutEvents.trigger();
-					if (!currentBomb.hasExploded && !ctx.winState) currentBomb.explode();
 				}
 			});
 		});
