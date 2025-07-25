@@ -75,6 +75,9 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 		get(tag, opts) {
 			return wareApp.sceneObj.get(tag, opts);
 		},
+		query(opt) {
+			return wareApp.sceneObj.query(opt);
+		},
 		fixed() {
 			let fixed = true;
 

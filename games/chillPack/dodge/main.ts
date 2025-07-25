@@ -12,11 +12,12 @@ const dodgeGame: Microgame = {
 	load(ctx) {
 		ctx.loadSprite("dino", "sprites/dino.png", { sliceX: 5, sliceY: 1 });
 		ctx.loadSprite("ptero", "sprites/ptero.png", { sliceX: 2, sliceY: 1 });
+		ctx.loadSprite("overlay", "sprites/overlay.png", { sliceX: 2, sliceY: 1 });
+		ctx.loadSprite("comet", "sprites/comet.png", { sliceX: 2, sliceY: 1 });
 		ctx.loadSprite("cactus", "sprites/cactus.png");
 		ctx.loadSprite("cloud", "sprites/cloud.png");
 		ctx.loadSprite("ground", "sprites/ground.png");
 		ctx.loadSprite("sand", "sprites/sand.png");
-		ctx.loadSprite("comet", "sprites/comet.png");
 		ctx.loadSprite("gameover", "sprites/gameover.png");
 		ctx.loadSprite("kaboom", "sprites/kaboom.png");
 		ctx.loadSprite("wifi", "sprites/wifi.png");
@@ -25,280 +26,254 @@ const dodgeGame: Microgame = {
 	},
 	// TODO: Touch up (add the browser overlya)
 	start(ctx) {
+		ctx.setGravity(3500);
+		const overlay = ctx.add([ctx.sprite("overlay")]);
 		const game = ctx.add([]);
-		ctx.setGravity(2500);
 
-		let timeout = false;
-		let alpha = 0; // 0 means white 1 means dark
-		let isDead = false;
-		let frame = 0;
-
-		let pteroEnabled = false;
-		let pteroAllowed = false;
-		let pteroTime = 0;
-		let pteroDuration = 4;
-
-		let cactusEnabled = true;
-		let cactusDuration = 0;
-		let cactusTime = 0;
-
+		const isDarkMode = ctx.difficulty == 3;
+		const SPEED = ctx.speed * 2;
 		const DARK_COLOR = ctx.Color.fromHex("#4b3153");
-		const CACTUS_SPEED = ctx.vec2(-480 * ctx.speed, 0);
 		const GROUND_Y = 370;
-		const changeColor = () => ctx.tween(alpha, alpha == 1 ? 0 : 1, 0.5, (p) => alpha = p);
+		const frequencyChanger = () => 1 + 0.17 * ctx.difficulty;
 
-		let PRIMARY_COLOR = DARK_COLOR;
-		let SECONDARY_COLOR = ctx.WHITE;
-
-		function runCloudLoop() {
-			if (isDead || timeout) return;
-			ctx.wait(ctx.rand(0.35, 1) / ctx.speed, () => {
-				const cloud = game.add([
-					ctx.sprite("cloud"),
-					ctx.pos(ctx.width() + 300, ctx.center().y - ctx.rand(50, 200)),
-					ctx.color(),
-					ctx.opacity(0.25),
-					ctx.vec2(0.75, 1),
-					ctx.anchor("center"),
-				]);
-
-				cloud.onUpdate(() => {
-					if (isDead) return;
-					cloud.color = PRIMARY_COLOR;
-					cloud.move(CACTUS_SPEED.scale(0.5));
-					if (cloud.pos.x <= -100) cloud.destroy();
-				});
-
-				runCloudLoop();
-			});
-		}
-
-		function addCactus() {
-			if (isDead || !cactusEnabled || timeout) return;
-			const cactus = game.add([
-				ctx.pos(ctx.width() + 10, GROUND_Y + ctx.rand(20, 25)),
-				ctx.sprite("cactus"),
-				ctx.anchor("bot"),
-				ctx.scale(ctx.rand(0.75, 1.5)),
-				ctx.color(),
-				ctx.area({ scale: ctx.vec2(0.75, 0.75) }),
-				"enemy",
-				"moving",
-			]);
-
-			cactus.onUpdate(() => {
-				if (!isDead) cactus.move(CACTUS_SPEED);
-				cactus.color = DARK_COLOR.lerp(ctx.WHITE, alpha);
-			});
-		}
-
-		function addPtero() {
-			if (isDead || !pteroEnabled || timeout) return;
-			const y = ctx.choose([
-				GROUND_Y - 100,
-				GROUND_Y - 150,
-			]);
-
-			const ptero = game.add([
-				ctx.pos(ctx.width() + 100, y),
-				ctx.sprite("ptero"),
-				ctx.color(),
-				ctx.area({ scale: ctx.vec2(1, 0.5) }),
-				ctx.anchor("center"),
-				"moving",
-				"enemy",
-			]);
-
-			ptero.onUpdate(() => {
-				if (!isDead) ptero.move(CACTUS_SPEED.scale(1.25));
-				ptero.frame = frame;
-				ptero.color = PRIMARY_COLOR;
-			});
-		}
-
-		function runSandLoop() {
-			if (isDead || timeout) return;
-			ctx.wait(ctx.rand(0.5, 2) / ctx.speed, () => {
-				const sand = game.add([
-					ctx.sprite("sand"),
-					ctx.pos(ctx.width() + 300, GROUND_Y + ctx.rand(30, 40)),
-					ctx.color(),
-					ctx.anchor("right"),
-				]);
-
-				sand.onUpdate(() => {
-					if (isDead) return;
-					sand.color = PRIMARY_COLOR;
-					sand.move(CACTUS_SPEED);
-					if (sand.pos.x <= -100) sand.destroy();
-				});
-
-				runSandLoop();
-			});
-		}
-
-		// TODO: Fix the ground of this microgame
-		function addGround() {
-			const ground = game.add([
-				ctx.sprite("ground", { tiled: true }),
-				ctx.color(PRIMARY_COLOR),
-				ctx.pos(0, GROUND_Y),
-				ctx.area({ offset: ctx.vec2(0, 30), scale: ctx.vec2(1, 5) }),
-				ctx.body({ isStatic: true }),
-			]);
-			ground.gravityScale = 0;
-			ground.width = ctx.width();
-
-			const ground2 = ground.add([
-				ctx.sprite("ground", { tiled: true }),
-				ctx.color(),
-				ctx.pos(0, 0),
-				ctx.area({ offset: ctx.vec2(0, 30), scale: ctx.vec2(1, 5) }),
-				ctx.body({ isStatic: true }),
-			]);
-
-			ground.pos.x = -ground.width;
-			ground2.gravityScale = 0;
-			ground2.width = ctx.width();
-
-			ground.onUpdate(() => {
-				ground.color = PRIMARY_COLOR;
-				ground2.color = ground.color;
-				ground2.pos.x = ground.width;
-				if (!isDead) ground.move(CACTUS_SPEED);
-				if (ground.pos.x <= -ground.width) {
-					ground.pos.x = 0;
-				}
-			});
-		}
+		let frame = 0;
+		let cloudTimer = 3;
+		let sandTimer = 1.5;
+		let cactusTimer = 1;
+		let pteroTimer = 0.5;
 
 		const dino = game.add([
 			ctx.sprite("dino"),
-			ctx.color(PRIMARY_COLOR),
+			ctx.pos(85, GROUND_Y + 30),
+			ctx.area({ scale: ctx.vec2(0.35, 1) }),
+			ctx.body(),
 			ctx.anchor("bot"),
-			ctx.pos(80, GROUND_Y + 50),
-			ctx.area({ scale: ctx.vec2(0.25, 1), offset: ctx.vec2(-10, 0) }),
-			ctx.body({ stickToPlatform: false }),
-			ctx.z(3),
+			ctx.z(1),
+			ctx.color(DARK_COLOR),
+			"primary",
+			{
+				cJump() {
+					dino.jump(1100);
+					ctx.play("jump", { detune: ctx.rand(-50, 50) });
+				},
+			},
 		]);
 
-		ctx.onUpdate(() => {
-			PRIMARY_COLOR = DARK_COLOR.lerp(ctx.WHITE, alpha);
-			SECONDARY_COLOR = DARK_COLOR.lerp(ctx.WHITE, 1 - alpha);
-			ctx.setRGB(SECONDARY_COLOR);
+		// https://github.com/MaxRohowsky/chrome-dinosaur/blob/master/main.py
 
-			frame = Math.floor((ctx.time() * 5 * ctx.speed) % 2);
-			dino.paused = isDead;
-			dino.color = PRIMARY_COLOR;
+		const ground = game.add([
+			ctx.rect(ctx.width(), 100, { fill: false }),
+			ctx.area({ offset: ctx.vec2(0, 30) }),
+			ctx.pos(0, GROUND_Y),
+			ctx.body({ isStatic: true }),
+			ctx.color(DARK_COLOR),
+			"primary",
+		]);
 
-			dino.gravityScale = ctx.isButtonDown("down") ? 3 : 1;
-			if (isDead) {
-				dino.frame = 4;
-				return;
-			}
-			if (ctx.isButtonDown("down")) dino.frame = 2 + frame;
-			else if (dino.isGrounded()) dino.frame = frame;
-			dino.area.scale.y = ctx.isButtonDown("down") ? 0.25 : 1;
-
-			ctx.get("moving").forEach((obj) => {
-				if (obj.pos.x <= -100) obj.destroy();
+		let groundX = 0;
+		ground.onDraw(() => {
+			ctx.drawSprite({
+				sprite: "ground",
+				pos: ctx.vec2(groundX, 0),
+				tiled: true,
+				width: ctx.width(),
+				color: ground.color,
 			});
 
-			cactusTime += ctx.dt();
-			pteroTime += ctx.dt();
+			ctx.drawSprite({
+				sprite: "ground",
+				pos: ctx.vec2(groundX + ctx.width(), 0),
+				tiled: true,
+				width: ctx.width(),
+				color: ground.color,
+			});
+		});
 
-			if (pteroEnabled) {
-				if (pteroTime >= pteroDuration) {
-					addPtero();
-					pteroTime = 0;
-					pteroDuration = ctx.rand(4, 5) / ctx.speed;
+		ctx.onUpdate(() => {
+			if (game.paused) return;
+			groundX -= 250 * SPEED * ctx.dt();
+			if (groundX <= -ctx.width()) groundX = 0;
+
+			frame = Math.round((ctx.time() / SPEED * 3.5) % 1);
+			if (ctx.isButtonDown("down")) {
+				if (dino.isGrounded()) dino.frame = 2 + frame;
+				dino.area.scale.y = 0.5;
+				dino.gravityScale = 2;
+			}
+			else {
+				if (dino.isGrounded()) dino.frame = frame;
+				dino.area.scale.y = 1;
+				dino.gravityScale = 1;
+			}
+
+			cloudTimer += ctx.dt();
+			if (cloudTimer >= ctx.rand(3, 5)) {
+				cloudTimer = 0;
+				const cloud = game.add([
+					ctx.sprite("cloud"),
+					ctx.pos(ctx.width() + 25, ctx.rand(120, 260)),
+					ctx.anchor("center"),
+					ctx.opacity(0.5),
+					ctx.z(0),
+					ctx.color(isDarkMode ? ctx.WHITE : DARK_COLOR),
+					ctx.scale(ctx.rand(0.8, 1)),
+					"primary",
+				]);
+
+				let xSpeed = ctx.rand(70, 140);
+
+				cloud.onUpdate(() => {
+					cloud.pos.x -= xSpeed * SPEED * ctx.dt();
+					if (cloud.pos.x < -50) cloud.destroy();
+				});
+			}
+
+			// TODO: have to see what to do with primaries, which ones should get turned dark inmediately, or make it so everytime one is added yeah that thing
+
+			sandTimer += ctx.dt();
+			if (sandTimer >= ctx.rand(1.5, 3.5)) {
+				sandTimer = 0;
+				const sand = game.add([
+					ctx.sprite("sand", { flipX: ctx.choose([true, false]), flipY: ctx.choose([true, false]) }),
+					ctx.pos(ctx.width() + 50, 400),
+					ctx.color(isDarkMode ? ctx.WHITE : DARK_COLOR),
+					ctx.anchor("center"),
+					ctx.scale(ctx.rand(0.9, 1)),
+					"primary",
+				]);
+
+				sand.onUpdate(() => {
+					sand.pos.x -= 250 * SPEED * ctx.dt();
+					if (sand.pos.x < -100) sand.destroy();
+				});
+			}
+
+			// obstacles
+			// check if there's no obstacles to add a new one or check length depending on difficulty
+			cactusTimer += ctx.dt();
+			if (cactusTimer >= ctx.rand(2, 4.5) / frequencyChanger()) {
+				cactusTimer = 0;
+				const cactus = game.add([
+					ctx.sprite("cactus", { flipX: ctx.choose([true, false]) }),
+					ctx.pos(ctx.width(), ctx.rand(400, 410)),
+					ctx.color(isDarkMode ? ctx.WHITE : DARK_COLOR),
+					ctx.anchor("bot"),
+					ctx.area({ scale: ctx.vec2(0.75) }),
+					ctx.scale(ctx.rand(0.9, 1.1)),
+					"primary",
+					"obstacle",
+				]);
+
+				cactus.onUpdate(() => {
+					cactus.pos.x -= 250 * SPEED * ctx.dt();
+					if (cactus.pos.x < -50) cactus.destroy();
+				});
+
+				if (ctx.difficulty > 1 && ctx.chance(0.5)) {
+					cactus.scale.x = 1.5;
+					cactus.area.scale.x = 1.5;
+					cactus.onDraw(() => {
+						ctx.drawSprite({
+							sprite: "cactus",
+							scale: ctx.vec2(0.5),
+							pos: ctx.vec2(-35, -45),
+							color: cactus.color,
+						});
+
+						ctx.drawSprite({
+							sprite: "cactus",
+							scale: ctx.vec2(0.5),
+							pos: ctx.vec2(20, -45),
+							color: cactus.color,
+						});
+					});
 				}
 			}
 
-			if (cactusEnabled) {
-				if (cactusTime >= cactusDuration) {
-					addCactus();
-					cactusTime = 0;
-					cactusDuration = ctx.rand(1, 2) / ctx.speed;
-				}
-			}
+			// ptero stuff
+			pteroTimer += ctx.dt();
+			if (pteroTimer >= ctx.rand(3, 5) / frequencyChanger() && ctx.difficulty >= 2) {
+				// top middle and bottom respectively
+				const pteroYs = [220, 295, 360];
+				let pteroY = ctx.choose(pteroYs);
 
-			if (pteroAllowed) {
-				pteroEnabled = Math.round(ctx.time() % 4) == 0;
-				cactusEnabled = !pteroEnabled;
+				// if the timing is right, but the conditions aren't
+				// hold on to it until they are
+				const obstaclesFar = ctx.get("obstacle").some((obs) => ctx.width() - obs.pos.x < 800);
+				if (!obstaclesFar && cactusTimer < 1) return;
+
+				pteroTimer = 0;
+				const ptero = game.add([
+					ctx.sprite("ptero"),
+					ctx.pos(ctx.width(), pteroY),
+					ctx.color(isDarkMode ? ctx.WHITE : DARK_COLOR),
+					ctx.anchor("center"),
+					ctx.area({ scale: ctx.vec2(0.75, 0.6) }),
+					"primary",
+					"obstacle",
+				]);
+
+				// if no cactus or at least one, add ptero on top
+				// if 2 cactus on screen add on middle or top
+
+				// determine the Y pos based on the current obstacles
+
+				let pteroSpeed = ctx.rand(270, 290);
+				ptero.onUpdate(() => {
+					ptero.frame = frame;
+					ptero.pos.x -= pteroSpeed * SPEED * ctx.dt();
+					if (ptero.pos.x < -50) ptero.destroy();
+				});
 			}
 		});
 
-		dino.onCollide("enemy", (enemy) => {
-			isDead = true;
+		if (isDarkMode) {
+			overlay.frame = 1;
+
+			ctx.tween(ctx.WHITE, DARK_COLOR, 0.25 / ctx.speed, (p) => ctx.setRGB(p));
+			game.get("primary").forEach((obj) => ctx.tween(obj.color, ctx.WHITE, 0.25 / ctx.speed, (p) => obj.color = p));
+			game.get("secondary").forEach((obj) => ctx.tween(obj.color, DARK_COLOR, 0.25 / ctx.speed, (p) => obj.color = p));
+		}
+
+		ctx.onButtonPress(["action", "up"], dino.cJump);
+
+		dino.onCollide("obstacle", () => {
+			game.paused = true;
+			dino.frame = 4;
 			ctx.lose();
-
-			ctx.add([
-				ctx.sprite("gameover"),
-				ctx.color(PRIMARY_COLOR),
-			]);
-
+			ctx.play("jump", { detune: -500, speed: 0.5 });
+			ctx.add([ctx.sprite("gameover"), ctx.color(isDarkMode ? ctx.WHITE : DARK_COLOR)]);
+			ctx.wait(2 / ctx.speed, () => ctx.finish());
 			const comet = ctx.add([
-				ctx.sprite("comet"),
-				ctx.color(PRIMARY_COLOR),
-				ctx.pos(ctx.width() + 50, -50),
+				ctx.sprite("comet", { frame: isDarkMode ? 1 : 0 }),
+				ctx.pos(700, 200),
 				ctx.anchor("center"),
-				ctx.z(100),
 			]);
 
 			ctx.tween(comet.pos, dino.pos, 0.25 / ctx.speed, (p) => comet.pos = p).onEnd(() => {
-				ctx.play("explosion", { detune: ctx.rand(-50, 50) });
+				ctx.play("explosion");
 				const kaboom = ctx.add([
 					ctx.sprite("kaboom"),
 					ctx.pos(dino.pos),
-					ctx.color(PRIMARY_COLOR),
-					ctx.anchor("center"),
 					ctx.scale(),
-					ctx.z(100),
+					ctx.color(dino.color),
+					ctx.anchor("center"),
 				]);
 
-				ctx.tween(kaboom.scale, ctx.vec2(10), 0.5 / ctx.speed, (p) => kaboom.scale = p);
+				ctx.tween(kaboom.scale, ctx.vec2(4.5), 0.5 / ctx.speed, (p) => kaboom.scale = p, ctx.easings.easeOutQuint).onEnd(() => {
+					ctx.finish();
+				});
 			});
-
-			ctx.wait(0.5 / ctx.speed, () => {
-				ctx.finish();
-			});
-		});
-
-		ctx.onButtonPress(["up", "action"], () => {
-			if (timeout || isDead) return;
-			if (dino.isGrounded() && !isDead && !ctx.isButtonDown("down")) {
-				dino.jump(900);
-				ctx.play("jump", { detune: ctx.rand(-50, 50) });
-			}
 		});
 
 		ctx.onTimeout(() => {
-			timeout = true;
-			ctx.get("*").forEach((obj) => obj.destroy());
-
+			if (game.paused) return;
 			ctx.win();
-			ctx.play("explosion", { detune: ctx.rand(-50, 50) });
-			ctx.add([
-				ctx.sprite("wifi"),
-				ctx.color(PRIMARY_COLOR),
-			]);
 
-			ctx.wait(1 / ctx.speed, () => {
-				ctx.finish();
-			});
+			game.destroy();
+			ctx.add([ctx.sprite("wifi"), ctx.color(isDarkMode ? ctx.WHITE : DARK_COLOR)]);
+			ctx.wait(1 / ctx.speed, () => ctx.finish());
 		});
-
-		if (ctx.difficulty == 3) changeColor();
-		if (ctx.difficulty == 2 || ctx.difficulty == 3) pteroAllowed = true;
-
-		ctx.onUpdate(() => {
-			game.paused = timeout || isDead;
-		});
-
-		addGround();
-		runSandLoop();
-		runCloudLoop();
 	},
 };
 

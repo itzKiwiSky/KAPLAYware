@@ -13,7 +13,7 @@ window.microgames = [];
 
 export const modules = import.meta.glob("../../../games/**/*/main.ts", { eager: true });
 
-const exclude = new Set([]);
+const exclude = new Set(["amyspark-ng:test"]);
 
 /** The imported games */
 const games = Object.values(modules)

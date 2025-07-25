@@ -135,6 +135,7 @@ export const gameAPIs = [
 	"onDraw",
 	"onUpdate",
 	"get",
+	"query",
 	"mulfok",
 	"onMouseMove",
 	"trigger",
@@ -145,5 +146,5 @@ export const gameAPIs = [
 	"onButtonPress",
 	"onButtonDown",
 	"onButtonRelease",
-	"getTreeRoot"
+	"getTreeRoot",
 ] as const;
