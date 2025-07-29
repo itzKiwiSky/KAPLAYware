@@ -235,7 +235,9 @@ const dodgeGame: Microgame = {
 			game.get("secondary").forEach((obj) => ctx.tween(obj.color, DARK_COLOR, 0.25 / ctx.speed, (p) => obj.color = p));
 		}
 
-		ctx.onButtonPress(["action", "up"], dino.cJump);
+		ctx.onButtonPress(["action", "up"], () => {
+			if (dino.isGrounded()) dino.cJump();
+		});
 
 		dino.onCollide("obstacle", () => {
 			game.paused = true;

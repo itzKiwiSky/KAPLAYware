@@ -11,10 +11,7 @@ const aimGame: Microgame = {
 	input: "mouse (hidden)",
 	duration: 6,
 	load(ctx) {
-		ctx.loadSprite("balloon", "balloon.png", {
-			sliceX: 6,
-			sliceY: 1,
-		});
+		ctx.loadSprite("balloon", "assets/balloon.png", { sliceX: 6, sliceY: 1 });
 		ctx.loadSprite("explosivoon", "assets/bomb.png");
 		ctx.loadSprite("aim", "assets/aim.png");
 		ctx.loadSprite("cloud", "assets/cloud.png");
@@ -111,20 +108,15 @@ const aimGame: Microgame = {
 		const aim = ctx.add([
 			ctx.sprite("aim"),
 			ctx.pos(),
-			ctx.z(1),
-			ctx.area({
-				scale: 0.85,
-			}),
-
+			ctx.z(999),
+			ctx.area({ scale: 0.85 }),
+			ctx.scale(1.5, 1.5),
+			ctx.anchor("center"),
+			"aim",
 			{
 				animScale: 1.20,
 				animScaleTarget: 1.20,
 			},
-
-			ctx.scale(1.5, 1.5),
-			ctx.anchor("center"),
-
-			"aim",
 		]);
 
 		ctx.onUpdate(() => {

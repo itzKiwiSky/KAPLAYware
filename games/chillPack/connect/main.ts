@@ -7,147 +7,152 @@ const connectGame: Microgame = {
 	author: "amyspark-ng",
 	prompt: "CONNECT!",
 	input: "mouse",
-	rgb: (ctx) => ctx.mulfok.DARK_PURPLE,
-	duration: (ctx) => ctx.difficulty == 3 ? 7 : 5,
+	rgb: (k) => k.mulfok.DARK_BLUE,
+	// duration: (k) => k.difficulty == 3 ? 7 : 5,
+	duration: undefined,
 	urlPrefix: "games/chillPack/connect/",
 	colorDependant: true,
-	load(ctx) {
-		ctx.loadSprite("plug", "sprites/plug.png");
-		ctx.loadSprite("box", "sprites/box.png");
-		ctx.loadSound("plug", "sounds/switch.mp3");
+	load(k) {
+		k.loadSprite("socket", "sprites/socket.png");
+		k.loadSprite("plug", "sprites/plug.png");
+		k.loadSprite("box", "sprites/box.png");
+		k.loadSound("plug", "sounds/plug.ogg");
+		k.loadSound("unplug", "sounds/unplug.ogg");
 	},
 	// TODO: Do the remake
-	start(ctx) {
+	start(k) {
 		const allColors = [
-			ctx.Color.fromHex("#cc425e"),
-			ctx.Color.fromHex("#6bc96c"),
-			ctx.Color.fromHex("#8db7ff"),
-			ctx.Color.fromHex("#ffb879"),
-			ctx.Color.fromHex("#ee8fcb"),
+			k.Color.fromHex("#cc425e"),
+			k.Color.fromHex("#6bc96c"),
+			k.Color.fromHex("#8db7ff"),
+			k.Color.fromHex("#ffb879"),
+			k.Color.fromHex("#fcef8d"),
+			k.Color.fromHex("#ee8fcb"),
 		];
 
-		const COLOR_AMOUNT = ctx.difficulty == 1 ? 2 : ctx.difficulty == 2 ? 3 : ctx.difficulty == 3 ? 4 : 0;
-
-		const gameColors = ctx.chooseMultiple(allColors, COLOR_AMOUNT);
+		const COLOR_AMOUNT = k.difficulty + 1;
+		const gameColors = k.chooseMultiple(allColors, COLOR_AMOUNT);
 
 		const sockets: GameObj[] = [];
-		const sources: GameObj[] = [];
-		const plugSocketState: ("wiring" | "connected" | "disconnected")[] = [];
-		const winCondition = () => !plugSocketState.some((state) => state != "connected");
+		const plugs: GameObj[] = [];
 
-		gameColors.forEach((color, plugIndex, arr) => {
-			plugSocketState[plugIndex] = "disconnected";
-
-			const socketObj = ctx.add([
-				ctx.sprite("box"),
-				ctx.color(color),
-				ctx.pos(ctx.center().x, ctx.center().y - 200),
-				ctx.area(),
-				ctx.z(1),
+		gameColors.forEach((color, idx, arr) => {
+			const socketObj = k.add([
+				k.sprite("socket"),
+				k.color(color),
+				k.pos(0, 0),
+				k.area(),
+				k.anchor("top"),
+				k.z(2),
 				"socket",
 				"ignorepoint",
+				{
+					plug: null as typeof plugObj,
+				},
 			]);
 
-			const sourceObj = ctx.add([
-				ctx.sprite("box"),
-				ctx.color(color),
-				ctx.pos(ctx.center().x, ctx.center().y + 200),
-				ctx.area(),
-				"plugbox",
+			sockets[idx] = socketObj;
+
+			const plugObj = k.add([
+				k.sprite("plug"),
+				k.color(color),
+				k.pos(k.center().x, k.height()),
+				k.area({ scale: k.vec2(1, 0.5), offset: k.vec2(0, 50) }),
+				k.anchor("top"),
+				k.z(1),
+				"plug",
+				{
+					socket: null as typeof socketObj,
+					originX: socketObj.pos.x,
+					dragging: false,
+				},
 			]);
 
-			const plugObj = sourceObj.add([
-				ctx.sprite("plug"),
-				ctx.area(),
-				ctx.color(color),
-				ctx.pos(sourceObj.width / 2, -30),
-				ctx.anchor("center"),
-				ctx.z(socketObj.z - 1),
-			]);
+			plugObj.pos.y = k.height() - plugObj.height;
+			plugs[idx] = plugObj;
 
-			sources[plugIndex] = sourceObj;
-			sockets[plugIndex] = socketObj;
+			k.onDraw(() => {
+				const cableOrigin = plugObj.pos.add(0, plugObj.height - 15);
+				const h = k.vec2(plugObj.originX, k.height()).dist(cableOrigin); // height
+				const w = k.map(h, 0, k.height(), 5, 10); // amplitude
+				const f = k.mapc(h, 0, k.height(), 10, 100); // frequency
+				const pos = k.vec2(plugObj.originX, k.height() + 20);
+				const angle = pos.angle(cableOrigin) - 90;
 
-			let socketGap = (ctx.width() - socketObj.width * sockets.length) / (sockets.length + 1);
-			let socketX = socketGap;
-			sockets.forEach((socket) => {
-				socket.pos.x = socketX;
-				socketX += socketGap + socket.width;
-			});
-
-			sources.sort(() => Math.random() - 0.5); // shuffles them
-			let sourceGap = (ctx.width() - sourceObj.width * sources.length) / (sources.length + 1);
-			let sourceX = sourceGap;
-			sources.forEach((source, index) => {
-				source.pos.x = sourceX;
-				sourceX += sourceGap + source.width;
-			});
-
-			// TODO: make it so if you click and drop it it will stay on the floor, also make it so it can plug with other sockets
-			plugObj.onUpdate(() => {
-				if (plugSocketState[plugIndex] == "wiring") {
-					plugObj.pos = ctx.lerp(plugObj.pos, sourceObj.fromWorld(ctx.mousePos()), 0.5);
-				}
-				else if (plugSocketState[plugIndex] == "connected") {
-					const socketBoxPos = ctx.vec2(socketObj.pos.x + socketObj.width / 2, socketObj.pos.y + plugObj.height - 10);
-					const transformedPoint = sourceObj.fromWorld(socketBoxPos);
-					plugObj.pos = ctx.lerp(plugObj.pos, transformedPoint, 0.5);
-				}
-				else if (plugSocketState[plugIndex] == "disconnected") {
-					plugObj.pos = ctx.lerp(plugObj.pos, ctx.vec2(sourceObj.width / 2, -30), 0.5);
-				}
-			});
-
-			plugObj.onClick(() => {
-				if (plugSocketState[plugIndex] == "disconnected") plugSocketState[plugIndex] = "wiring";
-			});
-
-			plugObj.onUpdate(() => {
-				if (socketObj.isHovering() && plugSocketState[plugIndex] != "connected" && plugSocketState[plugIndex] == "wiring") {
-					ctx.play("plug", { detune: ctx.rand(-30, 30) * plugIndex });
-					plugSocketState[plugIndex] = "connected";
-				}
-
-				if (ctx.isButtonReleased("click") && plugSocketState[plugIndex] == "wiring") {
-					if (!socketObj.isHovering()) plugSocketState[plugIndex] = "disconnected";
-				}
-			});
-
-			ctx.onDraw(() => {
-				ctx.drawLine({
-					p1: ctx.vec2(sourceObj.pos.x + sourceObj.width / 2, sourceObj.pos.y),
-					p2: sourceObj.toWorld(plugObj.pos),
-					width: 10,
-					color,
+				k.drawCurve(t => k.vec2(w * Math.cos(f * t), t * -h).rotate(angle), {
+					color: k.mulfok.VOID_VIOLET,
+					width: 20,
+					pos: pos,
 				});
 			});
 
-			// ctx.onDraw("tag", () => {
-			// });
+			plugObj.onUpdate(() => {
+				// conection flag
+				const plugs = k.get("plug").find((plug) => plug.dragging);
+				const currentPlug = plugs[0]; // find may return undefined
+
+				if (socketObj.isHovering() && currentPlug) {
+					currentPlug.dragging = false;
+					currentPlug.socket = socketObj;
+					socketObj.plug = currentPlug;
+					k.play("plug", { detune: k.rand(-100, 100) });
+				}
+
+				// this causes win flag condition
+				if (socketObj.plug == plugObj && !socketObj.is("right")) {
+					socketObj.tag("right");
+					plugObj.tag("ignorepoint");
+				}
+
+				// if the socket has the right plug don't check anything else
+				if (socketObj.is("right")) return;
+
+				// this sets draggging
+				if (plugObj.isClicked()) {
+					plugObj.dragging = true;
+
+					// if there's no socket don't run anything
+					if (!plugObj.socket) return;
+					plugObj.socket.plug = null;
+					plugObj.socket = null;
+					k.play("unplug", { detune: k.rand(-100, 100) });
+				}
+
+				// this only runs if dragging
+				if (!plugObj.dragging) return;
+				plugObj.pos = k.vec2(k.mousePos().x, k.mousePos().y - plugObj.height / 2);
+				if (k.isButtonReleased("click")) plugObj.dragging = false;
+			});
 		});
 
-		let hasWon = false;
-		ctx.onUpdate(() => {
-			if (winCondition() && !hasWon) {
-				hasWon = true;
-				ctx.win();
-				ctx.wait(1, () => ctx.finish());
+		// this code mixes them up
+		let socketGap = (k.width() - k.getSprite("socket").data.width * sockets.length) / (sockets.length + 1);
+		let socketX = socketGap;
+		sockets.forEach((socket) => {
+			socket.pos.x = socketX;
+			socketX += socketGap + socket.width;
+		});
+
+		plugs.sort(() => Math.random() - 0.5); // shuffles them
+		let sourceGap = (k.width() - k.getSprite("plug").data.width * plugs.length) / (plugs.length + 1);
+		let sourceX = sourceGap;
+		plugs.forEach((plug) => {
+			plug.originX = sourceX;
+			plug.pos.x = sourceX;
+			sourceX += sourceGap + plug.width;
+		});
+
+		k.onUpdate(() => {
+			if (k.get("socket").every((socket) => socket.is("right")) && !k.winState) {
+				k.win();
+				k.wait(1 / k.speed, () => k.finish());
 			}
 		});
 
-		ctx.onDraw(() => {
-			// draw the connected ones
-			gameColors.forEach((color, index) => {
-				if (plugSocketState[index] == "disconnected") return;
-			});
-		});
-
-		ctx.onTimeout(() => {
-			if (!winCondition()) {
-				ctx.lose();
-				ctx.wait(1, () => {
-					ctx.finish();
-				});
+		k.onTimeout(() => {
+			if (!(k.get("socket").every((socket) => socket.is("right")) && !k.winState)) {
+				k.lose();
+				k.wait(1 / k.speed, () => k.finish());
 			}
 		});
 	},
