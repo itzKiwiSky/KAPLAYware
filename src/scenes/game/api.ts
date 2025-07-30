@@ -147,4 +147,5 @@ export const gameAPIs = [
 	"onButtonDown",
 	"onButtonRelease",
 	"getTreeRoot",
+	"mask",
 ] as const;

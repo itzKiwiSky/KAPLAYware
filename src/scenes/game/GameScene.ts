@@ -124,6 +124,7 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 			ctx.setRGB(getGameColor(microgame, ctx));
 			ware.microgameHistory[ware.score - 1] = getGameID(microgame);
 			ware.difficulty = ware.getDifficulty();
+			ware.difficulty = 3;
 			ware.timeLeft = duration != undefined ? duration / ware.speed : undefined;
 			ware.curDuration = duration;
 			if (typeof microgame.prompt == "string") ware.curPrompt = microgame.prompt;

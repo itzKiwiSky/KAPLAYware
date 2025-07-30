@@ -18,6 +18,10 @@ const cursor = k.add([
 	k.stay(),
 	k.timer(),
 	{
+		reset() {
+			this.opacity = 1;
+		},
+
 		set fadeAway(param: boolean) {
 			opacity = param == true ? 0 : 1;
 		},

@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@kaplayjs/crew':
-        specifier: ^1.7.1
-        version: 1.7.1(terser@5.43.1)(typescript@5.8.3)
+        specifier: 2.0.0-beta.6
+        version: 2.0.0-beta.6(typescript@5.8.3)
       '@neutralinojs/lib':
         specifier: ^6.2.0
         version: 6.2.0
@@ -405,8 +405,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.29':
     resolution: {integrity: sha512-uw6guiW/gcAGPDhLmd77/6lW8QLeiV5RUTsAX46Db6oLhGaVj4lhnPwb184s1bkc8kdVg/+h988dro8GRDpmYQ==}
 
-  '@kaplayjs/crew@1.7.1':
-    resolution: {integrity: sha512-sofP0zMgNRBYUe2GGJrgpProBx5j5xfEB7OS/nVO2VpjpS7MuIP4NGo2aYdeaGePUr0UnaEX60aCGADrOU8zpQ==}
+  '@kaplayjs/crew@2.0.0-beta.6':
+    resolution: {integrity: sha512-ApfZIzKYJuX50UDawqzqUL3lG9MRs6A+/rLuHg0+Ddzz+7XyznxTbReOCAv2Ut2AaTyVBlCfDsxjVPeq/ARukA==}
     peerDependencies:
       typescript: ^5.0.0
 
@@ -1258,19 +1258,9 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.4
 
-  '@kaplayjs/crew@1.7.1(terser@5.43.1)(typescript@5.8.3)':
+  '@kaplayjs/crew@2.0.0-beta.6(typescript@5.8.3)':
     dependencies:
       typescript: 5.8.3
-      vite: 5.4.19(terser@5.43.1)
-    transitivePeerDependencies:
-      - '@types/node'
-      - less
-      - lightningcss
-      - sass
-      - sass-embedded
-      - stylus
-      - sugarss
-      - terser
 
   '@neutralinojs/lib@6.2.0': {}
 

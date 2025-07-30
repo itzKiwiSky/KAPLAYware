@@ -204,6 +204,10 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 			else return k.isButtonReleased(btn);
 		},
 
+		getTreeRoot() {
+			return wareApp.sceneObj;
+		},
+
 		onButtonDown: overload2((action: (btn: any) => void) => {
 			return wareApp.inputs.add(k.onButtonDown(action));
 		}, (btn: any, action: (btn: any) => void) => {
