@@ -4,9 +4,26 @@ import games from "./scenes/game/games";
 import { createLoadCtx } from "./scenes/game/context/load";
 
 k.loadSprite("logo", "sprites/logo.png");
-k.loadSprite("menu-buttons", "sprites/menu/buttons.png", { sliceX: 2, sliceY: 3 });
-k.loadSprite("menu-cartridge", "sprites/menu/cartridge.png");
-k.loadSprite("menu-check", "sprites/menu/check.png");
+
+k.loadSprite("kaboy", "sprites/menu/kaboy.png");
+k.loadSprite("ui_arrow", "sprites/menu/ui_arrow.png");
+k.loadSprite("ui_button", "sprites/menu/ui_button.png", {
+	sliceX: 2,
+	sliceY: 1,
+	anims: {
+		"focus": 1,
+		"blur": 0,
+	},
+});
+
+k.loadSprite("kaboy_art_storymode", "sprites/menu/kaboy_art_storymode.png", {
+	sliceX: 3,
+	sliceY: 1,
+	anims: {
+		"idle": { from: 0, to: 1, speed: 2, loop: true },
+		"select": 2,
+	},
+});
 
 k.loadBitmapFont("happy", "fonts/happy.png", 31, 39);
 k.loadBitmapFont("happy-o", "fonts/happy-o.png", 31, 39);

@@ -46,10 +46,7 @@ export default defineConfig(async ({ mode }) => ({
 	],
 	server: {
 		allowedHosts: true,
-		hmr: {
-			overlay: false,
-			middlewareMode: false,
-		},
+		hmr: false,
 		port: 8000,
 	},
 	publicDir: false,

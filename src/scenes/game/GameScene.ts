@@ -129,7 +129,7 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 			ware.curDuration = duration;
 			if (typeof microgame.prompt == "string") ware.curPrompt = microgame.prompt;
 			else ware.curPrompt = microgame.name; // TODO: figure it out fine fine
-			cursor.fadeAway = gameHidesMouse(microgame);
+			gameHidesMouse(microgame) ? cursor.opacity = 0 : 1;
 			currentBomb = null;
 			microgame.start(ctx); // IMPORTANT: starts the game
 
@@ -170,7 +170,7 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 			app.sceneObj.paused = false;
 			transition.ctx.cancel(); // clear the transCtx
 			cursor.canPoint = true;
-			cursor.fadeAway = gameHidesMouse(microgame);
+			gameHidesMouse(microgame) ? cursor.opacity = 0 : 1;
 		});
 
 		// makes the transition happen and kickstarts the whole process

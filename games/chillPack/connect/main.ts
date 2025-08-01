@@ -224,7 +224,6 @@ const connectGame: Microgame = {
 			if (wrongSockets.length > 0 && !k.winState) {
 				k.lose();
 				k.play("lightsoff");
-				// make cursor.opacity = 0, would be funny
 
 				wrongSockets.forEach((socket) => {
 					socket.add([

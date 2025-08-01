@@ -26,7 +26,7 @@ k.scene("title", () => {
 			pressAny.scale.y = k.lerp(pressAny.scale.y, k.wave(0.5, 0.75, k.time()), 0.5);
 		}
 
-		if (k.isKeyPressed()) {
+		if ((k.isKeyPressed() || k.isMousePressed()) && !hasPressed) {
 			hasPressed = true;
 			k.tween(logo.angle, 0, 0.25, (p) => logo.angle = p, k.easings.easeOutBack);
 			k.tween(k.vec2(1), k.vec2(0.5), 0.25, (p) => pressAny.scale = p, k.easings.easeOutQuint);

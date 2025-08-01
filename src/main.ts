@@ -5,7 +5,6 @@ import "./plugins/cursor";
 import "./scenes/FocusScene";
 import "./scenes/TitleScene";
 import "./scenes/MenuScene";
-import "./scenes/SelectScene";
 import "../src/scenes/game/GameScene";
 
 import goGame from "../src/scenes/game/GameScene";
@@ -17,6 +16,7 @@ k.loadRoot("./");
 const INITIAL_SCENE = () => goGame();
 
 k.onLoad(() => {
-	if (k.isFocused()) INITIAL_SCENE();
-	else k.go("focus", INITIAL_SCENE);
+	k.go("title");
+	// if (k.isFocused()) INITIAL_SCENE();
+	// else k.go("focus", INITIAL_SCENE);
 });
