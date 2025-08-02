@@ -4,7 +4,7 @@ import "./plugins/cursor";
 
 import "./scenes/FocusScene";
 import "./scenes/TitleScene";
-import "./scenes/MenuScene";
+import "./scenes/menu/MenuScene";
 import "../src/scenes/game/GameScene";
 
 import goGame from "../src/scenes/game/GameScene";

@@ -1,9 +1,7 @@
-import k from "../engine";
-import goGame from "./game/GameScene";
-import { linearSelectorObj } from "./menu/linearSelector";
-
-// TODO: this is already looking kinda big and there's LOOOOTS of stuff that will happen here
-// figure out a way to separate it in different files and such, yeah
+import k from "../../engine";
+import goGame from "../game/GameScene";
+import { linearSelectorObj } from "./linearSelector";
+import { MenuDefinition, moveToMenu } from "./MenuScene";
 
 export function addButton(text: string, action?: () => void) {
 	const l = () => {};
@@ -43,14 +41,15 @@ export function addButton(text: string, action?: () => void) {
 
 type CoolButton = ReturnType<typeof addButton>;
 
-k.scene("menu", () => {
+export const mainMenu: MenuDefinition = (scene, tween) => {
 	let selected = false;
-	k.setBackground(k.BLACK);
-	k.add([k.rect(k.width(), k.height()), k.color(k.mulfok.DARK_VIOLET)]);
 
-	const kaboy = k.add([
+	const kaboy = scene.add([
 		k.sprite("kaboy"),
 		k.pos(-96, 12),
+		{
+			screen: null as typeof boyScreen,
+		},
 	]);
 
 	const boyScreen = kaboy.add([
@@ -60,7 +59,11 @@ k.scene("menu", () => {
 		k.opacity(),
 	]);
 
-	const uiArrow = k.add([
+	function consoleLeave() {
+		k.tween(kaboy.pos.y, 600, 0.5, (p) => kaboy.pos.y = p, k.easings.easeOutQuint);
+	}
+
+	const uiArrow = scene.add([
 		k.sprite("ui_arrow"),
 		k.pos(),
 		k.anchor("center"),
@@ -75,21 +78,22 @@ k.scene("menu", () => {
 	const storyButton = addButton("Story");
 	storyButton.pos = k.vec2(INITIAL_X, INITIAL_Y);
 	storyButton.action = () => {
-		goGame();
+		moveToMenu("story");
+		consoleLeave();
 	};
 
 	// freeplay
 	const freeplayButton = addButton("Freeplay");
 	freeplayButton.pos = storyButton.pos.add(0, 100);
 	freeplayButton.action = () => {
-		k.debug.log("go freeplay");
+		// k.debug.log("go freeplay");
 	};
 
 	// Extras
 	const extrasButton = addButton("Extras");
 	extrasButton.pos = freeplayButton.pos.add(0, 100);
 	extrasButton.action = () => {
-		k.debug.log("go extras????");
+		// k.debug.log("go extras????");
 	};
 
 	uiArrow.onUpdate(() => {
@@ -103,7 +107,7 @@ k.scene("menu", () => {
 	manager.menuBack = "up";
 	manager.menuNext = "down";
 	manager.menuSelect = "action";
-	manager.menuObjects = [storyButton, freeplayButton, extrasButton];
+	manager.menuItems = [storyButton, freeplayButton, extrasButton];
 
 	manager.onUpdate(() => {
 		k.get("button").forEach((button: CoolButton, idx) => {
@@ -134,7 +138,7 @@ k.scene("menu", () => {
 	});
 
 	manager.onSelect(() => {
-		// if (selected) return;
+		if (selected) return;
 		selected = true;
 		boyScreen.play("select");
 		const l = k.loop(0.1, () => {
@@ -146,10 +150,10 @@ k.scene("menu", () => {
 			l.cancel();
 		});
 
-		k.wait(1.5, () => {
+		k.wait(1, () => {
 			manager.getSelected().action();
 		});
 	});
 
 	manager.setSelected(storyButton);
-});
+};

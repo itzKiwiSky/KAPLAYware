@@ -7,8 +7,8 @@ type TButton = "up" | "down" | "left" | "right" | "action" | "click";
 export function linearSelectorObj<T extends any>() {
 	const linearSelector = k.add([
 		{
-			selectedIdx: 0,
-			menuObjects: [] as T[],
+			index: 0,
+			menuItems: [] as T[],
 			menuNext: null as TButton,
 			menuBack: null as TButton,
 			menuSelect: null as TButton,
@@ -19,11 +19,11 @@ export function linearSelectorObj<T extends any>() {
 
 			setSelected(newSelected: T) {
 				const lastSelection = linearSelector.getSelected();
-				linearSelector.selectedIdx = linearSelector.menuObjects.indexOf(newSelected);
+				linearSelector.index = linearSelector.menuItems.indexOf(newSelected);
 				linearSelector.trigger("change", linearSelector.getSelected(), lastSelection);
 			},
 			getSelected(): T {
-				return linearSelector.menuObjects[linearSelector.selectedIdx];
+				return linearSelector.menuItems[linearSelector.index];
 			},
 			onChange: (action: (newSelect: T, beforeSelect: T) => void) => {
 				linearSelector.on("change", (newSelect, beforeSelect) => action(newSelect, beforeSelect));
@@ -34,8 +34,8 @@ export function linearSelectorObj<T extends any>() {
 
 	function moveNext() {
 		const lastSelection = linearSelector.getSelected();
-		linearSelector.selectedIdx = (linearSelector.selectedIdx + 1)
-			% linearSelector.menuObjects.length;
+		linearSelector.index = (linearSelector.index + 1)
+			% linearSelector.menuItems.length;
 		linearSelector.trigger(
 			"change",
 			linearSelector.getSelected(),
@@ -45,9 +45,9 @@ export function linearSelectorObj<T extends any>() {
 
 	function moveBack() {
 		const lastSelection = linearSelector.getSelected();
-		linearSelector.selectedIdx = (linearSelector.selectedIdx - 1
-			+ linearSelector.menuObjects.length)
-			% linearSelector.menuObjects.length;
+		linearSelector.index = (linearSelector.index - 1
+			+ linearSelector.menuItems.length)
+			% linearSelector.menuItems.length;
 
 		linearSelector.trigger("change", linearSelector.getSelected(), lastSelection);
 	}
@@ -55,7 +55,7 @@ export function linearSelectorObj<T extends any>() {
 	function selectOption() {
 		linearSelector.trigger(
 			"select",
-			linearSelector.menuObjects[linearSelector.selectedIdx],
+			linearSelector.menuItems[linearSelector.index],
 		);
 	}
 

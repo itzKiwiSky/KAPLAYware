@@ -11,7 +11,7 @@ import { createWareEngine, KAPLAYwareOpts } from "./ware";
 k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 	const app = createWareApp();
 	const transition = createTransition(chillTransition, app);
-	const ware = createWareEngine({ availableGames: window.microgames });
+	const ware = createWareEngine({ availableGames: kaplaywareOpt.availableGames ?? window.microgames });
 	let gamePaused = false;
 	let currentBomb: WareBomb = null;
 
@@ -23,7 +23,7 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 		k.quickWatch("k.objects", k.debug.numObjects());
 
 		// toggle the pause on the app
-		if (k.isKeyPressed("escape")) {
+		if (k.isButtonPressed("return")) {
 			gamePaused = !gamePaused;
 			app.paused = gamePaused;
 			if (currentBomb) currentBomb.paused = gamePaused;
@@ -124,7 +124,6 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 			ctx.setRGB(getGameColor(microgame, ctx));
 			ware.microgameHistory[ware.score - 1] = getGameID(microgame);
 			ware.difficulty = ware.getDifficulty();
-			ware.difficulty = 3;
 			ware.timeLeft = duration != undefined ? duration / ware.speed : undefined;
 			ware.curDuration = duration;
 			if (typeof microgame.prompt == "string") ware.curPrompt = microgame.prompt;
