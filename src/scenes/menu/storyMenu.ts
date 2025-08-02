@@ -6,12 +6,13 @@ import { MenuDefinition, moveToMenu } from "./MenuScene";
 
 function addPack(pack: string, parent: GameObj) {
 	const obj = parent.add([
-		k.sprite("cartridge_pack"),
+		k.sprite("cartridge_pack", { anim: "blur" }),
 		k.anchor("center"),
 		k.pos(k.center().x, 150),
 		k.scale(),
 		k.opacity(),
 		k.rotate(),
+		k.area(),
 		"pack",
 		{
 			pack: pack,
@@ -87,7 +88,7 @@ export const storyMenu: MenuDefinition = (scene, tween) => {
 		button.onHoverEnd(() => button.play("blur"));
 		button.press = () => {
 			const randVec = k.vec2(k.rand(0.95, 1.215), k.rand(0.95, 1.215));
-			k.tween(randVec, k.vec2(1), 0.35, (p) => button.scale = p, k.easings.easeOutQuint);
+			scene.tween(randVec, k.vec2(1), 0.35, (p) => button.scale = p, k.easings.easeOutQuint);
 		};
 
 		button.onClick(() => {
@@ -101,28 +102,36 @@ export const storyMenu: MenuDefinition = (scene, tween) => {
 		addPack(pack, scene);
 	});
 
-	const manager = linearSelectorObj<PackObject>();
+	const manager = linearSelectorObj<PackObject>(scene);
+	manager.paused = true;
 	manager.menuItems = scene.get("pack");
 	manager.menuBack = "left";
 	manager.menuNext = "right";
 	manager.menuSelect = "action";
+	tween.onEnd(() => manager.paused = false);
 
 	scene.onUpdate(() => {
 		if (k.isButtonPressed("left")) leftBtn.press();
 		else if (k.isButtonPressed("right")) rightBtn.press();
-		else if (k.isButtonPressed("return")) backButton.press();
 
 		const packs = scene.get("pack") as PackObject[];
 		packs.forEach((packObj, index) => {
 			if (index == manager.index) {
 				packObj.intendedX = k.center().x;
-				if (selected) return;
+
+				if (selected) {
+					// packObj.angle = k.lerp()
+					return;
+				}
+
 				packObj.scale = k.lerp(packObj.scale, k.vec2(1), 0.5);
 				packObj.opacity = k.lerp(packObj.opacity, 1, 0.5);
 				const wavingY = k.wave(150, 155, k.time());
 				const wavingAngle = k.wave(-2.5, 2.5, k.time());
 				packObj.pos.y = k.lerp(packObj.pos.y, wavingY, 0.5);
 				packObj.angle = k.lerp(packObj.angle, wavingAngle, 0.5);
+
+				if (packObj.isClicked()) k.pressButton("action");
 			}
 			else {
 				packObj.intendedX = k.center().x + packObj.width * 1.5 * (index - manager.index);
@@ -137,15 +146,25 @@ export const storyMenu: MenuDefinition = (scene, tween) => {
 		});
 	});
 
+	manager.onChange((newSelect, oldSelect) => {
+		newSelect.untag("ignorepoint");
+		newSelect.play("focus");
+		oldSelect?.tag("ignorepoint");
+		oldSelect?.play("blur");
+	});
+
+	manager.trigger("change", manager.getSelected());
+
 	manager.onSelect(() => {
 		if (selected) return;
 		selected = true;
+		manager.paused = true;
 
 		const selectPack = manager.getSelected();
-		k.tween(k.vec2(1.25), k.vec2(1), 0.25, (p) => selectPack.scale = p, k.easings.easeOutQuint);
-		k.wait(0.25, () => {
-			k.tween(selectPack.pos.y, 380, 0.5, (p) => selectPack.pos.y = p, k.easings.easeOutQuint);
-			k.wait(0.5, () => {
+		scene.tween(k.vec2(1.25), k.vec2(1), 0.25, (p) => selectPack.scale = p, k.easings.easeOutQuint);
+		scene.wait(0.25, () => {
+			scene.tween(selectPack.pos.y, 380, 0.5, (p) => selectPack.pos.y = p, k.easings.easeOutQuint);
+			scene.wait(0.5, () => {
 				const theGames = window.microgames.filter((game) => game.pack == selectPack.pack);
 				goGame({ availableGames: theGames });
 			});
@@ -153,12 +172,14 @@ export const storyMenu: MenuDefinition = (scene, tween) => {
 	});
 
 	scene.onButtonPress("return", () => {
+		if (selected) return;
+		backButton.press();
 		moveToMenu("main");
-		k.tween(kaboy.pos.y, 600, 0.5, (p) => kaboy.pos.y = p, k.easings.easeOutQuint);
+		scene.tween(kaboy.pos.y, 600, 0.5, (p) => kaboy.pos.y = p, k.easings.easeOutQuint);
 	});
 
-	k.wait(0.5, () => {
-		k.tween(kaboy.pos.y, 600, 0.5, (p) => kaboy.pos.y = p, k.easings.easeOutQuint);
+	scene.wait(0.5, () => {
+		scene.tween(kaboy.pos.y, 600, 0.5, (p) => kaboy.pos.y = p, k.easings.easeOutQuint);
 	});
 
 	return scene;

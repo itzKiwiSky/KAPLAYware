@@ -16,20 +16,19 @@ const menus = {
 // make it so moveToMenu creates an object in the correctp osition and its passed to the function
 
 export function moveToMenu(menuKey: keyof typeof menus) {
-	const scene = k.add([k.pos(menus[menuKey].pos), k.timer()]);
-	scene.paused = true;
-	const tween = k.tween(k.getCamPos(), scene.pos.add(k.center()), 0.5, (p) => k.setCamPos(p), k.easings.easeOutQuint);
-	tween.onEnd(() => {
-		scene.paused = false;
-	});
-	menus[menuKey].sceneContent(scene, tween);
+	const oldScene = k.get("menu_scene")[0];
+	const newScene = k.add([k.pos(menus[menuKey].pos), k.timer(), "menu_scene", menuKey]);
+	const tween = k.tween(k.getCamPos(), newScene.pos.add(k.center()), 0.5, (p) => k.setCamPos(p), k.easings.easeOutQuint);
+	menus[menuKey].sceneContent(newScene, tween);
+	tween.onEnd(() => oldScene?.destroy());
+
 	return tween;
 }
 
 k.scene("menu", () => {
 	k.setBackground(k.BLACK);
 	k.add([k.rect(k.width(), k.height()), k.fixed(), k.color(k.mulfok.DARK_VIOLET)]);
-	k.setCamScale(1);
 
 	moveToMenu("main");
+	k.setCamScale(0.5);
 });

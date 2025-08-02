@@ -1,11 +1,11 @@
-import { ButtonBindingDevice } from "kaplay";
+import { ButtonBindingDevice, GameObj } from "kaplay";
 import { k } from "../../engine";
 import cursor from "../../plugins/cursor";
 
 type TButton = "up" | "down" | "left" | "right" | "action" | "click";
 
-export function linearSelectorObj<T extends any>() {
-	const linearSelector = k.add([
+export function linearSelectorObj<T extends any>(parent?: GameObj) {
+	const linearSelector = (parent ?? k.getTreeRoot()).add([
 		{
 			index: 0,
 			menuItems: [] as T[],

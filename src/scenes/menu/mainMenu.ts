@@ -1,13 +1,14 @@
+import { GameObj } from "kaplay";
 import k from "../../engine";
 import goGame from "../game/GameScene";
 import { linearSelectorObj } from "./linearSelector";
 import { MenuDefinition, moveToMenu } from "./MenuScene";
 
-export function addButton(text: string, action?: () => void) {
+export function addButton(parent: GameObj, text: string, action?: () => void) {
 	const l = () => {};
 	action = action ?? l;
 
-	const button = k.add([
+	const button = parent.add([
 		k.sprite("ui_button"),
 		k.opacity(1),
 		k.pos(),
@@ -60,7 +61,7 @@ export const mainMenu: MenuDefinition = (scene, tween) => {
 	]);
 
 	function consoleLeave() {
-		k.tween(kaboy.pos.y, 600, 0.5, (p) => kaboy.pos.y = p, k.easings.easeOutQuint);
+		scene.tween(kaboy.pos.y, 600, 0.5, (p) => kaboy.pos.y = p, k.easings.easeOutQuint);
 	}
 
 	const uiArrow = scene.add([
@@ -75,7 +76,7 @@ export const mainMenu: MenuDefinition = (scene, tween) => {
 	const INITIAL_Y = 220;
 
 	// story
-	const storyButton = addButton("Story");
+	const storyButton = addButton(scene, "Story");
 	storyButton.pos = k.vec2(INITIAL_X, INITIAL_Y);
 	storyButton.action = () => {
 		moveToMenu("story");
@@ -83,14 +84,14 @@ export const mainMenu: MenuDefinition = (scene, tween) => {
 	};
 
 	// freeplay
-	const freeplayButton = addButton("Freeplay");
+	const freeplayButton = addButton(scene, "Freeplay");
 	freeplayButton.pos = storyButton.pos.add(0, 100);
 	freeplayButton.action = () => {
 		// k.debug.log("go freeplay");
 	};
 
 	// Extras
-	const extrasButton = addButton("Extras");
+	const extrasButton = addButton(scene, "Extras");
 	extrasButton.pos = freeplayButton.pos.add(0, 100);
 	extrasButton.action = () => {
 		// k.debug.log("go extras????");
@@ -103,13 +104,29 @@ export const mainMenu: MenuDefinition = (scene, tween) => {
 		uiArrow.pos = k.lerp(uiArrow.pos, k.vec2(x, y), 0.5);
 	});
 
-	const manager = linearSelectorObj<CoolButton>();
+	const manager = linearSelectorObj<CoolButton>(scene);
 	manager.menuBack = "up";
 	manager.menuNext = "down";
 	manager.menuSelect = "action";
 	manager.menuItems = [storyButton, freeplayButton, extrasButton];
 
 	manager.onUpdate(() => {
+		// TODO: maybe i should use in conversations and comments the terminology substate or subscene so it's less confusing
+
+		// TODO: if you're on storyMenu and go back, that creates the THIS scene (mainMenu scene) inmediately
+		// which causes this return condition to appear SOMEHOW at the same time you press the key
+		// which would cause you to go to title inmediately
+
+		// this wouldn't happen if the "manager" was paused until the tween that moves you to this scene ended
+		// but that would be kinda annoying, since this is the first scene, so it would force you to be still for 0.5
+		// seconds which is how long the tween goes for, help me please lajbel i love you 🙏
+
+		if (k.isButtonPressed("return")) {
+			k.debug.log("this shouldn't return but somehow it does");
+			// selected = true;
+			// k.go("title");
+		}
+
 		k.get("button").forEach((button: CoolButton, idx) => {
 			const isSelected = button == manager.getSelected();
 
@@ -137,6 +154,8 @@ export const mainMenu: MenuDefinition = (scene, tween) => {
 		else if (newSelect == extrasButton) {}
 	});
 
+	manager.trigger("change", manager.getSelected());
+
 	manager.onSelect(() => {
 		if (selected) return;
 		selected = true;
@@ -146,11 +165,12 @@ export const mainMenu: MenuDefinition = (scene, tween) => {
 			else if (boyScreen.opacity == 1) boyScreen.opacity = 0.1;
 		});
 
-		k.wait(0.5, () => {
+		scene.wait(0.5, () => {
 			l.cancel();
 		});
 
-		k.wait(1, () => {
+		scene.wait(1, () => {
+			manager.paused = true;
 			manager.getSelected().action();
 		});
 	});
