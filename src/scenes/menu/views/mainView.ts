@@ -1,6 +1,6 @@
 import { GameObj } from "kaplay";
-import k from "../../engine";
-import { createView, goView } from "./MenuScene";
+import k from "../../../engine";
+import { createView, goView } from "../MenuScene";
 
 export function addButton(parent: GameObj, text: string, action?: () => void) {
 	const l = () => {};
@@ -42,7 +42,7 @@ type CoolButton = ReturnType<typeof addButton>;
 
 const MAIN_MENU_POS = k.vec2(0, 0);
 
-export const addMainMenu = () => {
+export const addMainView = () => {
 	const p = createView<CoolButton>(MAIN_MENU_POS, "main");
 
 	const kaboy = p.add([
@@ -84,7 +84,8 @@ export const addMainMenu = () => {
 	const freeplayButton = addButton(p, "Freeplay");
 	freeplayButton.pos = storyButton.pos.add(0, 100);
 	freeplayButton.action = () => {
-		// k.debug.log("go freeplay");
+		kaboy.leave();
+		goView("freeplay");
 	};
 
 	// extras
@@ -114,9 +115,9 @@ export const addMainMenu = () => {
 	p.menuItems = [storyButton, freeplayButton, extrasButton, configButton];
 
 	p.onUpdate(() => {
-		// if (k.isButtonPressed("return") && !p.selectorPaused) {
-		// 	k.go("title");
-		// }
+		if (k.isButtonPressed("return") && !p.selectorPaused) {
+			k.go("title");
+		}
 	});
 
 	p.onUpdate(() => {

@@ -1,7 +1,7 @@
 import { GameObj } from "kaplay";
-import k from "../../engine";
-import goGame from "../game/GameScene";
-import { createView, goView } from "./MenuScene";
+import k from "../../../engine";
+import goGame from "../../game/GameScene";
+import { createView, goView } from "../MenuScene";
 
 function addPack(pack: string, parent: GameObj) {
 	const obj = parent.add([
@@ -34,7 +34,7 @@ type PackObject = ReturnType<typeof addPack>;
 
 const STORY_POS = k.vec2(800, 0);
 
-export const addStoryMenu = () => {
+export const addStoryView = () => {
 	const p = createView<PackObject>(STORY_POS, "story");
 	p.selectorPaused = true;
 

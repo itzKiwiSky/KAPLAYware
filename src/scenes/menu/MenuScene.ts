@@ -1,8 +1,9 @@
-import { Comp, GameObj, KEventController, PosComp, TimerComp, Vec2 } from "kaplay";
 import k from "../../engine";
-import { addMainMenu } from "./mainMenu";
-import { addStoryMenu } from "./storyMenu";
+import { Comp, GameObj, PosComp, TimerComp, Vec2 } from "kaplay";
 import { linearSelector, LinearSelectorComp } from "./linearSelector";
+import { addMainView } from "./views/mainView";
+import { addStoryView } from "./views/storyView";
+import { addFreeplayView } from "./views/freeplayView";
 
 interface ViewComp extends Comp {
 	viewName: string;
@@ -33,6 +34,8 @@ export function createView<T extends any>(pos: Vec2, name: string): ViewObj<T> {
 		k.timer(),
 	]);
 
+	parent.paused = true;
+
 	return parent;
 }
 
@@ -60,6 +63,8 @@ k.scene("menu", () => {
 		k.setCamPos(k.lerp(k.getCamPos(), k.center().add(curCamPos), 0.5));
 	});
 
-	addMainMenu();
-	addStoryMenu();
+	addMainView();
+	addStoryView();
+	addFreeplayView();
+	goView("main");
 });

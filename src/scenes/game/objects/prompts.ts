@@ -21,7 +21,7 @@ export function addTextPrompt(wareApp: WareApp, promptText: string, speed = 1, t
 		k.anchor("center"),
 		k.scale(),
 		k.opacity(),
-		k.z(101),
+		k.z(50),
 		{
 			/** Set this to true if you wish for the object to not use the default animation */
 			overrideAnimation: false,

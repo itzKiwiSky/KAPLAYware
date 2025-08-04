@@ -3,17 +3,20 @@ import cursor from "../../plugins/cursor";
 import { createWareApp } from "./app";
 import { createGameCtx } from "./context/gameContext";
 import { addBomb, WareBomb } from "./objects/bomb";
+import { addPauseScreen } from "./objects/pause";
 import chillTransition from "./transitions/chill";
 import { createTransition } from "./transitions/makeTransition";
 import { gameHidesMouse, getGameColor, getGameDuration, getGameID, getGameInput } from "./utils";
 import { createWareEngine, KAPLAYwareOpts } from "./ware";
 
-k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
+k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microgames }) => {
 	const app = createWareApp();
 	const transition = createTransition(chillTransition, app);
 	const ware = createWareEngine({ availableGames: kaplaywareOpt.availableGames ?? window.microgames });
+	const pauseScreen = addPauseScreen()
 	let gamePaused = false;
 	let currentBomb: WareBomb = null;
+
 
 	k.onUpdate(() => {
 		cursor.canPoint = !app.sceneObj.paused;
@@ -26,27 +29,11 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts) => {
 		if (k.isButtonPressed("return")) {
 			gamePaused = !gamePaused;
 			app.paused = gamePaused;
+			pauseScreen.isGamePaused = gamePaused
 			if (currentBomb) currentBomb.paused = gamePaused;
 			transition.ctx.paused = gamePaused;
 			app.draws.paused = false;
 		}
-	});
-
-	k.add([k.z(999)]).onDraw(() => {
-		if (!gamePaused) return;
-
-		k.drawRect({
-			color: k.BLACK,
-			width: k.width(),
-			height: k.height(),
-		});
-
-		k.drawText({
-			text: "PAUSED",
-			anchor: "center",
-			pos: k.center(),
-			color: k.WHITE,
-		});
 	});
 
 	function clearPrevious() {

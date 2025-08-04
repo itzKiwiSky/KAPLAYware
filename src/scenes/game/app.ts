@@ -2,10 +2,11 @@ import { AudioPlay, Color, KEventController, TimerController, TweenController, V
 import k from "../../engine";
 
 /** Creates a cute little object that contains a buncha game objects that can hold, a ware instance
+ * @param rootParent Wheter the root should have a parent
  * @returns An object with a lot of objects
  */
-export function createGameContainer() {
-	const root = k.add([]);
+export function createGameContainer(rootParent = k.getTreeRoot()) {
+	const root = rootParent.add([]);
 
 	const gameBox = root.add([
 		k.rect(k.width(), k.height()),
@@ -13,6 +14,12 @@ export function createGameContainer() {
 		k.scale(1),
 		k.pos(k.center()),
 		k.anchor("center"),
+		{
+			scaleToSize(size: Vec2) {
+				this.scale.x = size.x / k.width()
+				this.scale.y = size.y / k.height()
+			}
+		}
 	]);
 
 	const maskObj = gameBox.add([
@@ -137,9 +144,11 @@ export type WareApp = {
 	handleQuickWatch(): void;
 };
 
-/** Function that creates an instance of {@link WareApp `WareApp`} */
-export function createWareApp(): WareApp {
-	const gameContainer = createGameContainer();
+/** Function that creates an instance of {@link WareApp `WareApp`}
+ * @param rootParent Wheter to pass a parent to the createGameContainer() function
+ */
+export function createWareApp(rootParent = k.getTreeRoot()): WareApp {
+	const gameContainer = createGameContainer(rootParent);
 
 	/** Wheter the app should be paused */
 	let appPaused = false;
