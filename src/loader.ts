@@ -23,6 +23,33 @@ k.loadSprite("kaboy_art_storymode", "sprites/menu/kaboy_art_storymode.png", {
 	},
 });
 
+k.loadSprite("kaboy_art_freeplay", "sprites/menu/kaboy_art_freeplay.png", {
+	sliceX: 3,
+	sliceY: 1,
+	anims: {
+		"idle": { from: 0, to: 1, speed: 2, loop: true },
+		"select": 2,
+	},
+});
+
+k.loadSprite("kaboy_art_config", "sprites/menu/kaboy_art_config.png", {
+	sliceX: 3,
+	sliceY: 1,
+	anims: {
+		"idle": { from: 0, to: 1, speed: 2, loop: true },
+		"select": 2,
+	},
+});
+
+k.loadSprite("kaboy_art_extras", "sprites/menu/kaboy_art_extras.png", {
+	sliceX: 3,
+	sliceY: 1,
+	anims: {
+		"idle": { from: 0, to: 1, speed: 2, loop: true },
+		"select": 2,
+	},
+});
+
 k.loadBitmapFont("happy", "fonts/happy.png", 31, 39);
 k.loadBitmapFont("happy-o", "fonts/happy-o.png", 31, 39);
 

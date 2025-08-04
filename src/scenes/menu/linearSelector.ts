@@ -1,80 +1,95 @@
-import { ButtonBindingDevice, GameObj } from "kaplay";
+import { ButtonBindingDevice, Comp, GameObj, KEventController } from "kaplay";
 import { k } from "../../engine";
-import cursor from "../../plugins/cursor";
 
 type TButton = "up" | "down" | "left" | "right" | "action" | "click";
 
-export function linearSelectorObj<T extends any>(parent?: GameObj) {
-	const linearSelector = (parent ?? k.getTreeRoot()).add([
-		{
-			index: 0,
-			menuItems: [] as T[],
-			menuNext: null as TButton,
-			menuBack: null as TButton,
-			menuSelect: null as TButton,
-			lastInput: undefined as ButtonBindingDevice,
-			triggerSelect() {
-				selectOption();
-			},
+export interface LinearSelectorComp<T extends any> extends Comp {
+	selectorPaused: boolean;
+	index: number;
+	menuItems: T[];
+	menuNext: TButton;
+	menuBack: TButton;
+	menuSelect: TButton;
+	lastInput: ButtonBindingDevice;
+	triggerSelect(): void;
+	setSelected(newSelect: T): void;
+	getSelected(): T;
+	onChange(action: (newSelect: T, oldSelect: T) => void): KEventController;
+	onSelect(action: () => void): KEventController;
+}
 
-			setSelected(newSelected: T) {
-				const lastSelection = linearSelector.getSelected();
-				linearSelector.index = linearSelector.menuItems.indexOf(newSelected);
-				linearSelector.trigger("change", linearSelector.getSelected(), lastSelection);
-			},
-			getSelected(): T {
-				return linearSelector.menuItems[linearSelector.index];
-			},
-			onChange: (action: (newSelect: T, beforeSelect: T) => void) => {
-				linearSelector.on("change", (newSelect, beforeSelect) => action(newSelect, beforeSelect));
-			},
-			onSelect: (action: () => void) => linearSelector.on("select", () => action()),
-		},
-	]);
+export function linearSelector<T extends any>(): LinearSelectorComp<T> {
+	let obj = null;
+
+	let lastSelection: T = null;
 
 	function moveNext() {
-		const lastSelection = linearSelector.getSelected();
-		linearSelector.index = (linearSelector.index + 1)
-			% linearSelector.menuItems.length;
-		linearSelector.trigger(
+		lastSelection = obj.getSelected();
+		obj.index = (obj.index + 1)
+			% obj.menuItems.length;
+		obj.trigger(
 			"change",
-			linearSelector.getSelected(),
+			obj.getSelected(),
 			lastSelection,
 		);
 	}
 
 	function moveBack() {
-		const lastSelection = linearSelector.getSelected();
-		linearSelector.index = (linearSelector.index - 1
-			+ linearSelector.menuItems.length)
-			% linearSelector.menuItems.length;
+		lastSelection = obj.getSelected();
+		obj.index = (obj.index - 1
+			+ obj.menuItems.length)
+			% obj.menuItems.length;
 
-		linearSelector.trigger("change", linearSelector.getSelected(), lastSelection);
+		obj.trigger("change", obj.getSelected(), lastSelection);
 	}
 
 	function selectOption() {
-		linearSelector.trigger(
+		obj.trigger(
 			"select",
-			linearSelector.menuItems[linearSelector.index],
+			obj.menuItems[obj.index],
 		);
 	}
 
-	linearSelector.onMouseMove(() => {
-		linearSelector.lastInput = "mouse";
-	});
+	return {
+		selectorPaused: false,
+		index: 0,
+		menuItems: [],
+		menuNext: undefined,
+		menuBack: undefined,
+		menuSelect: undefined,
+		lastInput: undefined,
+		add() {
+			obj = this;
+		},
 
-	linearSelector.onKeyPress(() => {
-		linearSelector.lastInput = "keyboard";
-	});
+		triggerSelect() {
+			selectOption();
+		},
 
-	linearSelector.onUpdate(() => {
-		if (linearSelector.lastInput == "mouse") cursor.opacity = k.lerp(cursor.opacity, 1, 0.25);
-		else cursor.opacity = k.lerp(cursor.opacity, 0, 0.25);
+		setSelected(newSelect) {
+			lastSelection = this.getSelected();
+			this.index = this.menuItems.indexOf(newSelect);
 
-		if (k.isButtonPressed(linearSelector.menuBack)) moveBack();
-		else if (k.isButtonPressed(linearSelector.menuNext)) moveNext();
-		else if (k.isButtonPressed(linearSelector.menuSelect)) selectOption();
-	});
+			this.trigger("change", this.getSelected(), lastSelection);
+		},
 
-	return linearSelector;
+		getSelected() {
+			return this.menuItems[this.index];
+		},
+
+		onChange(action) {
+			return this.on("change", action);
+		},
+
+		onSelect(action) {
+			return this.on("select", action);
+		},
+
+		update() {
+			if (this.selectorPaused) return;
+			if (k.isButtonPressed(this.menuBack)) moveBack();
+			else if (k.isButtonPressed(this.menuNext)) moveNext();
+			else if (k.isButtonPressed(this.menuSelect)) selectOption();
+		},
+	};
 }

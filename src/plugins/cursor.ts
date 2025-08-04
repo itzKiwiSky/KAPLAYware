@@ -1,7 +1,9 @@
+import { ButtonBindingDevice } from "kaplay";
 import k from "../engine";
 
 // TODO: make this better, it sucks!
 let canPoint = true;
+let lastInput: ButtonBindingDevice = "mouse";
 
 /** The cursor object :) */
 const cursor = k.add([
@@ -31,7 +33,9 @@ const cursor = k.add([
 ]);
 
 cursor.onUpdate(() => {
-	if (cursor.opacity == 0) return;
+	if (lastInput == "mouse") cursor.opacity = k.lerp(cursor.opacity, 1, 0.25);
+	else cursor.opacity = k.lerp(cursor.opacity, 0, 0.25);
+
 	const hovered = k.get("area", { recursive: true }).filter((obj) => obj.isHovering() && canPoint && !obj.is("ignorepoint")).length > 0;
 	if (k.isMouseDown("left")) cursor.sprite = "cursor-knock";
 	if (hovered && !k.isMouseDown("left")) cursor.sprite = "cursor-point";
@@ -40,6 +44,10 @@ cursor.onUpdate(() => {
 
 cursor.onMouseMove(() => {
 	cursor.pos = k.mousePos();
+	lastInput = "mouse";
 });
+
+cursor.onKeyPress(() => lastInput = "keyboard");
+cursor.onGamepadButtonPress(() => lastInput = "gamepad");
 
 export default cursor;

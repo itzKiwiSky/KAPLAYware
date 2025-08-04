@@ -1,8 +1,7 @@
 import { GameObj } from "kaplay";
 import k from "../../engine";
-import { linearSelectorObj } from "./linearSelector";
 import goGame from "../game/GameScene";
-import { MenuDefinition, moveToMenu } from "./MenuScene";
+import { createView, goView } from "./MenuScene";
 
 function addPack(pack: string, parent: GameObj) {
 	const obj = parent.add([
@@ -33,10 +32,13 @@ function addPack(pack: string, parent: GameObj) {
 
 type PackObject = ReturnType<typeof addPack>;
 
-export const storyMenu: MenuDefinition = (scene, tween) => {
-	let selected = false;
+const STORY_POS = k.vec2(800, 0);
 
-	const kaboy = scene.add([
+export const addStoryMenu = () => {
+	const p = createView<PackObject>(STORY_POS, "story");
+	p.selectorPaused = true;
+
+	const kaboy = p.add([
 		k.sprite("kaboy"),
 		k.pos(k.center().x, 900),
 		k.anchor("center"),
@@ -44,7 +46,7 @@ export const storyMenu: MenuDefinition = (scene, tween) => {
 	]);
 
 	// side buttons
-	const leftBtn = scene.add([
+	const leftBtn = p.add([
 		k.sprite("btn_arrow", { flipX: true }),
 		k.anchor("center"),
 		k.area(),
@@ -57,7 +59,7 @@ export const storyMenu: MenuDefinition = (scene, tween) => {
 		},
 	]);
 
-	const rightBtn = scene.add([
+	const rightBtn = p.add([
 		k.sprite("btn_arrow"),
 		k.anchor("center"),
 		k.pos(746, 196),
@@ -70,7 +72,7 @@ export const storyMenu: MenuDefinition = (scene, tween) => {
 		},
 	]);
 
-	const backButton = scene.add([
+	const backButton = p.add([
 		k.sprite("btn_back"),
 		k.anchor("center"),
 		k.pos(leftBtn.pos.x, 540),
@@ -83,12 +85,12 @@ export const storyMenu: MenuDefinition = (scene, tween) => {
 		},
 	]);
 
-	scene.get("button").forEach((button: typeof backButton) => {
+	p.get("button").forEach((button: typeof backButton) => {
 		button.onHover(() => button.play("focus"));
 		button.onHoverEnd(() => button.play("blur"));
 		button.press = () => {
 			const randVec = k.vec2(k.rand(0.95, 1.215), k.rand(0.95, 1.215));
-			scene.tween(randVec, k.vec2(1), 0.35, (p) => button.scale = p, k.easings.easeOutQuint);
+			p.tween(randVec, k.vec2(1), 0.35, (p) => button.scale = p, k.easings.easeOutQuint);
 		};
 
 		button.onClick(() => {
@@ -99,28 +101,27 @@ export const storyMenu: MenuDefinition = (scene, tween) => {
 
 	const packs = ["chill", "community"];
 	packs.forEach((pack) => {
-		addPack(pack, scene);
+		const packObj = addPack(pack, p);
+		packObj.onClick(() => p.getSelected() == packObj ? k.pressButton("action") : false);
 	});
 
-	const manager = linearSelectorObj<PackObject>(scene);
-	manager.paused = true;
-	manager.menuItems = scene.get("pack");
-	manager.menuBack = "left";
-	manager.menuNext = "right";
-	manager.menuSelect = "action";
-	tween.onEnd(() => manager.paused = false);
+	p.menuItems = p.get("pack");
+	p.menuBack = "left";
+	p.menuNext = "right";
+	p.menuSelect = "action";
 
-	scene.onUpdate(() => {
+	p.onUpdate(() => {
 		if (k.isButtonPressed("left")) leftBtn.press();
 		else if (k.isButtonPressed("right")) rightBtn.press();
 
-		const packs = scene.get("pack") as PackObject[];
+		const packs = p.get("pack") as PackObject[];
 		packs.forEach((packObj, index) => {
-			if (index == manager.index) {
+			if (index == p.index) {
 				packObj.intendedX = k.center().x;
+				if (packObj.tags.includes("ignorepoint")) packObj.untag("ignorepoint");
 
-				if (selected) {
-					// packObj.angle = k.lerp()
+				if (p.selectorPaused) {
+					packObj.angle = k.lerp(packObj.angle, 0, 0.5);
 					return;
 				}
 
@@ -130,11 +131,10 @@ export const storyMenu: MenuDefinition = (scene, tween) => {
 				const wavingAngle = k.wave(-2.5, 2.5, k.time());
 				packObj.pos.y = k.lerp(packObj.pos.y, wavingY, 0.5);
 				packObj.angle = k.lerp(packObj.angle, wavingAngle, 0.5);
-
-				if (packObj.isClicked()) k.pressButton("action");
 			}
 			else {
-				packObj.intendedX = k.center().x + packObj.width * 1.5 * (index - manager.index);
+				if (!packObj.tags.includes("ignorepoint")) packObj.tag("ignorepoint");
+				packObj.intendedX = k.center().x + packObj.width * 1.5 * (index - p.index);
 				packObj.scale = k.lerp(packObj.scale, k.vec2(0.85), 0.5);
 				packObj.opacity = k.lerp(packObj.opacity, 0.85, 0.5);
 				const wavingY = k.wave(150, 155, k.time() / 2);
@@ -146,41 +146,39 @@ export const storyMenu: MenuDefinition = (scene, tween) => {
 		});
 	});
 
-	manager.onChange((newSelect, oldSelect) => {
-		newSelect.untag("ignorepoint");
-		newSelect.play("focus");
-		oldSelect?.tag("ignorepoint");
+	p.onChange((newSelect, oldSelect) => {
 		oldSelect?.play("blur");
+		newSelect.play("focus");
 	});
 
-	manager.trigger("change", manager.getSelected());
-
-	manager.onSelect(() => {
-		if (selected) return;
-		selected = true;
-		manager.paused = true;
-
-		const selectPack = manager.getSelected();
-		scene.tween(k.vec2(1.25), k.vec2(1), 0.25, (p) => selectPack.scale = p, k.easings.easeOutQuint);
-		scene.wait(0.25, () => {
-			scene.tween(selectPack.pos.y, 380, 0.5, (p) => selectPack.pos.y = p, k.easings.easeOutQuint);
-			scene.wait(0.5, () => {
+	p.onSelect(() => {
+		if (p.selectorPaused) return;
+		p.selectorPaused = true;
+		const selectPack = p.getSelected();
+		p.tween(k.vec2(1.25), k.vec2(1), 0.25, (p) => selectPack.scale = p, k.easings.easeOutQuint);
+		p.wait(0.25, () => {
+			p.tween(selectPack.pos.y, 380, 0.5, (p) => selectPack.pos.y = p, k.easings.easeOutQuint);
+			p.wait(0.5, () => {
 				const theGames = window.microgames.filter((game) => game.pack == selectPack.pack);
 				goGame({ availableGames: theGames });
 			});
 		});
 	});
 
-	scene.onButtonPress("return", () => {
-		if (selected) return;
+	p.onButtonPress("return", () => {
+		p.selectorPaused = true;
 		backButton.press();
-		moveToMenu("main");
-		scene.tween(kaboy.pos.y, 600, 0.5, (p) => kaboy.pos.y = p, k.easings.easeOutQuint);
+		goView("main");
+		k.tween(kaboy.pos.y, 900, 0.5, (p) => kaboy.pos.y = p, k.easings.easeOutQuint);
 	});
 
-	scene.wait(0.5, () => {
-		scene.tween(kaboy.pos.y, 600, 0.5, (p) => kaboy.pos.y = p, k.easings.easeOutQuint);
-	});
+	p.setSelected(p.menuItems[0]);
+	p.resetState = () => {
+		p.selectorPaused = true;
 
-	return scene;
+		p.wait(0.25, () => {
+			p.selectorPaused = false;
+			k.tween(kaboy.pos.y, 600, 0.5, (p) => kaboy.pos.y = p, k.easings.easeOutQuint);
+		});
+	};
 };

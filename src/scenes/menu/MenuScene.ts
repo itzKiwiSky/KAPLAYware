@@ -1,34 +1,65 @@
-import { GameObj, PosComp, TimerComp, TimerController, Vec2 } from "kaplay";
+import { Comp, GameObj, KEventController, PosComp, TimerComp, Vec2 } from "kaplay";
 import k from "../../engine";
-import { mainMenu } from "./mainMenu";
-import { storyMenu } from "./storyMenu";
+import { addMainMenu } from "./mainMenu";
+import { addStoryMenu } from "./storyMenu";
+import { linearSelector, LinearSelectorComp } from "./linearSelector";
 
-// TODO: this is already looking kinda big and there's LOOOOTS of stuff that will happen here
-// figure out a way to separate it in different files and such, yeah
+interface ViewComp extends Comp {
+	viewName: string;
+	resetState(): void;
+}
 
-export type MenuDefinition = (scene: GameObj<PosComp | TimerComp>, tween: TimerController) => void;
+type ViewObj<T extends any> = GameObj<PosComp | ViewComp | TimerComp | LinearSelectorComp<T>>;
 
-const menus = {
-	"main": { pos: k.vec2(), sceneContent: mainMenu },
-	"story": { pos: k.vec2(800, -600), sceneContent: storyMenu },
-} as const satisfies Record<string, { pos: Vec2; sceneContent: MenuDefinition; }>;
+const views: ViewObj<unknown>[] = [];
+const viewPositions: Vec2[] = [];
 
-// make it so moveToMenu creates an object in the correctp osition and its passed to the function
+export function createView<T extends any>(pos: Vec2, name: string): ViewObj<T> {
+	function view(pos: Vec2, name: string): ViewComp {
+		return {
+			resetState: null,
+			viewName: name,
+			add() {
+				viewPositions.push(pos);
+				views.push(this);
+			},
+		};
+	}
 
-export function moveToMenu(menuKey: keyof typeof menus) {
-	const oldScene = k.get("menu_scene")[0];
-	const newScene = k.add([k.pos(menus[menuKey].pos), k.timer(), "menu_scene", menuKey]);
-	const tween = k.tween(k.getCamPos(), newScene.pos.add(k.center()), 0.5, (p) => k.setCamPos(p), k.easings.easeOutQuint);
-	menus[menuKey].sceneContent(newScene, tween);
-	tween.onEnd(() => oldScene?.destroy());
+	const parent = k.add([
+		view(pos, name),
+		linearSelector<T>(),
+		k.pos(pos),
+		k.timer(),
+	]);
 
-	return tween;
+	return parent;
+}
+
+let curCamPos = k.vec2(0);
+let curView = 0;
+
+export function goView(viewName: string) {
+	views[curView].paused = true;
+	curView = views.indexOf(views.find((view) => view.viewName == viewName));
+	views[curView].paused = false;
+	if (views[curView].resetState) views[curView].resetState();
+	curCamPos = viewPositions[curView].clone();
 }
 
 k.scene("menu", () => {
 	k.setBackground(k.BLACK);
 	k.add([k.rect(k.width(), k.height()), k.fixed(), k.color(k.mulfok.DARK_VIOLET)]);
 
-	moveToMenu("main");
-	k.setCamScale(0.5);
+	while (views.length) views.pop();
+	while (viewPositions.length) viewPositions.pop();
+	curCamPos = k.vec2(0);
+	curView = 0;
+
+	k.onUpdate(() => {
+		k.setCamPos(k.lerp(k.getCamPos(), k.center().add(curCamPos), 0.5));
+	});
+
+	addMainMenu();
+	addStoryMenu();
 });
