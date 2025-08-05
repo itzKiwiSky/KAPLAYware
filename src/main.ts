@@ -16,7 +16,7 @@ k.loadRoot("./");
 const INITIAL_SCENE = () => goGame();
 
 k.onLoad(() => {
-	k.go("title");
-	// if (k.isFocused()) INITIAL_SCENE();
-	// else k.go("focus", INITIAL_SCENE);
+	// k.go("title");
+	if (k.isFocused()) INITIAL_SCENE();
+	else k.go("focus", INITIAL_SCENE);
 });

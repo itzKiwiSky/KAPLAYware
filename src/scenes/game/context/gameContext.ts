@@ -45,9 +45,9 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 			return {
 				...k.area(opt),
 				onClick(f, btn) {
-					return wareApp.inputs.add(k.onMousePress("left", () => {
-						if (this.isHovering()) f();
-					}));
+					return wareApp.inputs.obj.onMousePress("left", () => {
+						if (this.isHovering()) f()
+					})
 				},
 			};
 		},
@@ -125,10 +125,10 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 			// should ctx.width() return width of gamebox?
 			// what about mousepos?
 			// stuff like that
-			return wareApp.inputs.add(k.onMouseMove(action));
+			return wareApp.inputs.obj.onMouseMove(action);
 		},
 		onButtonPress(btn, action) {
-			return wareApp.inputs.add(k.onButtonPress(btn, action));
+			return wareApp.inputs.obj.onButtonPress(btn, action);
 		},
 		// timer controllers
 		tween(from, to, duration, setValue, easeFunc) {
@@ -209,15 +209,15 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 		},
 
 		onButtonDown: overload2((action: (btn: any) => void) => {
-			return wareApp.inputs.add(k.onButtonDown(action));
+			return wareApp.inputs.obj.onButtonDown(action);
 		}, (btn: any, action: (btn: any) => void) => {
-			return wareApp.inputs.add(k.onButtonDown(btn, action));
+			return wareApp.inputs.obj.onButtonDown(btn, action);
 		}),
 
 		onButtonRelease: overload2((action: (btn: any) => void) => {
-			return wareApp.inputs.add(k.onButtonRelease(action));
+			return wareApp.inputs.obj.onButtonRelease(action);
 		}, (btn: any, action: (btn: any) => void) => {
-			return wareApp.inputs.add(k.onButtonRelease(btn, action));
+			return wareApp.inputs.obj.onButtonRelease(btn, action);
 		}),
 
 		onUpdate: overload2((action: () => void): KEventController => {
@@ -273,34 +273,41 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 			return wareApp.draws.add(ev);
 		}),
 		onClick: overload2((action: () => void) => {
-			const ev = k.onMousePress(action);
-			return wareApp.inputs.add(ev);
+			return wareApp.inputs.obj.onMousePress(action)
 		}, (tag: Tag, action: (obj: GameObj) => void) => {
-			const events: KEventController[] = [];
-			let paused: boolean = false;
+			// TODO: THIS IS COMPLETELY BROKEN
+			// IT'S LAJBEL'S REPONSABILITY TO FIX IT
+			// I (amyspark-ng) WILL NOT BE FORCED TO WRITE THIS IN ANOTHER WAY
+			// I (amyspark-ng) WILL NOT RE-DO THIS
+			// I (amyspark-ng) WILL STAY SILENT IN THE NEAR FUTURE ABOUT THIS SUBJECT
 
-			const listener = forAllCurrentAndFuture(wareApp.sceneObj, tag, (obj) => {
-				if (!obj.area) {
-					throw new Error(
-						"onClick() requires the object to have area() component",
-					);
-				}
-				events.push(obj.onClick(() => action(obj)));
-			});
-			const ev: KEventController = {
-				get paused() {
-					return paused;
-				},
-				set paused(val: boolean) {
-					paused = val;
-					listener.paused = paused;
-				},
-				cancel() {
-					events.forEach((ev) => ev.cancel());
-					listener.cancel();
-				},
-			};
-			return wareApp.inputs.add(ev);
+			// const events: KEventController[] = [];
+			// let paused: boolean = false;
+
+			// const listener = forAllCurrentAndFuture(wareApp.sceneObj, tag, (obj) => {
+			// 	if (!obj.area) {
+			// 		throw new Error(
+			// 			"onClick() requires the object to have area() component",
+			// 		);
+			// 	}
+			// 	events.push(obj.onClick(() => action(obj)));
+			// });
+			// const ev: KEventController = {
+			// 	get paused() {
+			// 		return paused;
+			// 	},
+			// 	set paused(val: boolean) {
+			// 		paused = val;
+			// 		listener.paused = paused;
+			// 	},
+			// 	cancel() {
+			// 		events.forEach((ev) => ev.cancel());
+			// 		listener.cancel();
+			// 	},
+			// };
+			// return wareApp.inputs.add(ev);
+			return k.onClick(tag, action)
+
 		}),
 	};
 

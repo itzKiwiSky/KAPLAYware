@@ -1,4 +1,4 @@
-import { AudioPlay, Color, KEventController, TimerController, TweenController, Vec2 } from "kaplay";
+import { AudioPlay, Color, GameObj, KEventController, TimerController, TweenController, Vec2 } from "kaplay";
 import k from "../../engine";
 
 /** Creates a cute little object that contains a buncha game objects that can hold, a ware instance
@@ -117,7 +117,7 @@ export type WareApp = {
 	inputs: {
 		paused: boolean;
 		readonly length: number;
-		add(ev: KEventController): KEventController;
+		readonly obj: GameObj;
 		cancel(): void;
 	};
 
@@ -166,7 +166,7 @@ export function createWareApp(rootParent = k.getTreeRoot()): WareApp {
 	let soundsPaused = false;
 	let disabledSounds: AudioPlay[] = []; // sounds that were disabled by sounds.paused
 
-	let inputs: KEventController[] = [];
+	let inputObj = k.add([])
 	let inputsPaused = false;
 
 	const app = {
@@ -232,23 +232,22 @@ export function createWareApp(rootParent = k.getTreeRoot()): WareApp {
 
 		inputs: {
 			get length() {
-				return inputs.length;
+				return inputObj._inputEvents.length;
 			},
 			set paused(val: boolean) {
-				inputsPaused = val;
-				inputs.forEach((i) => i.paused = val);
+				inputObj.paused = val;
 			},
 			get paused() {
-				return inputsPaused;
+				return inputObj.paused;
 			},
-			add(ev) {
-				inputs.push(ev);
-				ev.paused = this.paused;
-				return ev;
+			get obj() {
+				return inputObj;
 			},
 			cancel() {
-				inputs.forEach((i) => i.cancel());
-				inputs = [];
+				k.debug.log(inputObj._inputEvents)
+				inputObj._inputEvents.forEach((ev) => {
+					ev.cancel()
+				})
 			},
 		},
 
