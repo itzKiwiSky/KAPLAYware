@@ -46,8 +46,8 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 				...k.area(opt),
 				onClick(f, btn) {
 					return wareApp.inputs.obj.onMousePress("left", () => {
-						if (this.isHovering()) f()
-					})
+						if (this.isHovering()) f();
+					});
 				},
 			};
 		},
@@ -189,18 +189,26 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 			return k.timer(maxLoopsPerFrame);
 		},
 
+		mousePos() {
+			if (k.kaplaywared.ignoreWareInputEvents) return k.center();
+			return k.mousePos();
+		},
+
 		isButtonPressed(btn) {
 			if (wareApp.inputs.paused) return false;
+			if (k.kaplaywared.ignoreWareInputEvents) return false;
 			else return k.isButtonPressed(btn);
 		},
 
 		isButtonDown(btn) {
 			if (wareApp.inputs.paused) return false;
+			if (k.kaplaywared.ignoreWareInputEvents) return false;
 			else return k.isButtonDown(btn);
 		},
 
 		isButtonReleased(btn) {
 			if (wareApp.inputs.paused) return false;
+			if (k.kaplaywared.ignoreWareInputEvents) return false;
 			else return k.isButtonReleased(btn);
 		},
 
@@ -273,7 +281,7 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 			return wareApp.draws.add(ev);
 		}),
 		onClick: overload2((action: () => void) => {
-			return wareApp.inputs.obj.onMousePress(action)
+			return wareApp.inputs.obj.onMousePress(action);
 		}, (tag: Tag, action: (obj: GameObj) => void) => {
 			// TODO: THIS IS COMPLETELY BROKEN
 			// IT'S LAJBEL'S REPONSABILITY TO FIX IT
@@ -306,8 +314,7 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 			// 	},
 			// };
 			// return wareApp.inputs.add(ev);
-			return k.onClick(tag, action)
-
+			return k.onClick(tag, action);
 		}),
 	};
 

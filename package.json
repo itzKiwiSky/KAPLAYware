@@ -13,7 +13,7 @@
 	"dependencies": {
 		"@kaplayjs/crew": "2.0.0-beta.6",
 		"@neutralinojs/lib": "^6.2.0",
-		"kaplay": "github:kaplayjs/kaplay"
+		"kaplay": "github:lajbel/kaplay-kaplaywared#kaplaywared"
 	},
 	"devDependencies": {
 		"@neutralinojs/neu": "^11.5.0",

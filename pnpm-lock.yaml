@@ -15,8 +15,8 @@ importers:
         specifier: ^6.2.0
         version: 6.2.0
       kaplay:
-        specifier: github:kaplayjs/kaplay
-        version: https://codeload.github.com/kaplayjs/kaplay/tar.gz/732a75d435b632d8d13a0afd757bcac08e7c9106
+        specifier: github:lajbel/kaplay-kaplaywared#kaplaywared
+        version: https://codeload.github.com/lajbel/kaplay-kaplaywared/tar.gz/53a2d5451a2a5db9a73b8ca5c857d09c743402a3
     devDependencies:
       '@neutralinojs/neu':
         specifier: ^11.5.0
@@ -796,8 +796,8 @@ packages:
   jsonfile@6.1.0:
     resolution: {integrity: sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==}
 
-  kaplay@https://codeload.github.com/kaplayjs/kaplay/tar.gz/732a75d435b632d8d13a0afd757bcac08e7c9106:
-    resolution: {tarball: https://codeload.github.com/kaplayjs/kaplay/tar.gz/732a75d435b632d8d13a0afd757bcac08e7c9106}
+  kaplay@https://codeload.github.com/lajbel/kaplay-kaplaywared/tar.gz/53a2d5451a2a5db9a73b8ca5c857d09c743402a3:
+    resolution: {tarball: https://codeload.github.com/lajbel/kaplay-kaplaywared/tar.gz/53a2d5451a2a5db9a73b8ca5c857d09c743402a3}
     version: 4000.0.0-alpha.20
     engines: {node: '>=20.0.0'}
 
@@ -1669,7 +1669,7 @@ snapshots:
     optionalDependencies:
       graceful-fs: 4.2.11
 
-  kaplay@https://codeload.github.com/kaplayjs/kaplay/tar.gz/732a75d435b632d8d13a0afd757bcac08e7c9106: {}
+  kaplay@https://codeload.github.com/lajbel/kaplay-kaplaywared/tar.gz/53a2d5451a2a5db9a73b8ca5c857d09c743402a3: {}
 
   make-dir@3.1.0:
     dependencies:

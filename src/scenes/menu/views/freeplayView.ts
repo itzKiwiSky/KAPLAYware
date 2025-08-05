@@ -29,7 +29,7 @@ function addCartridge(game: Microgame, parent: GameObj) {
 			text: game.name,
 			anchor: "center",
 			size: 20,
-			pos: k.vec2(0, 20)
+			pos: k.vec2(0, 20),
 		});
 	});
 
@@ -51,10 +51,10 @@ export const addFreeplayView = () => {
 	]);
 
 	// add small engine
+	k.kaplaywared.ignoreWareInputEvents = true;
 	const app = createWareApp(kaboy);
-	app.boxObj.pos = k.vec2(0, -116)
-	app.boxObj.scaleToSize(k.vec2(246, 148))
-	app.paused = true;
+	app.boxObj.pos = k.vec2(0, -116);
+	app.boxObj.scaleToSize(k.vec2(246, 148));
 	const ware = createWareEngine({ availableGames: window.microgames });
 
 	// side buttons
@@ -66,7 +66,7 @@ export const addFreeplayView = () => {
 		k.pos(54, 196),
 		"button",
 		{
-			press: () => { },
+			press: () => {},
 			action: () => k.pressButton("left"),
 		},
 	]);
@@ -79,7 +79,7 @@ export const addFreeplayView = () => {
 		k.area(),
 		"button",
 		{
-			press: () => { },
+			press: () => {},
 			action: () => k.pressButton("right"),
 		},
 	]);
@@ -92,7 +92,7 @@ export const addFreeplayView = () => {
 		k.scale(),
 		"button",
 		{
-			press: () => { },
+			press: () => {},
 			action: () => k.pressButton("return"),
 		},
 	]);
@@ -167,7 +167,7 @@ export const addFreeplayView = () => {
 		ware.onTimeOutEvents.clear();
 		k.setGravity(0);
 		const ctx = createGameCtx(newSelect.game, app, ware);
-		app.boxObj.color = getGameColor(newSelect.game, ctx)
+		app.boxObj.color = getGameColor(newSelect.game, ctx);
 		newSelect.game.start(ctx);
 	});
 

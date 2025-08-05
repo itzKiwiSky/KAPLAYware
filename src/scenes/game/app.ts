@@ -16,10 +16,10 @@ export function createGameContainer(rootParent = k.getTreeRoot()) {
 		k.anchor("center"),
 		{
 			scaleToSize(size: Vec2) {
-				this.scale.x = size.x / k.width()
-				this.scale.y = size.y / k.height()
-			}
-		}
+				this.scale.x = size.x / k.width();
+				this.scale.y = size.y / k.height();
+			},
+		},
 	]);
 
 	const maskObj = gameBox.add([
@@ -47,6 +47,7 @@ export function createGameContainer(rootParent = k.getTreeRoot()) {
 		k.pos(-cameraObject.width / 2, -cameraObject.height / 2),
 		k.timer(),
 	]);
+	k.kaplaywared.wareSceneObj = sceneObject;
 
 	cameraObject.onUpdate(() => {
 		cameraObject.shake = k.lerp(cameraObject.shake, 0, 5 * k.dt());
@@ -166,7 +167,8 @@ export function createWareApp(rootParent = k.getTreeRoot()): WareApp {
 	let soundsPaused = false;
 	let disabledSounds: AudioPlay[] = []; // sounds that were disabled by sounds.paused
 
-	let inputObj = k.add([])
+	let inputObj = k.add([]);
+	k.kaplaywared.wareInputObj = inputObj;
 	let inputsPaused = false;
 
 	const app = {
@@ -244,10 +246,9 @@ export function createWareApp(rootParent = k.getTreeRoot()): WareApp {
 				return inputObj;
 			},
 			cancel() {
-				k.debug.log(inputObj._inputEvents)
 				inputObj._inputEvents.forEach((ev) => {
-					ev.cancel()
-				})
+					ev.cancel();
+				});
 			},
 		},
 

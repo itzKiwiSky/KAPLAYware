@@ -13,10 +13,12 @@ k.setVolume(0.1);
 k.setCursor("none");
 k.loadRoot("./");
 
-const INITIAL_SCENE = () => goGame();
+const INITIAL_SCENE = () => {
+	// goGame()
+	k.go("title");
+};
 
 k.onLoad(() => {
-	// k.go("title");
 	if (k.isFocused()) INITIAL_SCENE();
 	else k.go("focus", INITIAL_SCENE);
 });

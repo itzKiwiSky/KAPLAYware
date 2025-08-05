@@ -36,7 +36,10 @@ cursor.onUpdate(() => {
 	if (lastInput == "mouse") cursor.opacity = k.lerp(cursor.opacity, 1, 0.25);
 	else cursor.opacity = k.lerp(cursor.opacity, 0, 0.25);
 
-	const hovered = k.get("area", { recursive: true }).filter((obj) => obj.isHovering() && canPoint && !obj.is("ignorepoint")).length > 0;
+	const hovered = k.get("area", { recursive: true }).filter((obj) => {
+		obj.isHovering() && canPoint && !obj.is("ignorepoint") && (!k.kaplaywared.ignoreWareInputEvents || !obj._isWare);
+	}).length > 0;
+
 	if (k.isMouseDown("left")) cursor.sprite = "cursor-knock";
 	if (hovered && !k.isMouseDown("left")) cursor.sprite = "cursor-point";
 	else if (!hovered && !k.isMouseDown("left")) cursor.sprite = "cursor";

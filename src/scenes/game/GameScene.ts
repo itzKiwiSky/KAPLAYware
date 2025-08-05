@@ -10,13 +10,13 @@ import { gameHidesMouse, getGameColor, getGameDuration, getGameID, getGameInput 
 import { createWareEngine, KAPLAYwareOpts } from "./ware";
 
 k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microgames }) => {
+	k.kaplaywared.ignoreWareInputEvents = false;
 	const app = createWareApp();
 	const transition = createTransition(chillTransition, app);
 	const ware = createWareEngine({ availableGames: kaplaywareOpt.availableGames ?? window.microgames });
-	const pauseScreen = addPauseScreen()
+	const pauseScreen = addPauseScreen();
 	let gamePaused = false;
 	let currentBomb: WareBomb = null;
-
 
 	k.onUpdate(() => {
 		cursor.canPoint = !app.sceneObj.paused;
@@ -29,7 +29,7 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 		if (k.isButtonPressed("return")) {
 			gamePaused = !gamePaused;
 			app.paused = gamePaused;
-			pauseScreen.isGamePaused = gamePaused
+			pauseScreen.isGamePaused = gamePaused;
 			if (currentBomb) currentBomb.paused = gamePaused;
 			transition.ctx.paused = gamePaused;
 			app.draws.paused = false;
