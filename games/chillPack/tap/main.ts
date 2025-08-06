@@ -28,10 +28,10 @@ const tapGame: Microgame = {
 		const numbers = ctx.difficulty == 1
 			? [0, 1, 2, 3, 4]
 			: ctx.difficulty == 2
-				? [0, 1, 2, 3, 4, 5, 6]
-				: ctx.difficulty == 3
-					? [0, 1, 2, 3, 4, 5, 6, 7, 8]
-					: [];
+			? [0, 1, 2, 3, 4, 5, 6]
+			: ctx.difficulty == 3
+			? [0, 1, 2, 3, 4, 5, 6, 7, 8]
+			: [];
 
 		const numbersHit: number[] = [0];
 		let lost = false;
@@ -62,8 +62,8 @@ const tapGame: Microgame = {
 		}
 
 		ctx.onUpdate(() => {
-			hand.pos = ctx.isButtonDown("click") ? ctx.mousePos().sub(0, 30) : ctx.mousePos();
-			hand.frame = ctx.isButtonDown("click") ? 1 : 0;
+			hand.pos = ctx.isButtonDown("action") ? ctx.mousePos().sub(0, 30) : ctx.mousePos();
+			hand.frame = ctx.isButtonDown("action") ? 1 : 0;
 		});
 
 		const grid = generateGrid();

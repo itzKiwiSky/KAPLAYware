@@ -1,7 +1,6 @@
 import { ButtonBindingDevice, Comp, GameObj, KEventController } from "kaplay";
 import { k } from "../../engine";
-
-type TButton = "up" | "down" | "left" | "right" | "action" | "click";
+import { TButton } from "../../main";
 
 export interface LinearSelectorComp<T extends any> extends Comp {
 	selectorPaused: boolean;

@@ -92,7 +92,7 @@ const killGame: Microgame = {
 					]);
 
 					bullet.onCollide("boss", () => {
-						boss.hp -= 25
+						boss.hp -= 25;
 						bullet.destroy();
 					});
 
@@ -192,7 +192,7 @@ const killGame: Microgame = {
 			spaceship.move(lerpMovement);
 
 			spaceship.angle = getAngleToMouse(spaceship.pos);
-			if (ctx.isButtonPressed("click")) {
+			if (ctx.isButtonPressed("action")) {
 				spaceship.shoot();
 				aim.scale = ctx.vec2(1.2);
 			}

@@ -157,7 +157,7 @@ const clickGame: Microgame = {
 		]);
 
 		hexagon.onUpdate(() => {
-			const hexagonClicked = hexagon.isHovering() && ctx.isButtonDown("click");
+			const hexagonClicked = hexagon.isHovering() && ctx.isButtonDown("action");
 			hexagon.scale = ctx.lerp(hexagon.scale, hexagonClicked ? ctx.vec2(0.95) : ctx.vec2(1), 0.25);
 			hexagon.angle = ctx.lerp(hexagon.angle, hexagon.angle + 0.1 + (score / 8 * spinspeed), 0.5);
 			scoreText.angle = ctx.wave(-15, 15, ctx.time() * ctx.speed);
@@ -186,7 +186,7 @@ const clickGame: Microgame = {
 			plusScoreText.onUpdate(() => plusScoreText.move(0, ctx.rand(-80, -90) * ctx.speed));
 		});
 
-		ctx.onButtonRelease("click", () => {
+		ctx.onButtonRelease("action", () => {
 			if (!hexagon.isHovering()) return;
 			ctx.play("clickpress", { detune: ctx.rand(-400, -200) });
 		});

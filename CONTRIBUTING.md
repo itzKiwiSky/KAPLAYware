@@ -258,7 +258,7 @@ ctx.onButtonPress("action") // DO, the appropiate function to use
 Also DON'T USE `onMousePress` FUNCTIONS EITHER, these are not accounted for and will crash KAPLAYware's engine
 ```ts
 bean.onMousePress("left") // DON'T, will break our game
-ctx.onButtonPress("click") // DO, the proper function to use 
+ctx.onButtonPress("action") // DO, the proper function to use 
 ```
 
 This means that you can't use different mouse buttons in your microgame, don't get smart with us, it's only left click 😔.

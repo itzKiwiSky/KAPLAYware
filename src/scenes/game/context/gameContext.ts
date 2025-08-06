@@ -86,6 +86,9 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 				add() {
 					this.parent = wareApp.maskObj;
 				},
+				serialize() {
+					return { fixed: fixed };
+				},
 				set fixed(val: boolean) {
 					fixed = val;
 					if (fixed == true) this.parent = wareApp.maskObj;

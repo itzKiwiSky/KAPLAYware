@@ -252,7 +252,7 @@ const sortGame: Microgame = {
 						draggedItem.pos.y += acceleration;
 					}
 
-					if (ctx.isButtonReleased("click")) {
+					if (ctx.isButtonReleased("action")) {
 						draggedItem.drop();
 					}
 				});

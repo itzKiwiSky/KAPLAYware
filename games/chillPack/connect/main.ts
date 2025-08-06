@@ -108,7 +108,7 @@ const connectGame: Microgame = {
 				// this only runs if dragging
 				if (!plugObj.dragging) return;
 				plugObj.pos = k.vec2(k.mousePos().x, k.mousePos().y - plugObj.height / 2);
-				if (k.isButtonReleased("click")) plugObj.dragging = false;
+				if (k.isButtonReleased("action")) plugObj.dragging = false;
 			});
 
 			socketObj.onUpdate(() => {

@@ -156,7 +156,7 @@ const aimGame: Microgame = {
 			}
 		});
 
-		ctx.onButtonPress("click", () => {
+		ctx.onButtonPress("action", () => {
 			if (ctx.winState == true) return;
 			for (const bln of ctx.get("balloon").reverse()) {
 				if (bln.isHovering()) {

@@ -126,7 +126,7 @@ export const addMainView = () => {
 
 			if (button.isHovering() && !p.selectorPaused) {
 				if (!isSelected) p.setSelected(button);
-				if (k.isButtonPressed("click")) p.triggerSelect();
+				if (k.isButtonPressed("action")) p.triggerSelect();
 			}
 
 			if (isSelected) {

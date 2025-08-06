@@ -1,4 +1,4 @@
-import { GameObj } from "kaplay";
+import { ButtonBindingDevice, GameObj, SerializedVec2, Vec2 } from "kaplay";
 import k from "../../../engine";
 import goGame from "../../game/GameScene";
 import { createView, goView } from "../MenuScene";
@@ -7,6 +7,7 @@ import { createWareApp } from "../../game/app";
 import { createWareEngine } from "../../game/ware";
 import { createGameCtx } from "../../game/context/gameContext";
 import { getGameColor } from "../../game/utils";
+import { TButton } from "../../../main";
 
 function addCartridge(game: Microgame, parent: GameObj) {
 	const obj = parent.add([
@@ -39,6 +40,52 @@ function addCartridge(game: Microgame, parent: GameObj) {
 type CartridgeObject = ReturnType<typeof addCartridge>;
 
 const FREEPLAY_POS = k.vec2(-800, 0);
+
+// dani esto no se va a quedar aqui luego miramos donde lo guardamos nomas lo pongo aqui por ahora
+
+/** Is every singular input that is recorded */
+type RecordedInput = {
+	// REQUIRED
+	frame: number; // frame it happened
+	type: "press" | "release" | "mouseMove";
+	button?: TButton;
+	position?: SerializedVec2; // Made with Vec2.serialize(), it is just for mouseMove type
+
+	// NON REQUIRED, BUT COOL TO HAVE
+	device: ButtonBindingDevice;
+};
+
+/** Is the final JSON that gets downloaded when you finish a minigame in recording mode (?) */
+type InputRecording = Record<"inputs", RecordedInput[]>;
+
+/*
+const data: InputRecording = { "inputs": [] };
+let frame = 0;
+k.onUpdate(() => {
+	frame++;
+
+	if (!k.mouseDeltaPos().isZero()) {
+		data.inputs.push({
+			frame: frame,
+			device: "mouse",
+			type: "mouseMove",
+			position: k.mousePos(),
+		});
+	}
+
+	["up", "down", "left", "right", "action"].forEach((btn: TButton) => {
+		// now we'd have to do this for every press,
+		if (k.isButtonPressed(btn)) {
+			data.inputs.push({
+				frame: frame,
+				button: btn,
+				device: k.getLastInputDeviceType(),
+				type: "press",
+			});
+		}
+	});
+});
+*/
 
 export const addFreeplayView = () => {
 	const p = createView<CartridgeObject>(FREEPLAY_POS, "freeplay");
@@ -167,7 +214,7 @@ export const addFreeplayView = () => {
 		ware.onTimeOutEvents.clear();
 		k.setGravity(0);
 		const ctx = createGameCtx(newSelect.game, app, ware);
-		app.boxObj.color = getGameColor(newSelect.game, ctx);
+		ctx.setRGB(getGameColor(newSelect.game, ctx));
 		newSelect.game.start(ctx);
 	});
 

@@ -19,9 +19,8 @@ export const k = kaplay({
 		"left": { "keyboard": ["left", "a"] },
 		"down": { "keyboard": ["down", "s"] },
 		"right": { "keyboard": ["right", "d"] },
-		"action": { "keyboard": "space" },
+		"action": { "keyboard": "space", mouse: "left" },
 		"return": { "keyboard": ["escape", "backspace"] },
-		"click": { "mouse": "left" },
 	},
 	plugins: [
 		dragCompPlugin,
@@ -31,6 +30,7 @@ export const k = kaplay({
 		mulfokPalettePlug,
 	],
 });
+
 console.log("KAPLAY RAN");
 
 export default k;
