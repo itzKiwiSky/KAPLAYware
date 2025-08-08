@@ -60,5 +60,6 @@ export default defineConfig(async ({ mode }) => ({
 		DEV_MICROGAME: process.env.DEV_MICROGAME,
 		DEV_SPEED: process.env.DEV_SPEED,
 		DEV_DIFFICULTY: process.env.DEV_DIFFICULTY,
+		DEV_RECORDINPUT: process.env.DEV_RECORDINPUT,
 	},
 }));

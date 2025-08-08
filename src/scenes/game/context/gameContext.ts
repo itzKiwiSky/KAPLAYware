@@ -11,10 +11,10 @@ import { WareEngine } from "../ware";
 // TODO: This context folder is pissing me off... I am the original       amyspark-ng
 
 /** Create the basic context, is a modified kaplay context
- * @param game Needs game for things like sprite() and play()
- * @param wareApp Needs wareApp to access hierarchy and props
+ * @param ware Needs ware to acess current game to get assets and such
+ * @param app Needs wareApp to access hierarchy and props
  */
-export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
+export function createGameCtx(ware: WareEngine, wareApp: WareApp): MicrogameCtx {
 	const pickedCtx = pickKeysInObj(k, [...gameAPIs]);
 
 	const startCtx: StartCtx = {
@@ -22,7 +22,7 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 		add: (comps) => wareApp.sceneObj.add(comps),
 		sprite(spr, opt) {
 			const hasAt = (t: any) => typeof t == "string" && t.startsWith("@");
-			const getSpriteName = (t: any) => hasAt(t) ? t : `${getGameID(game)}-${t}`;
+			const getSpriteName = (t: any) => hasAt(t) ? t : `${getGameID(ware.microgame)}-${t}`;
 			const spriteComp = k.sprite(getSpriteName(spr), opt);
 
 			return mergeWithRef(spriteComp, {
@@ -31,14 +31,14 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 				},
 
 				get sprite() {
-					if (spriteComp.sprite.startsWith(getGameID(game))) return spriteComp.sprite.replace(`${getGameID(game)}-`, "");
+					if (spriteComp.sprite.startsWith(getGameID(ware.microgame))) return spriteComp.sprite.replace(`${getGameID(ware.microgame)}-`, "");
 					else return spriteComp.sprite;
 				},
 			});
 		},
 		play(src, options) {
 			// if sound name is string, check for @, else just send it
-			src = typeof src == "string" ? (src.startsWith("@") ? src : `${getGameID(game)}-${src}`) : src;
+			src = typeof src == "string" ? (src.startsWith("@") ? src : `${getGameID(ware.microgame)}-${src}`) : src;
 			return wareApp.sounds.play(src, options);
 		},
 		area(opt) {
@@ -60,17 +60,17 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 			return startCtx["play"](k._k.game.defaultAssets.burp, options);
 		},
 		drawSprite(opt) {
-			if (!isDefaultAsset(opt.sprite)) opt.sprite = `${getGameID(game)}-${opt.sprite}`;
+			if (!isDefaultAsset(opt.sprite)) opt.sprite = `${getGameID(ware.microgame)}-${opt.sprite}`;
 			return k.drawSprite(opt);
 		},
 		getSprite(name) {
-			return k.getSprite(`${getGameID(game)}-${name}`);
+			return k.getSprite(`${getGameID(ware.microgame)}-${name}`);
 		},
 		getSound(name) {
-			return k.getSound(`${getGameID(game)}-${name}`);
+			return k.getSound(`${getGameID(ware.microgame)}-${name}`);
 		},
 		shader(id, uniform) {
-			return k.shader(`${getGameID(game)}-${id}`, uniform);
+			return k.shader(`${getGameID(ware.microgame)}-${id}`, uniform);
 		},
 		get(tag, opts) {
 			return wareApp.sceneObj.get(tag, opts);
@@ -321,15 +321,7 @@ export function createStartCtx(game: Microgame, wareApp: WareApp): StartCtx {
 		}),
 	};
 
-	return startCtx;
-}
-
-/** Create the microgame API, microgame exclusive functions
- * @param wareApp Needs wareApp to access the object hierarchy
- * @param wareEngine Is optional for "preview" mode, if not wareEngine will skip win() lose() and finish() calls
- */
-export function createMicrogameAPI(wareApp: WareApp, wareEngine?: WareEngine): MicrogameAPI {
-	return {
+	const microgameAPI: MicrogameAPI = {
 		getCamAngle: () => wareApp.cameraObj.angle,
 		setCamAngle: (val: number) => wareApp.cameraObj.angle = val,
 		getCamPos: () => wareApp.cameraObj.pos,
@@ -339,10 +331,10 @@ export function createMicrogameAPI(wareApp: WareApp, wareEngine?: WareEngine): M
 		shakeCam: (val: number = 12) => wareApp.cameraObj.shake += val,
 		getRGB: () => wareApp.backgroundColor,
 		setRGB: (val) => wareApp.backgroundColor = val,
-		onTimeout: (action) => wareEngine.onTimeOutEvents.add(action),
-		win: () => wareEngine.winGame(),
-		lose: () => wareEngine.loseGame(),
-		finish: () => wareEngine.finishGame(),
+		onTimeout: (action) => ware.onTimeOutEvents.add(action),
+		win: () => ware.winGame(),
+		lose: () => ware.loseGame(),
+		finish: () => ware.finishGame(),
 		flashCam: (flashColor: Color = k.WHITE, timeOut: number = 1, opacity: number) => {
 			const r = wareApp.boxObj.add([
 				k.pos(k.center()),
@@ -362,36 +354,27 @@ export function createMicrogameAPI(wareApp: WareApp, wareEngine?: WareEngine): M
 			return confetti;
 		},
 		get winState() {
-			return wareEngine.winState ?? undefined;
+			return ware.winState ?? undefined;
 		},
 		get difficulty() {
-			return wareEngine.difficulty ?? 1;
+			return ware.difficulty ?? 1;
 		},
 		get lives() {
-			return wareEngine.lives ?? 3;
+			return ware.lives ?? 3;
 		},
 		get speed() {
-			return wareEngine.speed ?? 1;
+			return ware.speed ?? 1;
 		},
 		get timeLeft() {
-			return wareEngine.timeLeft ?? 20;
+			return ware.timeLeft ?? 20;
 		},
 		get duration() {
-			return wareEngine.curDuration ?? 20;
+			return ware.curDuration ?? 20;
 		},
 		get prompt() {
-			return wareEngine.curPrompt ?? "";
+			return ware.curPrompt ?? "";
 		},
 	};
-}
 
-/** Creates the final, merged and usable context for a microgame
- * @param game The microgame to create the context for
- * @param wareApp The ware-app
- * @param wareEngine The ware engine, is optional for "preview" mode
- */
-export function createGameCtx(game: Microgame, wareApp: WareApp, wareEngine: WareEngine): MicrogameCtx {
-	const startCtx = createStartCtx(game, wareApp);
-	const api = createMicrogameAPI(wareApp, wareEngine);
-	return mergeWithRef(startCtx, api);
+	return mergeWithRef(startCtx, microgameAPI);
 }

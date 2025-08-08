@@ -17,8 +17,8 @@ k.setCursor("none");
 k.loadRoot("./");
 
 const INITIAL_SCENE = () => {
-	// goGame()
-	k.go("title");
+	goGame();
+	// k.go("title");
 };
 
 k.onLoad(() => {

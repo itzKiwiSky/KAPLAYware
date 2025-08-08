@@ -2,8 +2,9 @@ import k from "../../engine";
 import cursor from "../../plugins/cursor";
 import { createWareApp } from "./app";
 import { createGameCtx } from "./context/gameContext";
+import { managePreviewMode } from "./inputRecorder";
 import { addBomb, WareBomb } from "./objects/bomb";
-import { addPauseScreen } from "./objects/pause";
+import { createPauseScreen } from "./objects/pause";
 import chillTransition from "./transitions/chill";
 import { createTransition } from "./transitions/makeTransition";
 import { gameHidesMouse, getGameColor, getGameDuration, getGameID, getGameInput } from "./utils";
@@ -14,7 +15,9 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 	const app = createWareApp();
 	const transition = createTransition(chillTransition, app);
 	const ware = createWareEngine({ availableGames: kaplaywareOpt.availableGames ?? window.microgames });
-	const pauseScreen = addPauseScreen();
+	ware.ctx = createGameCtx(ware, app);
+
+	const pauseScreen = createPauseScreen();
 	let gamePaused = false;
 	let currentBomb: WareBomb = null;
 
@@ -26,13 +29,13 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 		k.quickWatch("k.objects", k.debug.numObjects());
 
 		// toggle the pause on the app
-		if (k.isButtonPressed("return")) {
+		if (k.isButtonPressed("return") && !window.DEV_RECORDINPUT) {
 			gamePaused = !gamePaused;
 			app.paused = gamePaused;
-			pauseScreen.isGamePaused = gamePaused;
 			if (currentBomb) currentBomb.paused = gamePaused;
-			transition.ctx.paused = gamePaused;
 			app.draws.paused = false;
+			transition.ctx.paused = gamePaused;
+			pauseScreen.isGamePaused = gamePaused;
 		}
 	});
 
@@ -101,26 +104,25 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 		}
 
 		// chooses the next minigame
-		const microgame = ware.getRandomGame();
-		const ctx = createGameCtx(microgame, app, ware);
-		const duration = getGameDuration(microgame, ctx);
+		ware.microgame = ware.getRandomGame();
+		const duration = getGameDuration(ware.microgame, ware.ctx);
 		const stages = ware.getTransitionStages();
 
 		transition.onStageStart("prep", () => {
 			// prepares
-			ctx.setRGB(getGameColor(microgame, ctx));
-			ware.microgameHistory[ware.score - 1] = getGameID(microgame);
+			ware.ctx.setRGB(getGameColor(ware.microgame, ware.ctx));
+			ware.microgameHistory[ware.score - 1] = getGameID(ware.microgame);
 			ware.difficulty = ware.getDifficulty();
 			ware.timeLeft = duration != undefined ? duration / ware.speed : undefined;
 			ware.curDuration = duration;
-			if (typeof microgame.prompt == "string") ware.curPrompt = microgame.prompt;
-			else ware.curPrompt = microgame.name; // TODO: figure it out fine fine
-			gameHidesMouse(microgame) ? cursor.opacity = 0 : 1;
+			if (typeof ware.microgame.prompt == "string") ware.curPrompt = ware.microgame.prompt;
+			else ware.curPrompt = ware.microgame.name; // TODO: figure it out fine fine
+			gameHidesMouse(ware.microgame) ? cursor.opacity = 0 : 1;
 			currentBomb = null;
-			microgame.start(ctx); // IMPORTANT: starts the game
+			ware.microgame.start(ware.ctx); // IMPORTANT: starts the game
 
-			// behaviour that manages microgame
-			ctx.onUpdate(() => {
+			// behaviour that manages ware.microgame
+			ware.ctx.onUpdate(() => {
 				if (!ware.timeLeft) return;
 				if (ware.timePaused) return;
 				// bomb and such is not necessary bcause time is undefined
@@ -131,7 +133,7 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 				// When there's 4 beats left
 				const beatInterval = 60 / (140 * ware.speed);
 				if (ware.timeLeft <= beatInterval * 4 && currentBomb == null) {
-					if (ctx.winState == true) return;
+					if (ware.ctx.winState == true) return;
 					currentBomb = addBomb(app);
 					currentBomb.lit(140 * ware.speed);
 				}
@@ -156,7 +158,7 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 			app.sceneObj.paused = false;
 			transition.ctx.cancel(); // clear the transCtx
 			cursor.canPoint = true;
-			gameHidesMouse(microgame) ? cursor.opacity = 0 : 1;
+			gameHidesMouse(ware.microgame) ? cursor.opacity = 0 : 1;
 		});
 
 		// makes the transition happen and kickstarts the whole process
@@ -165,13 +167,28 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 			lives: ware.lives,
 			score: ware.score,
 			speed: ware.speed,
-			input: getGameInput(microgame),
-			prompt: microgame.prompt,
-			ctx: ctx,
+			input: getGameInput(ware.microgame),
+			prompt: ware.microgame.prompt,
+			ctx: ware.ctx,
 		});
 
 		ware.winState = undefined;
 		ware.onTimeOutEvents.add(() => app.inputs.paused = true); // pauses inputs when the time is over
+
+		if (window.DEV_RECORDINPUT) {
+			gamePaused = !gamePaused;
+			app.paused = gamePaused;
+			app.draws.paused = false;
+			transition.ctx.paused = gamePaused;
+			managePreviewMode(app, ware, () => {
+				gamePaused = !gamePaused;
+				app.paused = gamePaused;
+				if (currentBomb) currentBomb.paused = gamePaused;
+				app.draws.paused = false;
+				transition.ctx.paused = gamePaused;
+				pauseScreen.isGamePaused = gamePaused;
+			});
+		}
 	}
 
 	ware.winGame = () => {
@@ -187,13 +204,15 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 
 	ware.finishGame = () => {
 		// this runs when someone calls the game to be over (ctx.finish())
-		if (ware.winState == undefined) throw new Error("Finished microgame without setting the win condition!! Please call ctx.win() or ctx.lose() before calling ctx.finish()");
+		if (ware.winState == undefined) {
+			throw new Error("Finished ware.microgame without setting the win condition!! Please call ctx.win() or ctx.lose() before calling ctx.finish()");
+		}
+
 		runNextGame();
 	};
 
-	runNextGame();
-
 	// start the game around here
+	runNextGame();
 });
 
 const goGame = (opts?: KAPLAYwareOpts) => k.go("game", opts);

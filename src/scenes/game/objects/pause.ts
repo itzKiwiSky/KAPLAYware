@@ -2,10 +2,10 @@ import { Color, GameObj } from "kaplay";
 import k from "../../../engine";
 import { linearSelector } from "../../menu/linearSelector";
 
-export const addPauseScreen = () => {
+export const createPauseScreen = () => {
 	// let canPress = false;
-	let enabled = false
-	const p = k.add([linearSelector(), k.z(100)])
+	let enabled = false;
+	const p = k.add([linearSelector(), k.z(100)]);
 	// const resumeBtn = addBtn(p, k.BLUE, "Resume")
 	// resumeBtn.pos = k.vec2(188, 380)
 	// const exitBtn = addBtn(p, k.RED, "Exit")
@@ -21,7 +21,7 @@ export const addPauseScreen = () => {
 			color: k.BLACK,
 			width: k.width(),
 			height: k.height(),
-			opacity: 0.8
+			opacity: 0.8,
 		});
 
 		k.drawText({
@@ -34,9 +34,9 @@ export const addPauseScreen = () => {
 					pos: k.vec2(0, k.wave(-4, 4, k.time() * 4 + idx * 0.5)),
 					// scale: k.wave(1, 1.2, k.time() * 3 + idx),
 					// angle: k.wave(-9, 9, k.time() * 3 + idx),
-				}
-			}
-		})
+				};
+			},
+		});
 	});
 
 	// p.onChange((newSelect, oldSelect) => {
@@ -52,7 +52,7 @@ export const addPauseScreen = () => {
 
 	return {
 		set isGamePaused(val: boolean) {
-			enabled = val
-		}
-	}
-}
+			enabled = val;
+		},
+	};
+};

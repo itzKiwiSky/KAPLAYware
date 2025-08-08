@@ -4,7 +4,6 @@ import { MicrogameCtx, MicrogameInput } from "./context/types";
 import k from "../../engine";
 import { TransitionStage } from "./transitions/makeTransition";
 import { getGameByID, getGameColor } from "./utils";
-import { WareApp } from "./app";
 
 /** Certain options to instantiate kaplayware (ware-engine) */
 export type KAPLAYwareOpts = {
@@ -24,8 +23,11 @@ export type WareEngine = {
 	timePaused: boolean;
 	microgameHistory: string[];
 	onTimeOutEvents: KEvent;
+	/** Wheter you lost or won the last game, true or false means won or lost, undefined means still playing */
 	winState: boolean | undefined;
 	paused: boolean;
+	ctx: MicrogameCtx;
+	microgame: Microgame;
 	curDuration: number;
 	curPrompt: string;
 	/** Basically there's this microgame hat, when you pick a microgame, that microgame gets taken out of the hat, when there's no more microgames just add more again to the hat */
@@ -37,7 +39,6 @@ export type WareEngine = {
 	increaseSpeed(): number;
 	isGameOver(): boolean;
 	handleQuickWatch(): void;
-
 	winGame(): void;
 	loseGame(): void;
 	/** Is re-set after, runs when the game should be over (ctx.finish()) */
@@ -62,7 +63,9 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 		microgameHistory: [],
 		onTimeOutEvents: new k.KEvent(),
 		paused: false,
+		ctx: null,
 		speed: 1,
+		microgame: null,
 		timeLeft: 20,
 		timePaused: false,
 		winState: undefined,

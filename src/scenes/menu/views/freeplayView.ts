@@ -47,7 +47,7 @@ const FREEPLAY_POS = k.vec2(-800, 0);
 type RecordedInput = {
 	// REQUIRED
 	frame: number; // frame it happened
-	type: "press" | "release" | "mouseMove";
+	type: "press" | "down" | "release" | "mouseMove";
 	button?: TButton;
 	position?: SerializedVec2; // Made with Vec2.serialize(), it is just for mouseMove type
 
@@ -56,7 +56,7 @@ type RecordedInput = {
 };
 
 /** Is the final JSON that gets downloaded when you finish a minigame in recording mode (?) */
-type InputRecording = Record<"inputs", RecordedInput[]>;
+export type InputRecording = Record<"inputs", RecordedInput[]>;
 
 /*
 const data: InputRecording = { "inputs": [] };
@@ -213,9 +213,9 @@ export const addFreeplayView = () => {
 		app.sceneObj.removeAll();
 		ware.onTimeOutEvents.clear();
 		k.setGravity(0);
-		const ctx = createGameCtx(newSelect.game, app, ware);
-		ctx.setRGB(getGameColor(newSelect.game, ctx));
-		newSelect.game.start(ctx);
+		// const ctx = createGameCtx(newSelect.game, app, ware);
+		// ctx.setRGB(getGameColor(newSelect.game, ctx));
+		// newSelect.game.start(ctx);
 	});
 
 	p.onSelect(() => {

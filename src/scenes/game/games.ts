@@ -3,13 +3,10 @@ import { getGameID } from "./utils";
 
 window.microgames = [];
 
-// TODO: ASSET REFACTORING
-/*
- * have to make it so each minigame asset is properly loaded (may have to change a buncha of the loadSprite code)
- * how do games that are not built in work?
- * get the code below properly working
- * fix the function thing that creates a new minigame
- */
+console.log(window.DEV_MICROGAME);
+console.log(window.DEV_SPEED);
+console.log(window.DEV_RECORDINPUT);
+console.log(window.DEV_DIFFICULTY);
 
 export const modules = import.meta.glob("../../../games/**/*/main.ts", { eager: true });
 
@@ -27,7 +24,6 @@ for (const g of games) {
 
 const onlyInclude = new Set([
 	window.DEV_MICROGAME, // Passed arg from npm run dev {yourname}:{gamename}
-	...(import.meta.env?.VITE_ONLY_MICROGAME ?? "").trim().split("\n").map((s: string) => s.trim()),
 ].filter((id) => games.some((game) => getGameID(game) === id)));
 
 if (onlyInclude.size == 0 && window.DEV_MICROGAME) {
