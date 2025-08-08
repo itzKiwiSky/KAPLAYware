@@ -148,7 +148,7 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 
 		transition.onStageStart("speed", () => {
 			// this changes the speedDivisor thing, check the engine
-			ware.speed = ware.increaseSpeed();
+			ware.speed = ware.getSpeed();
 		});
 
 		transition.onTransitionEnd(() => {
@@ -202,12 +202,14 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 		ware.lives--;
 	};
 
+	const oldFinish = ware.finishGame;
 	ware.finishGame = () => {
 		// this runs when someone calls the game to be over (ctx.finish())
 		if (ware.winState == undefined) {
 			throw new Error("Finished ware.microgame without setting the win condition!! Please call ctx.win() or ctx.lose() before calling ctx.finish()");
 		}
 
+		oldFinish();
 		runNextGame();
 	};
 

@@ -91,13 +91,13 @@ if (author && gameId) {
 	}
 }
 
-process.env.DEV_MICROGAME = author && gameId ? `${author}:${gameId}` : undefined
-process.env.DEV_SPEED = flags.speed
-process.env.DEV_DIFFICULTY = flags.difficulty
-process.env.DEV_RECORDINPUT = flags.recordInput
+process.env.DEV_MICROGAME = author && gameId ? `"${author}:${gameId}"` : undefined
+process.env.DEV_SPEED = flags.speed ?? undefined
+process.env.DEV_DIFFICULTY = flags.difficulty ?? undefined
+process.env.DEV_RECORDINPUT = flags.recordInput ?? undefined
 
 spawn(
 	"vite",
-	[...process.argv.slice(isMicrogameSet ? 3 : 2)],
+	[...process.argv.slice(author && gameId ? 5 : 4)],
 	{ shell: true, stdio: "inherit" },
 );

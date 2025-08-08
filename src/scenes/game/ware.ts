@@ -30,11 +30,14 @@ export type WareEngine = {
 	microgame: Microgame;
 	curDuration: number;
 	curPrompt: string;
+
+	readonly shouldSpeedUp: boolean;
+
 	/** Basically there's this microgame hat, when you pick a microgame, that microgame gets taken out of the hat, when there's no more microgames just add more again to the hat */
 	getRandomGame(games?: Microgame[]): Microgame;
+	getSpeed(score?: number): number;
 	getDifficulty(score?: number): 1 | 2 | 3;
 	getTransitionStages(): TransitionStage[];
-	shouldSpeedUp(score?: number, speed?: number, lastGame?: Microgame): boolean;
 	shouldBoss(): boolean;
 	increaseSpeed(): number;
 	isGameOver(): boolean;
@@ -53,6 +56,10 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 
 	// when the engine deals a boss minigame the speed divisor should change to a random value
 	let speedDivisor = 5;
+
+	let gamesSinceLastSpeedUp = 0;
+	let nextSpeedUp = k.randi(3, 7);
+	let shouldSpeedUp = false;
 
 	return {
 		lives: 4,
@@ -86,16 +93,21 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 
 			return randomGame;
 		},
+		getSpeed() {
+			if (window.DEV_SPEED) return window.DEV_SPEED;
+			else return 1;
+		},
 		getDifficulty(score = this.score) {
-			return Math.max(1, (Math.floor(score / 10) + 1) % 4) as 1 | 2 | 3;
+			if (window.DEV_DIFFICULTY) return window.DEV_DIFFICULTY;
+			else return Math.max(1, (Math.floor(score / 10) + 1) % 4) as 1 | 2 | 3;
 		},
 		shouldBoss(games = window.microgames) {
 			const scoreEqualsBoss = () => this.score % HOW_FREQUENT_BOSS == 0;
 			const onlyBoss = () => games.length == 1 && games[0].isBoss == true;
 			return scoreEqualsBoss() || onlyBoss();
 		},
-		shouldSpeedUp(this: WareEngine) {
-			return (this.score % speedDivisor == 0 && !this.shouldBoss() && this.speed < MAX_SPEED);
+		get shouldSpeedUp() {
+			return shouldSpeedUp;
 		},
 		isGameOver(this: WareEngine) {
 			return this.winState == false && this.lives == 0;
@@ -106,7 +118,7 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 			const lastGame = () => getGameByID(this.microgameHistory[this.microgameHistory.length - 1]);
 			const winThing: TransitionStage = lastGame()?.isBoss ? (this.winState == true ? "bossWin" : "bossLose") : this.winState == true ? "win" : "lose";
 			if (this.winState != undefined) transitionStages.splice(0, 0, winThing);
-			if (this.shouldSpeedUp()) transitionStages.splice(1, 0, "speed");
+			if (this.shouldSpeedUp) transitionStages.splice(1, 0, "speed");
 			if (this.isGameOver()) transitionStages = [lastGame().isBoss ? "bossLose" : "lose", "gameOver"];
 			if (this.shouldBoss()) transitionStages.splice(1, 0, "bossPrep"); // this would be before the prep, so it does BOSS! then regular prep
 
@@ -129,6 +141,18 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 		},
 		winGame() {},
 		loseGame() {},
-		finishGame() {},
+		finishGame(this: WareEngine) {
+			if (this.shouldBoss() || this.speed >= MAX_SPEED) {
+				shouldSpeedUp = false;
+				return;
+			}
+
+			gamesSinceLastSpeedUp++;
+			if (this.score >= nextSpeedUp) {
+				shouldSpeedUp = true;
+				gamesSinceLastSpeedUp = 0;
+				nextSpeedUp = k.randi(3, 7);
+			}
+		},
 	};
 }
