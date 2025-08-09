@@ -199,10 +199,10 @@ const clickGame: Microgame = {
 				ctx.win();
 				addComboText(ctx);
 				ctx.addConfetti({ pos: ctx.mousePos() });
-				ctx.tween(-25, 0, 1 / ctx.speed, (p) => ctx.setCamAngle(p), ctx.easings.easeOutQuint);
+				ctx.tween(-25, 0, 1 / ctx.speed, (p) => ctx.setCamRot(p), ctx.easings.easeOutQuint);
 			}
 			else {
-				ctx.shakeCam();
+				ctx.shake();
 				ctx.lose();
 				ctx.tween(hexagon.pos.y, ctx.height() * 1.5, 1 / ctx.speed, (p) => hexagon.pos.y = p, ctx.easings.easeOutExpo);
 				ctx.tween(spinspeed, spinspeed * 2, 1 / ctx.speed, (p) => spinspeed = p, ctx.easings.easeOutExpo);

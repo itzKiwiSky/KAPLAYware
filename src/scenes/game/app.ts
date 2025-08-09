@@ -139,6 +139,8 @@ export type WareApp = {
 	backgroundColor: Color;
 	/** Wheter all the events, inputs, sounds in the app should be paused */
 	paused: boolean;
+	/** Equivalent to KAPLAYCtx.time that gets paused when the app is paused */
+	time: number;
 
 	clearAll(): void;
 	resetCamera(): void;
@@ -169,9 +171,11 @@ export function createWareApp(rootParent = k.getTreeRoot()): WareApp {
 
 	let inputObj = k.add([]);
 	k.kaplaywared.wareInputObj = inputObj;
-	let inputsPaused = false;
 
 	const app = {
+		time: 0,
+		backgroundColor: k.rgb(),
+
 		get rootObj() {
 			return gameContainer.root;
 		},
@@ -323,7 +327,6 @@ export function createWareApp(rootParent = k.getTreeRoot()): WareApp {
 			},
 		},
 
-		backgroundColor: k.rgb(),
 		get paused() {
 			return appPaused;
 		},
@@ -363,6 +366,7 @@ export function createWareApp(rootParent = k.getTreeRoot()): WareApp {
 
 	gameContainer.root.onUpdate(() => {
 		gameContainer.box.color = app.backgroundColor;
+		app.time += k.dt();
 	});
 
 	return app;

@@ -102,7 +102,7 @@ export const addFreeplayView = () => {
 	const app = createWareApp(kaboy);
 	app.boxObj.pos = k.vec2(0, -116);
 	app.boxObj.scaleToSize(k.vec2(246, 148));
-	const ware = createWareEngine({ availableGames: window.microgames });
+	const ware = createWareEngine(app, { availableGames: window.microgames });
 
 	// side buttons
 	const leftBtn = p.add([

@@ -27,16 +27,16 @@ const testGame: Microgame = {
 				draw() {
 					if (this.isHovering()) {
 						ctx.drawText({
-							text: this.sprite
-						})
+							text: this.sprite,
+						});
 					}
-				}
-			}
+				},
+			},
 		]);
 
 		bean.onClick(() => {
-			ctx.debug.log("OIJDWQIJWIJOWF")
-		})
+			ctx.debug.log("OIJDWQIJWIJOWF");
+		});
 
 		const ghosty = ctx.add([
 			ctx.sprite("@ghosty"),
@@ -73,7 +73,7 @@ const testGame: Microgame = {
 		});
 
 		ctx.onButtonPress("right", () => {
-			ctx.shakeCam();
+			ctx.shake();
 		});
 
 		ctx.onButtonPress("action", () => {
@@ -121,7 +121,7 @@ const testGame: Microgame = {
 		});
 
 		ctx.onClick(() => {
-			ctx.flashCam(ctx.GREEN, 0.5);
+			ctx.flash(ctx.GREEN, 0.5);
 			if (ctx.winState != undefined) return;
 			ctx.win();
 			ctx.wait(1, () => {

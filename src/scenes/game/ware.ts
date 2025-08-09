@@ -1,9 +1,10 @@
-import { KEvent } from "kaplay";
+import { KEvent, KEventController } from "kaplay";
 import { Microgame } from "../../types/Microgame";
 import { MicrogameCtx, MicrogameInput } from "./context/types";
 import k from "../../engine";
 import { TransitionStage } from "./transitions/makeTransition";
 import { getGameByID, getGameColor } from "./utils";
+import { WareApp } from "./app";
 
 /** Certain options to instantiate kaplayware (ware-engine) */
 export type KAPLAYwareOpts = {
@@ -39,27 +40,25 @@ export type WareEngine = {
 	getDifficulty(score?: number): 1 | 2 | 3;
 	getTransitionStages(): TransitionStage[];
 	shouldBoss(): boolean;
-	increaseSpeed(): number;
 	isGameOver(): boolean;
 	handleQuickWatch(): void;
-	winGame(): void;
-	loseGame(): void;
-	/** Is re-set after, runs when the game should be over (ctx.finish()) */
-	finishGame(): void;
+	onWin(action: () => void): KEventController;
+	onLose(action: () => void): KEventController;
+	/** Runs when the game should be over (ctx.finish()) */
+	onFinish(action: () => void): KEventController;
 };
 
-export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
+export function createWareEngine(app: WareApp, opts: KAPLAYwareOpts = {}): WareEngine {
 	const HOW_FREQUENT_BOSS = 10;
 	const MAX_SPEED = 1.6;
 
 	let microgameHat: Microgame[] = [];
 
-	// when the engine deals a boss minigame the speed divisor should change to a random value
-	let speedDivisor = 5;
-
 	let gamesSinceLastSpeedUp = 0;
 	let nextSpeedUp = k.randi(3, 7);
 	let shouldSpeedUp = false;
+
+	// TODO: Have to re-do the speed system to make it prettier to use (in GameScene.ts)
 
 	return {
 		lives: 4,
@@ -124,10 +123,6 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 
 			return transitionStages;
 		},
-		increaseSpeed(this: WareEngine) {
-			speedDivisor = k.randi(4, 8);
-			return k.clamp(this.speed + this.speed * 0.07, 0, MAX_SPEED);
-		},
 		handleQuickWatch(this: WareEngine) {
 			// k.quickWatch("ware.scenePaused", wareEngine.scenePaused);
 			// k.quickWatch("ware.objects", wareApp.sceneObj.get("*", { recursive: true }).length);
@@ -139,20 +134,29 @@ export function createWareEngine(opts: KAPLAYwareOpts): WareEngine {
 			k.quickWatch("ware.winState", this.winState);
 			k.quickWatch("ware.gamehat", microgameHat.length);
 		},
-		winGame() {},
-		loseGame() {},
-		finishGame(this: WareEngine) {
-			if (this.shouldBoss() || this.speed >= MAX_SPEED) {
-				shouldSpeedUp = false;
-				return;
-			}
+		onWin(action: () => void) {
+			return app.rootObj.on("win", action);
+		},
+		onLose(action) {
+			return app.rootObj.on("lose", action);
+		},
+		onFinish(action) {
+			return app.rootObj.on("finish", () => {
+				if (this.shouldBoss() || this.speed >= MAX_SPEED) {
+					shouldSpeedUp = false;
+					return;
+				}
 
-			gamesSinceLastSpeedUp++;
-			if (this.score >= nextSpeedUp) {
-				shouldSpeedUp = true;
-				gamesSinceLastSpeedUp = 0;
-				nextSpeedUp = k.randi(3, 7);
-			}
+				gamesSinceLastSpeedUp++;
+				shouldSpeedUp = false;
+				if (this.score >= nextSpeedUp) {
+					shouldSpeedUp = true;
+					gamesSinceLastSpeedUp = 0;
+					nextSpeedUp = k.randi(3, 7);
+				}
+
+				action();
+			});
 		},
 	};
 }

@@ -114,7 +114,7 @@ const avoidGame: Microgame = {
 				}
 
 				ctx.play("stomp");
-				ctx.shakeCam(ctx.rand(13, 15));
+				ctx.shake(ctx.rand(13, 15));
 				if (ctx.winState == undefined) {
 					ctx.tween(foot.pos.y, highFeet, 0.35 / ctx.speed, (p) => foot.pos.y = p, ctx.easings.easeOutExpo);
 					jump();

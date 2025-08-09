@@ -94,8 +94,8 @@ export function addBomb(wareApp: WareApp) {
 	function explode() {
 		if (hasExploded) return;
 		destroy();
-		const kaboom = k.addKaboom(bombSpr.pos);
-		kaboom.parent = wareApp.rootObj;
+		// const kaboom = k.addKaboom(bombSpr.pos);
+		// kaboom.parent = wareApp.rootObj;
 		wareApp.sounds.play("explosion");
 		hasExploded = true;
 	}

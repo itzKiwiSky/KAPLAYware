@@ -162,7 +162,7 @@ const aimGame: Microgame = {
 				if (bln.isHovering()) {
 					if (!mngr.hasLost) {
 						ctx.addKaboom(ctx.mousePos());
-						ctx.shakeCam(2.2);
+						ctx.shake(2.2);
 						ctx.play("pop", { detune: ctx.rand(0, 100) });
 						hittedBalloons.push(bln);
 						bln.destroy();
@@ -189,7 +189,7 @@ const aimGame: Microgame = {
 						ctx.addKaboom(ctx.mousePos(), {
 							scale: 4.5,
 						});
-						ctx.shakeCam(15);
+						ctx.shake(15);
 						exp.destroy();
 						ctx.lose();
 						ctx.wait(0.6, () => {

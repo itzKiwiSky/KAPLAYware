@@ -37,7 +37,7 @@ const dontGame: Microgame = {
 
 		function explodeEverything() {
 			ctx.lose();
-			ctx.flashCam(ctx.WHITE, 0.1 / ctx.speed);
+			ctx.flash(ctx.WHITE, 0.1 / ctx.speed);
 			ctx.play("explode", { speed: 0.5 * ctx.speed });
 
 			const explosion = ctx.add([

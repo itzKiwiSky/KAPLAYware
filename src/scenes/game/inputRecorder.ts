@@ -82,9 +82,7 @@ export function managePreviewMode(app: WareApp, ware: WareEngine, unpause: () =>
 		});
 	});
 
-	const oldFinishGame = ware.finishGame;
-	ware.finishGame = () => {
-		oldFinishGame();
+	ware.onFinish(() => {
 		k.downloadJSON(`${getGameID(ware.microgame)}-inputs.json`, data);
-	};
+	});
 }

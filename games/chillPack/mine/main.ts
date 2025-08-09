@@ -131,7 +131,7 @@ const mineGame: Microgame = {
 				ctx.lose();
 
 				for (let i = 0; i < 10; i++) {
-					ctx.shakeCam(5);
+					ctx.shake(5);
 					const boulder = ctx.add([
 						ctx.sprite("peddle"),
 						ctx.scale(ctx.rand(3, 5)),

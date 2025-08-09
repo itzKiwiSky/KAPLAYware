@@ -100,8 +100,9 @@ const sortGame: Microgame = {
 				daystext.frame = 2;
 				ctx.tween(light.color, ctx.mulfok.RED, 1 / ctx.speed, (p) => light.color = p, ctx.easings.easeOutQuint);
 				function playSound() {
-					ctx.shakeCam();
-					ctx.flashCam(ctx.RED, 0.15, 0.5);
+					ctx.shake();
+					const flash = ctx.add([ctx.rect(ctx.width(), ctx.height()), ctx.color(ctx.RED), ctx.opacity(0.5)]);
+					flash.fadeOut(0.5).onEnd(() => flash.destroy());
 					const sound = ctx.play("buzzer");
 					ctx.wait(sound.duration() / ctx.speed * 2, () => playSound());
 				}

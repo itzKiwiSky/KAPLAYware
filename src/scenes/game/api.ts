@@ -1,3 +1,5 @@
+import { k } from "../../engine";
+
 export const loadAPIs = [
 	"loadRoot",
 	"loadSprite",
@@ -149,4 +151,12 @@ export const gameAPIs = [
 	"getTreeRoot",
 	"mask",
 	"randSeed",
+	"flash",
+	"getCamPos",
+	"setCamPos",
+	"getCamScale",
+	"setCamScale",
+	"getCamRot",
+	"setCamRot",
+	"shake",
 ] as const;

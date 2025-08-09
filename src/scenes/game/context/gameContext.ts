@@ -5,7 +5,6 @@ import { WareApp } from "../app";
 import { MicrogameAPI, MicrogameCtx, StartCtx } from "./types";
 import { addConfetti } from "../objects/confetti";
 import k from "../../../engine";
-import { Microgame } from "../../../types/Microgame";
 import { WareEngine } from "../ware";
 
 // TODO: This context folder is pissing me off... I am the original       amyspark-ng
@@ -183,13 +182,23 @@ export function createGameCtx(ware: WareEngine, wareApp: WareApp): MicrogameCtx 
 			ka.parent = wareApp.sceneObj;
 			return ka;
 		},
-		// TODO: find a way to do something that keeps this from keeping t o increasing
 		time() {
-			return k.time();
+			return wareApp.time;
 		},
-		// TODO: this probably causes problems with app, maybe make an app timer comp and add it to sceneObj, so it's th same??
 		timer(maxLoopsPerFrame) {
-			return k.timer(maxLoopsPerFrame);
+			const fakeTimer = wareApp.sceneObj.add([k.timer(maxLoopsPerFrame), "fakeTimer"]);
+
+			return {
+				loop: fakeTimer.loop,
+				tween: fakeTimer.tween,
+				wait: fakeTimer.wait,
+				get maxLoopsPerFrame() {
+					return fakeTimer.maxLoopsPerFrame;
+				},
+				set maxLoopsPerFrame(val) {
+					fakeTimer.maxLoopsPerFrame = val;
+				},
+			};
 		},
 
 		mousePos() {
@@ -218,6 +227,15 @@ export function createGameCtx(ware: WareEngine, wareApp: WareApp): MicrogameCtx 
 		getTreeRoot() {
 			return wareApp.sceneObj;
 		},
+
+		// camera stuff
+		getCamRot: () => wareApp.cameraObj.angle,
+		setCamRot: (val: number) => wareApp.cameraObj.angle = val,
+		getCamPos: () => wareApp.cameraObj.pos,
+		setCamPos: (val) => wareApp.cameraObj.pos = val,
+		getCamScale: () => wareApp.cameraObj.scale,
+		setCamScale: (val) => wareApp.cameraObj.scale = val,
+		shake: (val: number = 12) => wareApp.cameraObj.shake += val,
 
 		onButtonDown: overload2((action: (btn: any) => void) => {
 			return wareApp.inputs.obj.onButtonDown(action);
@@ -322,32 +340,12 @@ export function createGameCtx(ware: WareEngine, wareApp: WareApp): MicrogameCtx 
 	};
 
 	const microgameAPI: MicrogameAPI = {
-		getCamAngle: () => wareApp.cameraObj.angle,
-		setCamAngle: (val: number) => wareApp.cameraObj.angle = val,
-		getCamPos: () => wareApp.cameraObj.pos,
-		setCamPos: (val) => wareApp.cameraObj.pos = val,
-		getCamScale: () => wareApp.cameraObj.scale,
-		setCamScale: (val) => wareApp.cameraObj.scale = val,
-		shakeCam: (val: number = 12) => wareApp.cameraObj.shake += val,
 		getRGB: () => wareApp.backgroundColor,
 		setRGB: (val) => wareApp.backgroundColor = val,
 		onTimeout: (action) => ware.onTimeOutEvents.add(action),
-		win: () => ware.winGame(),
-		lose: () => ware.loseGame(),
-		finish: () => ware.finishGame(),
-		flashCam: (flashColor: Color = k.WHITE, timeOut: number = 1, opacity: number) => {
-			const r = wareApp.boxObj.add([
-				k.pos(k.center()),
-				k.rect(k.width() * 2, k.height() * 2),
-				k.color(flashColor),
-				k.anchor("center"),
-				k.opacity(opacity),
-				k.fixed(),
-			]);
-			const f = r.fadeOut(timeOut);
-			f.onEnd(() => k.destroy(r));
-			return f;
-		},
+		win: () => wareApp.rootObj.trigger("win"),
+		lose: () => wareApp.rootObj.trigger("lose"),
+		finish: () => wareApp.rootObj.trigger("finish"),
 		addConfetti(opts) {
 			const confetti = addConfetti(opts);
 			confetti.parent = wareApp.sceneObj;

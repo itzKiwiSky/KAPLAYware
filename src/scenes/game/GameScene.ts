@@ -14,7 +14,7 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 	k.kaplaywared.ignoreWareInputEvents = false;
 	const app = createWareApp();
 	const transition = createTransition(chillTransition, app);
-	const ware = createWareEngine({ availableGames: kaplaywareOpt.availableGames ?? window.microgames });
+	const ware = createWareEngine(app, { availableGames: kaplaywareOpt.availableGames ?? window.microgames });
 	ware.ctx = createGameCtx(ware, app);
 
 	const pauseScreen = createPauseScreen();
@@ -45,6 +45,8 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 		app.sceneObj.removeAll();
 		// fixed objs are added to the mask so they're not affected by camera (parent of sceneObj)
 		app.maskObj.get("fixed").forEach((obj) => obj.destroy());
+		// fake timer objects for the timer comp
+		app.sceneObj.get("fakeTimer").forEach((obj) => obj.destroy());
 		currentBomb?.destroy();
 		ware.onTimeOutEvents.clear();
 		k.setGravity(0);
@@ -113,6 +115,7 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 			ware.ctx.setRGB(getGameColor(ware.microgame, ware.ctx));
 			ware.microgameHistory[ware.score - 1] = getGameID(ware.microgame);
 			ware.difficulty = ware.getDifficulty();
+			ware.speed = ware.getSpeed();
 			ware.timeLeft = duration != undefined ? duration / ware.speed : undefined;
 			ware.curDuration = duration;
 			if (typeof ware.microgame.prompt == "string") ware.curPrompt = ware.microgame.prompt;
@@ -144,11 +147,6 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 					ware.onTimeOutEvents.trigger();
 				}
 			});
-		});
-
-		transition.onStageStart("speed", () => {
-			// this changes the speedDivisor thing, check the engine
-			ware.speed = ware.getSpeed();
 		});
 
 		transition.onTransitionEnd(() => {
@@ -191,27 +189,25 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 		}
 	}
 
-	ware.winGame = () => {
+	ware.onWin(() => {
 		ware.winState = true;
 		currentBomb?.extinguish();
-	};
+	});
 
-	ware.loseGame = () => {
+	ware.onLose(() => {
 		ware.winState = false;
 		currentBomb?.explode();
 		ware.lives--;
-	};
+	});
 
-	const oldFinish = ware.finishGame;
-	ware.finishGame = () => {
+	ware.onFinish(() => {
 		// this runs when someone calls the game to be over (ctx.finish())
 		if (ware.winState == undefined) {
 			throw new Error("Finished ware.microgame without setting the win condition!! Please call ctx.win() or ctx.lose() before calling ctx.finish()");
 		}
 
-		oldFinish();
 		runNextGame();
-	};
+	});
 
 	// start the game around here
 	runNextGame();

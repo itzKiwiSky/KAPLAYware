@@ -39,22 +39,6 @@ export type MicrogameInput = "mouse" | "keys" | "both";
 export type MicrogameAPI = {
 	/** Adds a buncha confetti!!! */
 	addConfetti(opts?: ConfettiOpt): void;
-
-	setCamScale(val: Vec2): Vec2;
-	getCamScale(): Vec2;
-	setCamAngle(val: number): number;
-	getCamAngle(): number;
-	setCamPos(val: Vec2): Vec2;
-	getCamPos(): Vec2;
-	/** Shakes the camera randomly
-	 * @param intensity How much? (default: 14)
-	 */
-	shakeCam(intensity?: number): void;
-	/** Flashes the screen
-	 * @param flashColor The color the flash will be
-	 * @param time How long the flash will be on screen
-	 */
-	flashCam(flashColor?: Color, time?: number, opacity?: number): TweenController;
 	/** Gets the current RGB of the background of your microgame */
 	getRGB(): Color;
 	/** Sets the RGB to the background of your microgame */

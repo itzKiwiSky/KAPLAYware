@@ -185,7 +185,7 @@ const transformGame: Microgame = {
 			clearPrevCanvas();
 			createGameOverScreen(isWin);
 			// fade in
-			ctx.flashCam(ctx.WHITE, 0.5 / ctx.speed, 1);
+			ctx.flash(ctx.WHITE, 0.5 / ctx.speed);
 		}
 
 		function updateBothCommands() {
@@ -242,7 +242,7 @@ const transformGame: Microgame = {
 			if (ctx.winState != undefined) return;
 			updateBothCommands();
 			ctx.addKaboom(check.pos);
-			ctx.shakeCam();
+			ctx.shake();
 			ctx.play(ctx.choose(grunts), { volume: 1, speed: 1 });
 			ctx.tween(ctx.rand(-30, -60), 0, 0.5 / ctx.speed, (p) => punch.angle = p, ctx.easings.easeOutQuint);
 			ctx.tween(ctx.vec2(ctx.rand(1.25, 1.5)), ctx.vec2(1), 0.5 / ctx.speed, (p) => punch.scale = p, ctx.easings.easeOutQuint);
