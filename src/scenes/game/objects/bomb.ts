@@ -94,8 +94,8 @@ export function addBomb(wareApp: WareApp) {
 	function explode() {
 		if (hasExploded) return;
 		destroy();
-		// const kaboom = k.addKaboom(bombSpr.pos);
-		// kaboom.parent = wareApp.rootObj;
+		const kaboom = k.addKaboom(bombSpr.pos);
+		kaboom.parent = wareApp.rootObj;
 		wareApp.sounds.play("explosion");
 		hasExploded = true;
 	}
@@ -126,6 +126,9 @@ export function addBomb(wareApp: WareApp) {
 
 	/** Turns off the bomb */
 	function extinguish() {
+		// when timeOut and you win, it explodes and since you won it runs extinguish
+		// which access fuse, which it shouldn't because when it explodes the parent is destroyed
+		if (hasExploded) return;
 		bomb.conductor.paused = true;
 		fuse.fadeOut(0.5 / 3).onEnd(() => fuse.destroy());
 	}

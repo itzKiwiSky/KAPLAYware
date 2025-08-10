@@ -118,7 +118,7 @@ export const addStoryView = () => {
 		packs.forEach((packObj, index) => {
 			if (index == p.index) {
 				packObj.intendedX = k.center().x;
-				if (packObj.tags.includes("ignorepoint")) packObj.untag("ignorepoint");
+				if (packObj.area.cursor == "none") packObj.area.cursor = null;
 
 				if (p.selectorPaused) {
 					packObj.angle = k.lerp(packObj.angle, 0, 0.5);

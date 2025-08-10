@@ -272,12 +272,11 @@ But you CAN'T do:
 bean.onClick(() => bean.destroy(), "right") // this is NOT fine
 ```
 
-**PROTIP:** In mouse games, objects with area automatically changed the cursor's animation to hover, to make the cursor ignore the animation on that particular object, you can tag it as "ignorepoint"
+**PROTIP:** In mouse games, objects with area automatically changed the cursor's animation to hover, to make the cursor ignore the animation on that particular object, you can set its area cursor as "none"
 ```ts
 ctx.add([
     ctx.rect(50, 50),
-    ctx.area(), // makes the cursor to change to point animation when hovering
-    "ignorepoint", // tells the cursor to ignore this object (will still work as a regular area object, it will just not change the mouse animation)
+    ctx.area({ cursor: "none" }), // makes the cursor NOT change to point animation when hovering, to make it do it, remove the cursor opt
 ])
 ```
 

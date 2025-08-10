@@ -24,10 +24,9 @@ const uploadGame: Microgame = {
 		ctx.add([ctx.sprite("os")]); // taskbar
 		const window = ctx.add([
 			ctx.sprite("window"),
-			ctx.area(),
+			ctx.area({ cursor: "none" }),
 			ctx.anchor("center"),
 			ctx.pos(565, 270),
-			"ignorepoint",
 		]);
 
 		window.onDraw(() => {

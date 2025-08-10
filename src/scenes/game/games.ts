@@ -3,11 +3,6 @@ import { getGameID } from "./utils";
 
 window.microgames = [];
 
-console.log(window.DEV_MICROGAME);
-console.log(window.DEV_SPEED);
-console.log(window.DEV_RECORDINPUT);
-console.log(window.DEV_DIFFICULTY);
-
 export const modules = import.meta.glob("../../../games/**/*/main.ts", { eager: true });
 
 const exclude = new Set(["amyspark-ng:test"]);

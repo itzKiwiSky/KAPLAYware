@@ -5,27 +5,20 @@ import { WareApp } from "./app";
 import { getGameID } from "./utils";
 import { WareEngine } from "./ware";
 
-export function managePreviewMode(app: WareApp, ware: WareEngine, unpause: () => void) {
+export function managePreviewMode(app: WareApp, ware: WareEngine, runFunction: () => void) {
 	const RAND_SEED = 1225;
 	let frame = 0;
 	const data: InputRecording = { inputs: [] };
 
-	// WAIT pause it and show you that you're on input recording mode
-	app.paused = true;
 	const message = k.add([
 		k.rect(k.width(), k.height()),
 		k.color(k.BLACK),
+		k.z(999),
 		{
-			update() {
-				if (k.isButtonPressed("action")) {
-					this.destroy();
-					unpause();
-				}
-			},
-
+			text: `YOU'RE ON "INPUT RECORD" MODE\nPRESS "ACTION" TO CONTINUE\n\nWHEN YOU'RE FINISHED\nYOUR INPUT DATA WILL BE DOWNLOADED`,
 			draw() {
 				k.drawText({
-					text: `YOU'RE ON "INPUT RECORD" MODE\nPRESS "ACTION" TO CONTINUE`,
+					text: this.text,
 					pos: k.center(),
 					size: 20,
 					align: "center",
@@ -35,6 +28,12 @@ export function managePreviewMode(app: WareApp, ware: WareEngine, unpause: () =>
 			},
 		},
 	]);
+
+	const actionCheck = k.onButtonPress("action", () => {
+		message.hidden = true;
+		actionCheck.cancel();
+		runFunction();
+	});
 
 	// CHANGE RNG
 	ware.ctx.randSeed(RAND_SEED);
@@ -83,6 +82,8 @@ export function managePreviewMode(app: WareApp, ware: WareEngine, unpause: () =>
 	});
 
 	ware.onFinish(() => {
+		message.text = `THANK YOU FOR COMPLYING\nKEEP DEVELOPING :)\n(Game won't run any further, restart it)`;
+		message.hidden = false;
 		k.downloadJSON(`${getGameID(ware.microgame)}-inputs.json`, data);
 	});
 }

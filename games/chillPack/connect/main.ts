@@ -46,11 +46,10 @@ const connectGame: Microgame = {
 				k.sprite("socket"),
 				k.color(color),
 				k.pos(0, 0),
-				k.area({ scale: k.vec2(0.75, 0.95) }),
+				k.area({ cursor: "none", scale: k.vec2(0.75, 0.95) }),
 				k.anchor("top"),
 				k.z(2),
 				"socket",
-				"ignorepoint",
 				{
 					plug: null as typeof plugObj,
 				},
@@ -119,7 +118,7 @@ const connectGame: Microgame = {
 					if (socketObj.plug == plugObj) {
 						// this causes win flag condition
 						socketObj.tag("right");
-						plugObj.tag("ignorepoint");
+						plugObj.area.cursor = "none";
 					}
 					socketObj.plug.pos.x = socketObj.pos.x;
 					socketObj.plug.pos.y = socketObj.pos.y + socketObj.height / 2 + 35;

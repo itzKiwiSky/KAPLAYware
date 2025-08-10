@@ -51,9 +51,8 @@ const killGame: Microgame = {
 			ctx.pos(ctx.center().x, 0),
 			ctx.health(300, 300),
 			ctx.color(),
-			ctx.area({ scale: ctx.vec2(0.5) }),
+			ctx.area({ cursor: "none", scale: ctx.vec2(0.5) }),
 			"boss",
-			"ignorepoint",
 		]);
 
 		const leftTentacle = gameObjs.add([

@@ -59,8 +59,10 @@ interface BaseMicrogame {
 	 * Assets URL prefix.
 	 */
 	urlPrefix?: string;
-	/** Wheter your game plays its own music or if it should play a random jingle from our selection of jingles */
-	playsOwnMusic?: boolean;
+	/**
+	 * Path to the inputs that are used in the freeplay view when previewing your game
+	 */
+	freeplayInputData?: string;
 	/** Wheter the microgame depends on colors to be played (crucial for accesability) */
 	colorDependant?: boolean;
 	/**

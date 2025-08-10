@@ -304,38 +304,33 @@ export function createGameCtx(ware: WareEngine, wareApp: WareApp): MicrogameCtx 
 		onClick: overload2((action: () => void) => {
 			return wareApp.inputs.obj.onMousePress(action);
 		}, (tag: Tag, action: (obj: GameObj) => void) => {
-			// TODO: THIS IS COMPLETELY BROKEN
-			// IT'S LAJBEL'S REPONSABILITY TO FIX IT
-			// I (amyspark-ng) WILL NOT BE FORCED TO WRITE THIS IN ANOTHER WAY
-			// I (amyspark-ng) WILL NOT RE-DO THIS
-			// I (amyspark-ng) WILL STAY SILENT IN THE NEAR FUTURE ABOUT THIS SUBJECT
+			const events: KEventController[] = [];
+			let paused: boolean = false;
 
-			// const events: KEventController[] = [];
-			// let paused: boolean = false;
+			const listener = forAllCurrentAndFuture(wareApp.sceneObj, tag, (obj) => {
+				if (!obj.area) {
+					throw new Error(
+						"onClick() requires the object to have area() component",
+					);
+				}
+				events.push(obj.onClick(() => action(obj)));
+			});
+			const ev: KEventController = {
+				get paused() {
+					return paused;
+				},
+				set paused(val: boolean) {
+					paused = val;
+					listener.paused = paused;
+				},
+				cancel() {
+					events.forEach((ev) => ev.cancel());
+					listener.cancel();
+				},
+			};
 
-			// const listener = forAllCurrentAndFuture(wareApp.sceneObj, tag, (obj) => {
-			// 	if (!obj.area) {
-			// 		throw new Error(
-			// 			"onClick() requires the object to have area() component",
-			// 		);
-			// 	}
-			// 	events.push(obj.onClick(() => action(obj)));
-			// });
-			// const ev: KEventController = {
-			// 	get paused() {
-			// 		return paused;
-			// 	},
-			// 	set paused(val: boolean) {
-			// 		paused = val;
-			// 		listener.paused = paused;
-			// 	},
-			// 	cancel() {
-			// 		events.forEach((ev) => ev.cancel());
-			// 		listener.cancel();
-			// 	},
-			// };
-			// return wareApp.inputs.add(ev);
-			return k.onClick(tag, action);
+			wareApp.inputs.obj._inputEvents.push(ev);
+			return ev;
 		}),
 	};
 

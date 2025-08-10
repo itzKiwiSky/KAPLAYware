@@ -109,7 +109,6 @@ const clickGame: Microgame = {
 	prompt: "CLICK!",
 	rgb: [41, 24, 52],
 	input: "mouse",
-	playsOwnMusic: true,
 	duration: 4,
 	urlPrefix: "games/chillPack/click/",
 	load(ctx) {

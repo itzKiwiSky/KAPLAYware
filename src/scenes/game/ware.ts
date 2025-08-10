@@ -3,7 +3,7 @@ import { Microgame } from "../../types/Microgame";
 import { MicrogameCtx, MicrogameInput } from "./context/types";
 import k from "../../engine";
 import { TransitionStage } from "./transitions/makeTransition";
-import { getGameByID, getGameColor } from "./utils";
+import { getGameByID } from "./utils";
 import { WareApp } from "./app";
 
 /** Certain options to instantiate kaplayware (ware-engine) */
@@ -57,6 +57,7 @@ export function createWareEngine(app: WareApp, opts: KAPLAYwareOpts = {}): WareE
 	let gamesSinceLastSpeedUp = 0;
 	let nextSpeedUp = k.randi(3, 7);
 	let shouldSpeedUp = false;
+	let intendedSpeed = 0;
 
 	// TODO: Have to re-do the speed system to make it prettier to use (in GameScene.ts)
 
@@ -94,7 +95,7 @@ export function createWareEngine(app: WareApp, opts: KAPLAYwareOpts = {}): WareE
 		},
 		getSpeed() {
 			if (window.DEV_SPEED) return window.DEV_SPEED;
-			else return 1;
+			else return intendedSpeed;
 		},
 		getDifficulty(score = this.score) {
 			if (window.DEV_DIFFICULTY) return window.DEV_DIFFICULTY;
@@ -151,6 +152,7 @@ export function createWareEngine(app: WareApp, opts: KAPLAYwareOpts = {}): WareE
 				shouldSpeedUp = false;
 				if (this.score >= nextSpeedUp) {
 					shouldSpeedUp = true;
+					intendedSpeed = k.clamp(this.speed + this.speed * k.rand(0.05, 0.07), 0, MAX_SPEED);
 					gamesSinceLastSpeedUp = 0;
 					nextSpeedUp = k.randi(3, 7);
 				}

@@ -5,8 +5,6 @@ import { createView, goView } from "../MenuScene";
 import { Microgame } from "../../../types/Microgame";
 import { createWareApp } from "../../game/app";
 import { createWareEngine } from "../../game/ware";
-import { createGameCtx } from "../../game/context/gameContext";
-import { getGameColor } from "../../game/utils";
 import { TButton } from "../../../main";
 
 function addCartridge(game: Microgame, parent: GameObj) {
@@ -176,7 +174,7 @@ export const addFreeplayView = () => {
 		packs.forEach((gameObj, index) => {
 			if (index == p.index) {
 				gameObj.intendedX = k.center().x;
-				if (gameObj.tags.includes("ignorepoint")) gameObj.untag("ignorepoint");
+				if (gameObj.area.cursor == "none") gameObj.area.cursor = null;
 
 				if (p.selectorPaused) {
 					gameObj.angle = k.lerp(gameObj.angle, 0, 0.5);
@@ -191,7 +189,7 @@ export const addFreeplayView = () => {
 				gameObj.angle = k.lerp(gameObj.angle, wavingAngle, 0.5);
 			}
 			else {
-				if (!gameObj.tags.includes("ignorepoint")) gameObj.tag("ignorepoint");
+				if (gameObj.area.cursor != "none") gameObj.area.cursor = "none";
 				gameObj.intendedX = k.center().x + gameObj.width * 1.5 * (index - p.index);
 				gameObj.scale = k.lerp(gameObj.scale, k.vec2(0.85), 0.5);
 				gameObj.opacity = k.lerp(gameObj.opacity, 0.85, 0.5);
@@ -213,9 +211,30 @@ export const addFreeplayView = () => {
 		app.sceneObj.removeAll();
 		ware.onTimeOutEvents.clear();
 		k.setGravity(0);
-		// const ctx = createGameCtx(newSelect.game, app, ware);
-		// ctx.setRGB(getGameColor(newSelect.game, ctx));
-		// newSelect.game.start(ctx);
+
+		// SMALL SKETCH ON HOW TRIGGERS COULD WORK
+		// i think this would not run onChange but on the singular context that is created
+		/*
+		const data = {} as unknown as InputRecording;
+		const onButtonPressHandler = new k.KEvent();
+
+		const ctx = createGameCtx(ware, app);
+		ctx.onButtonPress = (btn, action) => {
+			return onButtonPressHandler.add(action);
+		};
+
+		let frame = 0;
+		ctx.onUpdate(() => {
+			frame++;
+			data.inputs.forEach((input) => {
+				if (input.frame == frame) {
+					if (input.type == "press") {
+						onButtonPressHandler.trigger();
+					}
+				}
+			});
+		});
+		*/
 	});
 
 	p.onSelect(() => {

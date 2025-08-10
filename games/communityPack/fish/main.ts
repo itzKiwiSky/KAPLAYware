@@ -8,7 +8,6 @@ const fishGame: Microgame = {
 	input: "keys",
 	rgb: [109, 128, 250],
 	duration: (ctx) => 10 - ctx.difficulty / 2,
-	playsOwnMusic: true,
 	urlPrefix: "games/communityPack/fish/assets/",
 	load(ctx) {
 		ctx.loadSprite("alert", "sprites/fish/alert.png");

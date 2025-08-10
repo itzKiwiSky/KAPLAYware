@@ -43,12 +43,13 @@ export function addConfetti(opt?: ConfettiOpt) {
 			]),
 			k.color(sample(opt.color ?? k.hsl2rgb(k.rand(0, 1), DEF_SATURATION, DEF_LIGHTNESS))),
 			k.opacity(1),
-			// k.lifespan(4),
 			k.scale(1),
 			k.anchor("center"),
 			k.z(999),
 			k.rotate(k.rand(0, 360)),
+			k.timer(),
 		]);
+		p.wait(4, () => p.destroy());
 		const spin = k.rand(DEF_SPIN[0], DEF_SPIN[1]);
 		const gravity = opt.gravity ?? DEF_GRAVITY;
 		const airDrag = opt.airDrag ?? DEF_AIR_DRAG;

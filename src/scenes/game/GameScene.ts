@@ -19,6 +19,16 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 
 	const pauseScreen = createPauseScreen();
 	let gamePaused = false;
+	const setPaused = (newPause: boolean) => {
+		gamePaused = newPause;
+		app.paused = gamePaused;
+		transition.ctx.paused = gamePaused;
+		pauseScreen.isGamePaused = gamePaused;
+		app.draws.paused = false;
+		if (!transition.ctx.paused) app.sounds.paused = true;
+		if (currentBomb) currentBomb.paused = gamePaused;
+	};
+
 	let currentBomb: WareBomb = null;
 
 	k.onUpdate(() => {
@@ -29,14 +39,7 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 		k.quickWatch("k.objects", k.debug.numObjects());
 
 		// toggle the pause on the app
-		if (k.isButtonPressed("return") && !window.DEV_RECORDINPUT) {
-			gamePaused = !gamePaused;
-			app.paused = gamePaused;
-			if (currentBomb) currentBomb.paused = gamePaused;
-			app.draws.paused = false;
-			transition.ctx.paused = gamePaused;
-			pauseScreen.isGamePaused = gamePaused;
-		}
+		if (k.isButtonPressed("return") && !window.DEV_RECORDINPUT) setPaused(!gamePaused);
 	});
 
 	function clearPrevious() {
@@ -105,7 +108,7 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 			return;
 		}
 
-		// chooses the next minigame
+		// since we didn't lose, choose a new minigame
 		ware.microgame = ware.getRandomGame();
 		const duration = getGameDuration(ware.microgame, ware.ctx);
 		const stages = ware.getTransitionStages();
@@ -115,12 +118,11 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 			ware.ctx.setRGB(getGameColor(ware.microgame, ware.ctx));
 			ware.microgameHistory[ware.score - 1] = getGameID(ware.microgame);
 			ware.difficulty = ware.getDifficulty();
-			ware.speed = ware.getSpeed();
 			ware.timeLeft = duration != undefined ? duration / ware.speed : undefined;
 			ware.curDuration = duration;
 			if (typeof ware.microgame.prompt == "string") ware.curPrompt = ware.microgame.prompt;
 			else ware.curPrompt = ware.microgame.name; // TODO: figure it out fine fine
-			gameHidesMouse(ware.microgame) ? cursor.opacity = 0 : 1;
+			cursor.stayHidden = gameHidesMouse(ware.microgame);
 			currentBomb = null;
 			ware.microgame.start(ware.ctx); // IMPORTANT: starts the game
 
@@ -149,6 +151,10 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 			});
 		});
 
+		transition.onStageStart("speed", () => {
+			ware.speed = ware.getSpeed();
+		});
+
 		transition.onTransitionEnd(() => {
 			// when the transition is unpause the scene and start counting the time (also cancel transition events)
 			app.paused = false;
@@ -174,18 +180,8 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 		ware.onTimeOutEvents.add(() => app.inputs.paused = true); // pauses inputs when the time is over
 
 		if (window.DEV_RECORDINPUT) {
-			gamePaused = !gamePaused;
-			app.paused = gamePaused;
-			app.draws.paused = false;
-			transition.ctx.paused = gamePaused;
-			managePreviewMode(app, ware, () => {
-				gamePaused = !gamePaused;
-				app.paused = gamePaused;
-				if (currentBomb) currentBomb.paused = gamePaused;
-				app.draws.paused = false;
-				transition.ctx.paused = gamePaused;
-				pauseScreen.isGamePaused = gamePaused;
-			});
+			setPaused(true);
+			managePreviewMode(app, ware, () => setPaused(false));
 		}
 	}
 
@@ -206,7 +202,7 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 			throw new Error("Finished ware.microgame without setting the win condition!! Please call ctx.win() or ctx.lose() before calling ctx.finish()");
 		}
 
-		runNextGame();
+		if (!window.DEV_RECORDINPUT) runNextGame();
 	});
 
 	// start the game around here

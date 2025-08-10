@@ -12,7 +12,7 @@ import goGame from "../src/scenes/game/GameScene";
 /** The available buttons in the kaplay button definition */
 export type TButton = "up" | "down" | "left" | "right" | "action";
 
-k.setVolume(0.1);
+k.setVolume(0.25);
 k.setCursor("none");
 k.loadRoot("./");
 

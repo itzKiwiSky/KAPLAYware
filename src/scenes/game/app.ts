@@ -118,7 +118,7 @@ export type WareApp = {
 	inputs: {
 		paused: boolean;
 		readonly length: number;
-		readonly obj: GameObj;
+		readonly obj: GameObj<{ _inputEvents: KEventController[]; }>;
 		cancel(): void;
 	};
 
@@ -169,7 +169,7 @@ export function createWareApp(rootParent = k.getTreeRoot()): WareApp {
 	let soundsPaused = false;
 	let disabledSounds: AudioPlay[] = []; // sounds that were disabled by sounds.paused
 
-	let inputObj = k.add([]);
+	let inputObj = k.add([]) as WareApp["inputs"]["obj"];
 	k.kaplaywared.wareInputObj = inputObj;
 
 	const app = {

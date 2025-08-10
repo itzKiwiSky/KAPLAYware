@@ -1,14 +1,12 @@
-import { ButtonBindingDevice } from "kaplay";
+import { AreaComp, ButtonBindingDevice, GameObj } from "kaplay";
 import k from "../engine";
 
-// TODO: make this better, it sucks!
-let canPoint = true;
 let lastInput: ButtonBindingDevice = "mouse";
 
 /** The cursor object :) */
 const cursor = k.add([
 	k.sprite("@cursor"),
-	k.pos(Infinity),
+	k.pos(),
 	k.anchor("topleft"),
 	k.scale(2),
 	k.opacity(),
@@ -16,28 +14,19 @@ const cursor = k.add([
 	k.fixed(),
 	k.color(),
 	k.stay(),
-	k.timer(),
 	{
-		reset() {
-			this.opacity = 1;
-		},
-
-		set canPoint(param: boolean) {
-			canPoint = param;
-		},
-
-		get canPoint() {
-			return canPoint;
-		},
+		stayHidden: false,
+		canPoint: false,
 	},
 ]);
 
 cursor.onUpdate(() => {
-	if (lastInput == "mouse") cursor.opacity = k.lerp(cursor.opacity, 1, 0.25);
+	if (lastInput == "mouse" && !cursor.stayHidden) cursor.opacity = k.lerp(cursor.opacity, 1, 0.25);
 	else cursor.opacity = k.lerp(cursor.opacity, 0, 0.25);
+	if (cursor.stayHidden) return;
 
-	const hovered = k.get("area", { recursive: true }).filter((obj) => {
-		obj.isHovering() && canPoint && !obj.is("ignorepoint") && (!k.kaplaywared.ignoreWareInputEvents || !obj._isWare);
+	const hovered = k.get("area", { recursive: true }).filter((obj: GameObj<AreaComp>) => {
+		return obj.isHovering() && cursor.canPoint && obj.area.cursor != "none";
 	}).length > 0;
 
 	if (k.isMouseDown("left")) cursor.sprite = "cursor-knock";
