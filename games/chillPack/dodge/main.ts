@@ -90,7 +90,7 @@ const dodgeGame: Microgame = {
 		});
 
 		ctx.onUpdate(() => {
-			if (game.paused) return;
+			if (game.paused || !game.exists()) return;
 			groundX -= 250 * SPEED * ctx.dt();
 			if (groundX <= -ctx.width()) groundX = 0;
 

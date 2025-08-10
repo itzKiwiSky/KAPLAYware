@@ -115,18 +115,20 @@ export function createWareEngine(app: WareApp, opts: KAPLAYwareOpts = {}): WareE
 		getTransitionStages(this: WareEngine) {
 			let transitionStages: TransitionStage[] = ["prep"];
 
-			const lastGame = () => getGameByID(this.microgameHistory[this.microgameHistory.length - 1]);
-			const winThing: TransitionStage = lastGame()?.isBoss ? (this.winState == true ? "bossWin" : "bossLose") : this.winState == true ? "win" : "lose";
+			const lastGame = getGameByID(this.microgameHistory[this.microgameHistory.length - 1]);
+			const winThing: TransitionStage = lastGame?.isBoss ? (this.winState == true ? "bossWin" : "bossLose") : this.winState == true ? "win" : "lose";
+
+			// this would be before the prep, so it does BOSS! then regular prep
+			if (this.shouldBoss()) transitionStages = ["bossPrep", "prep"];
 			if (this.winState != undefined) transitionStages.splice(0, 0, winThing);
 			if (this.shouldSpeedUp) transitionStages.splice(1, 0, "speed");
-			if (this.isGameOver()) transitionStages = [lastGame().isBoss ? "bossLose" : "lose", "gameOver"];
-			if (this.shouldBoss()) transitionStages.splice(1, 0, "bossPrep"); // this would be before the prep, so it does BOSS! then regular prep
+			if (this.isGameOver()) transitionStages.splice(transitionStages.indexOf("lose"), 0, "gameOver");
 
 			return transitionStages;
 		},
 		handleQuickWatch(this: WareEngine) {
-			// k.quickWatch("ware.scenePaused", wareEngine.scenePaused);
-			// k.quickWatch("ware.objects", wareApp.sceneObj.get("*", { recursive: true }).length);
+			k.quickWatch("ware.scenePaused", app.sceneObj.paused);
+			k.quickWatch("ware.objects", app.sceneObj.get("*", { recursive: true }).length);
 			k.quickWatch("ware.score", this.score);
 			k.quickWatch("ware.time", this.timeLeft?.toFixed(2));
 			k.quickWatch("ware.lives", this.lives);
@@ -145,16 +147,16 @@ export function createWareEngine(app: WareApp, opts: KAPLAYwareOpts = {}): WareE
 			return app.rootObj.on("finish", () => {
 				if (this.shouldBoss() || this.speed >= MAX_SPEED) {
 					shouldSpeedUp = false;
-					return;
 				}
-
-				gamesSinceLastSpeedUp++;
-				shouldSpeedUp = false;
-				if (this.score >= nextSpeedUp) {
-					shouldSpeedUp = true;
-					intendedSpeed = k.clamp(this.speed + this.speed * k.rand(0.05, 0.07), 0, MAX_SPEED);
-					gamesSinceLastSpeedUp = 0;
-					nextSpeedUp = k.randi(3, 7);
+				else {
+					gamesSinceLastSpeedUp++;
+					shouldSpeedUp = false;
+					if (gamesSinceLastSpeedUp >= nextSpeedUp) {
+						shouldSpeedUp = true;
+						intendedSpeed = k.clamp(this.speed + this.speed * k.rand(0.05, 0.07), 0, MAX_SPEED);
+						gamesSinceLastSpeedUp = 0;
+						nextSpeedUp = k.randi(3, 7);
+					}
 				}
 
 				action();
