@@ -2,6 +2,7 @@ import { assets } from "@kaplayjs/crew";
 import k from "./engine";
 import games from "./scenes/game/games";
 import { createLoadCtx } from "./scenes/game/context/load";
+import { getGameID } from "./scenes/game/utils";
 
 k.loadSprite("logo", "sprites/logo.png");
 
@@ -119,12 +120,17 @@ k.loadSpriteAtlas("sprites/cursor.png", {
 	},
 });
 
-games.forEach((game) => {
+games.forEach(async (game) => {
+	// TODO: figure out this more nicely
 	if (!game.load) return;
 	const loadCtx = createLoadCtx(game);
 	// DON'T change the order of this
 	game.load(loadCtx);
 	loadCtx["loadRoot"] = k.loadRoot;
+	if (game.freeplayInputData) {
+		const data = await loadCtx.loadJSON(`${getGameID(game)}-inputData`, game.freeplayInputData);
+		window.freeplayPreviewData[getGameID(game)] = data;
+	}
 });
 
 // const load crew

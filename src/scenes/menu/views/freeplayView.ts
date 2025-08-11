@@ -1,11 +1,13 @@
-import { ButtonBindingDevice, GameObj, SerializedVec2, Vec2 } from "kaplay";
+import { GameObj } from "kaplay";
 import k from "../../../engine";
 import goGame from "../../game/GameScene";
 import { createView, goView } from "../MenuScene";
 import { Microgame } from "../../../types/Microgame";
 import { createWareApp } from "../../game/app";
 import { createWareEngine } from "../../game/ware";
-import { TButton } from "../../../main";
+import { createGameCtx } from "../../game/context/gameContext";
+import { getGameColor, getGameID, overload2 } from "../../game/utils";
+import { createPreviewGameCtx } from "./previewContext";
 
 function addCartridge(game: Microgame, parent: GameObj) {
 	const obj = parent.add([
@@ -41,50 +43,6 @@ const FREEPLAY_POS = k.vec2(-800, 0);
 
 // dani esto no se va a quedar aqui luego miramos donde lo guardamos nomas lo pongo aqui por ahora
 
-/** Is every singular input that is recorded */
-type RecordedInput = {
-	// REQUIRED
-	frame: number; // frame it happened
-	type: "press" | "down" | "release" | "mouseMove";
-	button?: TButton;
-	position?: SerializedVec2; // Made with Vec2.serialize(), it is just for mouseMove type
-
-	// NON REQUIRED, BUT COOL TO HAVE
-	device: ButtonBindingDevice;
-};
-
-/** Is the final JSON that gets downloaded when you finish a minigame in recording mode (?) */
-export type InputRecording = Record<"inputs", RecordedInput[]>;
-
-/*
-const data: InputRecording = { "inputs": [] };
-let frame = 0;
-k.onUpdate(() => {
-	frame++;
-
-	if (!k.mouseDeltaPos().isZero()) {
-		data.inputs.push({
-			frame: frame,
-			device: "mouse",
-			type: "mouseMove",
-			position: k.mousePos(),
-		});
-	}
-
-	["up", "down", "left", "right", "action"].forEach((btn: TButton) => {
-		// now we'd have to do this for every press,
-		if (k.isButtonPressed(btn)) {
-			data.inputs.push({
-				frame: frame,
-				button: btn,
-				device: k.getLastInputDeviceType(),
-				type: "press",
-			});
-		}
-	});
-});
-*/
-
 export const addFreeplayView = () => {
 	const p = createView<CartridgeObject>(FREEPLAY_POS, "freeplay");
 	p.selectorPaused = true;
@@ -96,11 +54,15 @@ export const addFreeplayView = () => {
 	]);
 
 	// add small engine
-	k.kaplaywared.ignoreWareInputEvents = true;
 	const app = createWareApp(kaboy);
 	app.boxObj.pos = k.vec2(0, -116);
 	app.boxObj.scaleToSize(k.vec2(246, 148));
 	const ware = createWareEngine(app, { availableGames: window.microgames });
+	const ctx = createPreviewGameCtx(createGameCtx(ware, app));
+	ware.onFinish(() => p.setSelected(p.getSelected()));
+
+	// pause ittt
+	app.paused = true;
 
 	// side buttons
 	const leftBtn = p.add([
@@ -206,35 +168,43 @@ export const addFreeplayView = () => {
 		oldSelect?.play("blur");
 		newSelect.play("focus");
 
+		// clear previous
 		app.clearAll();
 		app.resetCamera();
+		app.time = 0;
+		app.sounds.paused = true;
 		app.sceneObj.removeAll();
 		ware.onTimeOutEvents.clear();
 		k.setGravity(0);
+		ctx.clearInputHandlers();
+		ware.microgame = newSelect.game;
+		newSelect.game.start(ctx);
+		ctx.setRGB(getGameColor(newSelect.game, ctx));
 
-		// SMALL SKETCH ON HOW TRIGGERS COULD WORK
-		// i think this would not run onChange but on the singular context that is created
-		/*
-		const data = {} as unknown as InputRecording;
-		const onButtonPressHandler = new k.KEvent();
+		const previewData = window.freeplayPreviewData[getGameID(ware.microgame)];
+		if (!previewData) {
+			app.paused = true;
+		}
+		else {
+			ctx.randSeed(previewData.seed);
 
-		const ctx = createGameCtx(ware, app);
-		ctx.onButtonPress = (btn, action) => {
-			return onButtonPressHandler.add(action);
-		};
+			let frame = 0;
+			ctx.onUpdate(() => {
+				frame++;
+				previewData.inputs.forEach((input, index, arr) => {
+					if (index == arr.length) k.debug.log("last input");
+					if (input.frame != frame) return;
 
-		let frame = 0;
-		ctx.onUpdate(() => {
-			frame++;
-			data.inputs.forEach((input) => {
-				if (input.frame == frame) {
-					if (input.type == "press") {
-						onButtonPressHandler.trigger();
+					if (input.type == "mouseMove") {
+						ctx.triggerButton("moveMouse", k.Vec2.deserialize(input.position), k.Vec2.deserialize(input.delta));
 					}
-				}
+					else {
+						ctx.triggerButton(input.button, input.type);
+						// k.debug.log(input.type + " " + input.button);
+					}
+				});
 			});
-		});
-		*/
+		}
 	});
 
 	p.onSelect(() => {
@@ -261,6 +231,7 @@ export const addFreeplayView = () => {
 
 	p.setSelected(p.menuItems[0]);
 	p.resetState = () => {
+		app.paused = false;
 		p.get("game").forEach((game) => game.hidden = false);
 		p.selectorPaused = true;
 

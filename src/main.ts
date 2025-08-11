@@ -15,10 +15,11 @@ export type TButton = "up" | "down" | "left" | "right" | "action";
 k.setVolume(0.25);
 k.setCursor("none");
 k.loadRoot("./");
+window.freeplayPreviewData = {};
 
 const INITIAL_SCENE = () => {
-	goGame();
-	// k.go("title");
+	if (window.DEV_MICROGAME && window.DEV_RECORDINPUT) goGame();
+	else k.go("title");
 };
 
 k.onLoad(() => {

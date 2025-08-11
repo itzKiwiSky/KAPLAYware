@@ -102,9 +102,10 @@ export function createWareEngine(app: WareApp, opts: KAPLAYwareOpts = {}): WareE
 			else return Math.max(1, (Math.floor(score / 10) + 1) % 4) as 1 | 2 | 3;
 		},
 		shouldBoss(games = window.microgames) {
-			const scoreEqualsBoss = () => this.score % HOW_FREQUENT_BOSS == 0;
-			const onlyBoss = () => games.length == 1 && games[0].isBoss == true;
-			return scoreEqualsBoss() || onlyBoss();
+			const theresBoss = games.some((g) => g.isBoss);
+			const scoreEqualsBoss = this.score % HOW_FREQUENT_BOSS == 0;
+			const onlyBoss = games.length == 1 && games[0].isBoss == true;
+			return theresBoss && (scoreEqualsBoss || onlyBoss);
 		},
 		get shouldSpeedUp() {
 			return shouldSpeedUp;

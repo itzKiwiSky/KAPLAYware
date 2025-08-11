@@ -10,6 +10,7 @@ const getGame: Microgame = {
 	duration: (ctx) => ctx.difficulty == 3 ? 3.5 : 4,
 	input: "keys",
 	urlPrefix: "games/chillPack/get/",
+	freeplayInputData: "amyspark-ng_get-inputs.json",
 	load(ctx) {
 		ctx.loadSprite("grass", "sprites/grass.png");
 		ctx.loadSprite("trunk", "sprites/trunk.png");
@@ -109,6 +110,10 @@ const getGame: Microgame = {
 			if (!movement.isZero()) bean.angle = ctx.lerp(bean.angle, ctx.wave(-25, 25, ctx.time() * 12 * ctx.speed), 0.25);
 			else bean.angle = ctx.lerp(bean.angle, 0, 0.25);
 			bean.flipX = movement.x < 0;
+		});
+
+		ctx.onButtonPress("action", () => {
+			ctx.debug.log("THIS IS CALLED GET.TS ON BUTTON PRESS ACTION");
 		});
 
 		bean.onCollide("apple", () => {

@@ -1,3 +1,4 @@
+import { FreeplayPreviewData } from "./scenes/menu/views/previewContext.ts";
 import type { Microgame } from "./types/Microgame.ts";
 
 declare global {
@@ -9,5 +10,6 @@ declare global {
 		DEV_MICROGAME: string;
 		/** All the micro-games loaded inside KAPLAYWare/ */
 		microgames: Microgame[];
+		freeplayPreviewData: Record<string, FreeplayPreviewData>;
 	}
 }
