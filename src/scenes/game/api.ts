@@ -1,19 +1,5 @@
 import { k } from "../../engine";
 
-export const loadAPIs = [
-	"loadRoot",
-	"loadSprite",
-	"loadSpriteAtlas",
-	"loadAseprite",
-	"loadJSON",
-	"loadSound",
-	"loadFont",
-	"loadBitmapFont",
-	"loadShader",
-	"loadShaderURL",
-	"load",
-] as const;
-
 export const gameAPIs = [
 	"add",
 	"pos",

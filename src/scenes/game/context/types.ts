@@ -4,6 +4,7 @@ import { gameAPIs } from "../api";
 import { ConfettiOpt } from "../objects/confetti";
 import k from "../../../engine";
 
+// Inside me
 type Friend = keyof typeof assets | `${keyof typeof assets}-o`;
 type AtFriend = `@${Friend}`;
 type CustomSprite<T extends string> = T extends AtFriend | string & {} ? AtFriend | string & {} : string;

@@ -2,7 +2,7 @@ import { GameObj, KEvent, KEventController, PosComp, RotateComp, ScaleComp, Stat
 import { WareApp } from "../app";
 import k from "../../../engine";
 import { Microgame } from "../../../types/Microgame";
-import { createTransCtx, TransCtx } from "./trans";
+import { createTransCtx, TransCtx } from "./transContext";
 import { MicrogameCtx, MicrogameInput } from "../context/types";
 
 const baseStages = ["prep", "win", "lose", "bossPrep", "bossWin", "bossLose", "speed", "gameOver"] as const;

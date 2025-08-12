@@ -1,8 +1,7 @@
 import { assets } from "@kaplayjs/crew";
-import k from "./engine";
-import games from "./scenes/game/games";
-import { createLoadCtx } from "./scenes/game/context/load";
-import { getGameID } from "./scenes/game/utils";
+import k from "../engine";
+import { createLoadCtx } from "./loadContext";
+import { getGameID } from "../scenes/game/utils";
 
 k.loadSprite("logo", "sprites/logo.png");
 
@@ -120,7 +119,7 @@ k.loadSpriteAtlas("sprites/cursor.png", {
 	},
 });
 
-games.forEach(async (game) => {
+window.microgames.forEach(async (game) => {
 	// TODO: figure out this more nicely
 	if (!game.load) return;
 	const loadCtx = createLoadCtx(game);

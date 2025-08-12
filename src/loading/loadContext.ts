@@ -1,8 +1,21 @@
 import { KAPLAYCtx, SpriteAtlasData } from "kaplay";
-import { getGameID } from "../utils";
-import { loadAPIs } from "../api";
-import k from "../../../engine";
-import { Microgame } from "../../../types/Microgame";
+import { Microgame } from "../types/Microgame";
+import k from "../engine";
+import { getGameID } from "../scenes/game/utils";
+
+export const loadAPIs = [
+	"loadRoot",
+	"loadSprite",
+	"loadSpriteAtlas",
+	"loadAseprite",
+	"loadJSON",
+	"loadSound",
+	"loadFont",
+	"loadBitmapFont",
+	"loadShader",
+	"loadShaderURL",
+	"load",
+] as const;
 
 /** The allowed load functions */
 export type LoadCtx = Pick<KAPLAYCtx, typeof loadAPIs[number]>;

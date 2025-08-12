@@ -1,7 +1,7 @@
 import { Color } from "kaplay";
-import { LoadCtx } from "../scenes/game/context/load";
 import { MicrogameCtx } from "../scenes/game/context/types";
 import { addTextPrompt } from "../scenes/game/objects/prompts";
+import { LoadCtx } from "../loading/loadContext";
 
 interface BaseMicrogame {
 	/** Prompt of the microgame!
