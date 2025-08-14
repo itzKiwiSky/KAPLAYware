@@ -1,6 +1,6 @@
 import { GameObj } from "kaplay";
 import k from "../../../engine";
-import { createView, goView } from "../MenuScene";
+import { createView, goView } from "./viewManager";
 
 export function addButton(parent: GameObj, text: string, action?: () => void) {
 	const l = () => {};
@@ -42,8 +42,9 @@ type CoolButton = ReturnType<typeof addButton>;
 
 const MAIN_MENU_POS = k.vec2(0, 0);
 
-export const addMainView = () => {
+export const addMainView = (isFirst: boolean) => {
 	const p = createView<CoolButton>(MAIN_MENU_POS, "main");
+	let finishedAnimatingButtons = false;
 
 	const kaboy = p.add([
 		k.sprite("kaboy"),
@@ -74,7 +75,7 @@ export const addMainView = () => {
 
 	// story
 	const storyButton = addButton(p, "Story");
-	storyButton.pos = k.vec2(INITIAL_X, INITIAL_Y);
+	storyButton.pos = k.vec2(isFirst ? 999 : INITIAL_X, INITIAL_Y);
 	storyButton.action = () => {
 		kaboy.leave();
 		goView("story");
@@ -124,16 +125,14 @@ export const addMainView = () => {
 		p.get("button").forEach((button: CoolButton, idx) => {
 			const isSelected = button == p.getSelected();
 
-			if (button.isHovering() && !p.selectorPaused) {
-				if (!isSelected) p.setSelected(button);
-				if (k.isButtonPressed("action")) p.triggerSelect();
+			// sets selection based onHovering
+			if (button.isHovering() && !p.selectorPaused && !isSelected) {
+				p.setSelected(button);
 			}
 
-			if (isSelected) {
-				button.pos.x = k.lerp(button.pos.x, INITIAL_X + 15, 0.5);
-			}
-			else {
-				button.pos.x = k.lerp(button.pos.x, INITIAL_X, 0.5);
+			if (finishedAnimatingButtons) {
+				if (isSelected) button.pos.x = k.lerp(button.pos.x, INITIAL_X + 15, 0.5);
+				else button.pos.x = k.lerp(button.pos.x, INITIAL_X, 0.5);
 			}
 		});
 	});
@@ -158,6 +157,7 @@ export const addMainView = () => {
 
 	p.onSelect(() => {
 		if (p.selectorPaused) return;
+		if (p.lastInput == "mouse" && !p.getSelected().isHovering()) return;
 		p.selectorPaused = true;
 		boyScreen.play("select");
 		const l = k.loop(0.1, () => {
@@ -176,8 +176,24 @@ export const addMainView = () => {
 
 	p.setSelected(storyButton);
 
-	p.resetState = () => {
-		p.tween(kaboy.pos.y, 12, 0.75, (p) => kaboy.pos.y = p, k.easings.easeOutQuint);
-		p.wait(0.25, () => p.selectorPaused = false);
-	};
+	if (isFirst) {
+		// move all the buttons in place
+		p.get("button").forEach((button, idx) => {
+			const isSelected = button == p.getSelected();
+			p.tween(999, INITIAL_X - (isSelected ? 15 : 0), 0.25 - (0.05 * idx), (p) => button.pos.x = p, k.easings.easeOutQuint);
+		});
+
+		p.wait(0.5, () => {
+			finishedAnimatingButtons = true;
+			if (p.isActive) p.selectorPaused = false;
+		});
+	}
+
+	// will run everytime i enter the view (including the first one)
+	p.onEnter(() => {
+		if (!isFirst) finishedAnimatingButtons = true;
+		p.selectorPaused = true;
+		p.wait(0.15, () => p.selectorPaused = false);
+		p.tween(999, 12, 0.75, (p) => kaboy.pos.y = p, k.easings.easeOutQuint);
+	});
 };

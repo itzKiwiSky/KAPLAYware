@@ -309,7 +309,7 @@ export function createGameCtx(ware: WareEngine, wareApp: WareApp): MicrogameCtx 
 
 			const listener = forAllCurrentAndFuture(wareApp.sceneObj, tag, (obj) => {
 				if (!obj.area) {
-					throw new Error(
+					k.throwError(
 						"onClick() requires the object to have area() component",
 					);
 				}

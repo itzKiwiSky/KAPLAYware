@@ -1,12 +1,10 @@
 import { Color, GameObj, KEventController, Tag } from "kaplay";
 import { MicrogameCtx, MicrogameInput } from "./context/types";
-import games, { modules } from "./games";
+import games, { modules } from "../../loading/games";
 import k from "../../engine";
 import { Microgame } from "../../types/Microgame";
 
-export const getGameID = (g: Microgame) => {
-	return `${g.author}:${g.name}`;
-};
+export const getGameID = (g: Microgame) => `${g.author}:${g.name}`;
 export const getGameByID = (id: string) => games.find((microgame) => `${microgame.author}:${microgame.name}` == id);
 
 /**

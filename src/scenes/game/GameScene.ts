@@ -199,7 +199,7 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 	ware.onFinish(() => {
 		// this runs when someone calls the game to be over (ctx.finish())
 		if (ware.winState == undefined) {
-			throw new Error("Finished ware.microgame without setting the win condition!! Please call ctx.win() or ctx.lose() before calling ctx.finish()");
+			k.throwError("GameScene, Finished ware.microgame without setting the win condition!! Please call ctx.win() or ctx.lose() before calling ctx.finish()");
 		}
 
 		if (!window.DEV_RECORDINPUT) runNextGame();

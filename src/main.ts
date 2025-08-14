@@ -1,5 +1,5 @@
 import k from "./engine";
-import "./loader";
+import "./loading/loader";
 import "./plugins/cursor";
 
 import "./scenes/FocusScene";
@@ -19,7 +19,7 @@ window.freeplayPreviewData = {};
 
 const INITIAL_SCENE = () => {
 	if (window.DEV_MICROGAME && window.DEV_RECORDINPUT) goGame();
-	else k.go("title");
+	else k.go("menu");
 };
 
 k.onLoad(() => {

@@ -1,5 +1,5 @@
-import { Microgame } from "../../types/Microgame";
-import { getGameID } from "./utils";
+import { Microgame } from "../types/Microgame";
+import { getGameID } from "../scenes/game/utils";
 
 window.microgames = [];
 

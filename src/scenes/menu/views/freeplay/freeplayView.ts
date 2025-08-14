@@ -1,12 +1,12 @@
 import { GameObj } from "kaplay";
-import k from "../../../engine";
-import goGame from "../../game/GameScene";
-import { createView, goView } from "../MenuScene";
-import { Microgame } from "../../../types/Microgame";
-import { createWareApp } from "../../game/app";
-import { createWareEngine } from "../../game/ware";
-import { createGameCtx } from "../../game/context/gameContext";
-import { getGameColor, getGameID, overload2 } from "../../game/utils";
+import k from "../../../../engine";
+import goGame from "../../../game/GameScene";
+import { createView, goView } from "../../MenuScene";
+import { Microgame } from "../../../../types/Microgame";
+import { createWareApp } from "../../../game/app";
+import { createWareEngine } from "../../../game/ware";
+import { createGameCtx } from "../../../game/context/gameContext";
+import { getGameColor, getGameID } from "../../../game/utils";
 import { createPreviewGameCtx } from "./previewContext";
 
 function addCartridge(game: Microgame, parent: GameObj) {
@@ -230,7 +230,7 @@ export const addFreeplayView = () => {
 	});
 
 	p.setSelected(p.menuItems[0]);
-	p.resetState = () => {
+	p.onEnter(() => {
 		app.paused = false;
 		p.get("game").forEach((game) => game.hidden = false);
 		p.selectorPaused = true;
@@ -239,5 +239,5 @@ export const addFreeplayView = () => {
 			p.selectorPaused = false;
 			k.tween(kaboy.pos.y, 600, 0.5, (p) => kaboy.pos.y = p, k.easings.easeOutQuint);
 		});
-	};
+	});
 };

@@ -1,7 +1,7 @@
 import { GameObj } from "kaplay";
 import k from "../../../engine";
 import goGame from "../../game/GameScene";
-import { createView, goView } from "../MenuScene";
+import { createView, goView } from "./viewManager";
 
 function addPack(pack: string, parent: GameObj) {
 	const obj = parent.add([
@@ -34,7 +34,7 @@ type PackObject = ReturnType<typeof addPack>;
 
 const STORY_POS = k.vec2(800, 0);
 
-export const addStoryView = () => {
+export const addStoryView = (isFirst) => {
 	const p = createView<PackObject>(STORY_POS, "story");
 	p.selectorPaused = true;
 
@@ -173,12 +173,12 @@ export const addStoryView = () => {
 	});
 
 	p.setSelected(p.menuItems[0]);
-	p.resetState = () => {
+	p.onEnter(() => {
 		p.selectorPaused = true;
 
 		p.wait(0.25, () => {
 			p.selectorPaused = false;
 			k.tween(kaboy.pos.y, 600, 0.5, (p) => kaboy.pos.y = p, k.easings.easeOutQuint);
 		});
-	};
+	});
 };
