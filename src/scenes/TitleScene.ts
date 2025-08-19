@@ -1,4 +1,5 @@
 import k from "../engine";
+import goMenu from "./menu/MenuScene";
 
 k.scene("title", () => {
 	k.addPlainBackground(k.BLACK.lerp(k.WHITE, 0.45));
@@ -34,7 +35,7 @@ k.scene("title", () => {
 				k.tween(logo.pos.y, k.height() + 100, 0.25, (p) => logo.pos.y = p);
 				k.tween(pressAny.pos.y, k.height() + 100, 0.25, (p) => pressAny.pos.y = p);
 				k.camFade(0.25).onEnd(() => {
-					k.go("menu");
+					goMenu("main");
 				});
 			});
 		}

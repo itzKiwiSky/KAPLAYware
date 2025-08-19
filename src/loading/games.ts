@@ -1,9 +1,8 @@
 import { Microgame } from "../types/Microgame";
-import { getGameID } from "../scenes/game/utils";
-
+const getGameID = (g) => `${g.author}:${g.name}`; // TODO: fix this
 window.microgames = [];
 
-export const modules = import.meta.glob("../../../games/**/*/main.ts", { eager: true });
+export const modules = import.meta.glob("../../games/**/*/main.ts", { eager: true });
 
 const exclude = new Set(["amyspark-ng:test"]);
 

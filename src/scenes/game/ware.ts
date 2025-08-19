@@ -3,7 +3,7 @@ import { Microgame } from "../../types/Microgame";
 import { MicrogameCtx, MicrogameInput } from "./context/types";
 import k from "../../engine";
 import { TransitionStage } from "./transitions/makeTransition";
-import { getGameByID } from "./utils";
+import { getGameByID } from "../../utils";
 import { WareApp } from "./app";
 
 /** Certain options to instantiate kaplayware (ware-engine) */

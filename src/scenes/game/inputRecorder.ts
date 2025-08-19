@@ -1,9 +1,9 @@
 import k from "../../engine";
 import { TButton } from "../../main";
-import { FreeplayPreviewData } from "../menu/views/previewContext";
 import { WareApp } from "./app";
-import { getGameID } from "./utils";
+import { getGameID } from "../../utils";
 import { WareEngine } from "./ware";
+import { FreeplayPreviewData } from "../menu/views/freeplay/previewContext";
 
 export function managePreviewMode(app: WareApp, ware: WareEngine, runFunction: () => void) {
 	let frame = 0;

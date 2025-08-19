@@ -160,7 +160,7 @@ export const addStoryView = (isFirst) => {
 			p.tween(selectPack.pos.y, 380, 0.5, (p) => selectPack.pos.y = p, k.easings.easeOutQuint);
 			p.wait(0.5, () => {
 				const theGames = window.microgames.filter((game) => game.pack == selectPack.pack);
-				goGame({ availableGames: theGames });
+				goGame(theGames, {}, "story");
 			});
 		});
 	});

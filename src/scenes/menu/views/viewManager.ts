@@ -56,7 +56,7 @@ export function goView(viewName: string) {
 	curCamPos = views.map((view) => view.pos)[curView].clone();
 }
 
-export function setupView(initialView: string) {
+export function setupViews(initialView: string) {
 	curView = views.indexOf(views.find((v) => v.viewName == initialView));
 	curCamPos = views[curView].pos;
 	k.setCamPos(k.center().add(curCamPos));

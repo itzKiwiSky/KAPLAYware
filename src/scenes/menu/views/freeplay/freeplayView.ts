@@ -1,13 +1,13 @@
 import { GameObj } from "kaplay";
 import k from "../../../../engine";
 import goGame from "../../../game/GameScene";
-import { createView, goView } from "../../MenuScene";
 import { Microgame } from "../../../../types/Microgame";
 import { createWareApp } from "../../../game/app";
 import { createWareEngine } from "../../../game/ware";
 import { createGameCtx } from "../../../game/context/gameContext";
-import { getGameColor, getGameID } from "../../../game/utils";
+import { getGameColor, getGameID } from "../../../../utils";
 import { createPreviewGameCtx } from "./previewContext";
+import { createView, goView } from "../viewManager";
 
 function addCartridge(game: Microgame, parent: GameObj) {
 	const obj = parent.add([
@@ -43,7 +43,7 @@ const FREEPLAY_POS = k.vec2(-800, 0);
 
 // dani esto no se va a quedar aqui luego miramos donde lo guardamos nomas lo pongo aqui por ahora
 
-export const addFreeplayView = () => {
+export const addFreeplayView = (isFirst: boolean) => {
 	const p = createView<CartridgeObject>(FREEPLAY_POS, "freeplay");
 	p.selectorPaused = true;
 
@@ -132,8 +132,8 @@ export const addFreeplayView = () => {
 		if (k.isButtonPressed("left")) leftBtn.press();
 		else if (k.isButtonPressed("right")) rightBtn.press();
 
-		const packs = p.get("game") as CartridgeObject[];
-		packs.forEach((gameObj, index) => {
+		const gameCarts = p.get("game") as CartridgeObject[];
+		gameCarts.forEach((gameObj, index) => {
 			if (index == p.index) {
 				gameObj.intendedX = k.center().x;
 				if (gameObj.area.cursor == "none") gameObj.area.cursor = null;
@@ -216,7 +216,7 @@ export const addFreeplayView = () => {
 			p.tween(selectGame.pos.y, 380, 0.5, (p) => selectGame.pos.y = p, k.easings.easeOutQuint);
 			p.wait(0.5, () => {
 				const theGames = window.microgames.filter((game) => game == selectGame.game);
-				goGame({ availableGames: theGames });
+				// goGame({ availableGames: theGames });
 			});
 		});
 	});
@@ -230,9 +230,16 @@ export const addFreeplayView = () => {
 	});
 
 	p.setSelected(p.menuItems[0]);
+
+	if (isFirst) {
+		p.get("game").forEach((cartridge) => {
+			k.tween(900, 900, 0.5, (p) => kaboy.pos.y = p, k.easings.easeOutQuint);
+		});
+	}
+
 	p.onEnter(() => {
 		app.paused = false;
-		p.get("game").forEach((game) => game.hidden = false);
+		p.get("game").forEach((cartridge) => cartridge.hidden = false);
 		p.selectorPaused = true;
 
 		p.wait(0.25, () => {

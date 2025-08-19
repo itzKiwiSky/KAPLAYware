@@ -1,19 +1,46 @@
-import { Color, GameObj } from "kaplay";
+import { Color, GameObj, Vec2 } from "kaplay";
 import k from "../../../engine";
 import { linearSelector } from "../../menu/linearSelector";
 
-export const createPauseScreen = () => {
+export function createPauseScreen(resume: () => void, menu: () => void) {
 	// let canPress = false;
 	let enabled = false;
-	const p = k.add([linearSelector(), k.z(100)]);
-	// const resumeBtn = addBtn(p, k.BLUE, "Resume")
-	// resumeBtn.pos = k.vec2(188, 380)
-	// const exitBtn = addBtn(p, k.RED, "Exit")
-	// exitBtn.pos = k.vec2(300, 380)
-	// p.menuItems = [resumeBtn, exitBtn]
-	// p.menuBack = "left"
-	// p.menuNext = "right"
-	// p.menuSelect = "action"
+	const p = k.add([linearSelector<"resume" | "menu">(), k.z(100)]);
+	p.menuItems = ["resume", "menu"];
+	p.menuBack = "left";
+	p.menuNext = "right";
+	p.menuSelect = "action";
+
+	const drawBtn = (pos: Vec2, color: Color, text: string, selected = false) => {
+		if (selected) {
+			k.drawRect({
+				width: 190,
+				height: 60,
+				pos: pos,
+				radius: 50,
+				outline: { color: k.mulfok.WHITE, width: 25 },
+				anchor: "center",
+			});
+		}
+
+		k.drawRect({
+			width: 190,
+			height: 60,
+			pos: pos,
+			radius: 50,
+			color: color,
+			outline: { color: k.mulfok.VOID_VIOLET, width: 10 },
+			anchor: "center",
+		});
+
+		k.drawText({
+			text: text,
+			pos: pos,
+			size: 35,
+			align: "center",
+			anchor: "center",
+		});
+	};
 
 	p.onDraw(() => {
 		if (!enabled) return;
@@ -37,22 +64,21 @@ export const createPauseScreen = () => {
 				};
 			},
 		});
+
+		// draw buttons
+		drawBtn(k.center().add(-150, 70), k.mulfok.DARK_BLUE, "RESUME", p.getSelected() == "resume");
+		drawBtn(k.center().add(150, 70), k.mulfok.DARK_RED, "MENU", p.getSelected() == "menu");
 	});
 
-	// p.onChange((newSelect, oldSelect) => {
-	// 	newSelect.opacity = 0.5
-	// 	oldSelect.opacity = 0.5
-	// })
-
-	// p.onSelect(() => {
-	// 	if (p.getSelected() == exitBtn) canPress = false
-	// })
-
-	// p.setSelected(resumeBtn)
+	p.onSelect(() => {
+		if (p.getSelected() == "resume") resume();
+		if (p.getSelected() == "menu") menu();
+	});
 
 	return {
 		set isGamePaused(val: boolean) {
 			enabled = val;
+			if (enabled == true) p.index = 0;
 		},
 	};
-};
+}

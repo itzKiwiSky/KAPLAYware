@@ -8,6 +8,7 @@ import "./scenes/menu/MenuScene";
 import "../src/scenes/game/GameScene";
 
 import goGame from "../src/scenes/game/GameScene";
+import goMenu from "./scenes/menu/MenuScene";
 
 /** The available buttons in the kaplay button definition */
 export type TButton = "up" | "down" | "left" | "right" | "action";
@@ -19,7 +20,7 @@ window.freeplayPreviewData = {};
 
 const INITIAL_SCENE = () => {
 	if (window.DEV_MICROGAME && window.DEV_RECORDINPUT) goGame();
-	else k.go("menu");
+	else goMenu("freeplay");
 };
 
 k.onLoad(() => {

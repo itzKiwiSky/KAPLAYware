@@ -2,7 +2,7 @@ import { ButtonBindingDevice, SerializedVec2, Vec2 } from "kaplay";
 import { TButton } from "../../../../main";
 import { MicrogameCtx } from "../../../game/context/types";
 import k from "../../../../engine";
-import { overload2 } from "../../../game/utils";
+import { overload2 } from "../../../../utils";
 
 /*
 

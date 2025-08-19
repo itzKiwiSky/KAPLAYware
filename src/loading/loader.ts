@@ -1,7 +1,7 @@
 import { assets } from "@kaplayjs/crew";
 import k from "../engine";
 import { createLoadCtx } from "./loadContext";
-import { getGameID } from "../scenes/game/utils";
+import { getGameID } from "../utils";
 
 k.loadSprite("logo", "sprites/logo.png");
 

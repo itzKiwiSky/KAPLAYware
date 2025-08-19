@@ -7,17 +7,25 @@ import { addBomb, WareBomb } from "./objects/bomb";
 import { createPauseScreen } from "./objects/pause";
 import chillTransition from "./transitions/chill";
 import { createTransition } from "./transitions/makeTransition";
-import { gameHidesMouse, getGameColor, getGameDuration, getGameID, getGameInput } from "./utils";
+import { gameHidesMouse, getGameColor, getGameDuration, getGameID, getGameInput } from "../../utils";
 import { createWareEngine, KAPLAYwareOpts } from "./ware";
+import { Microgame } from "../../types/Microgame";
+import goMenu from "../menu/MenuScene";
 
-k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microgames }) => {
-	k.kaplaywared.ignoreWareInputEvents = false;
+k.scene("game", (gamesToPlay: Microgame[], mods: {}, lastView: string) => {
+	gamesToPlay = gamesToPlay ?? window.microgames;
+	mods = {};
+	lastView = lastView ?? "main";
+	const pack = "chill"; // TODO: find a way to get the pack from the majority of games
+
+	// setup the game
 	const app = createWareApp();
 	const transition = createTransition(chillTransition, app);
-	const ware = createWareEngine(app, { availableGames: kaplaywareOpt.availableGames ?? window.microgames });
+	const ware = createWareEngine(app, { availableGames: gamesToPlay });
 	ware.ctx = createGameCtx(ware, app);
 
-	const pauseScreen = createPauseScreen();
+	const pauseScreen = createPauseScreen(() => setPaused(false), () => goMenu(lastView));
+
 	let gamePaused = false;
 	const setPaused = (newPause: boolean) => {
 		gamePaused = newPause;
@@ -92,7 +100,7 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 				]);
 
 				k.onClick(() => {
-					goGame(kaplaywareOpt);
+					goGame(gamesToPlay, mods, lastView);
 				});
 			});
 
@@ -209,5 +217,5 @@ k.scene("game", (kaplaywareOpt: KAPLAYwareOpts = { availableGames: window.microg
 	runNextGame();
 });
 
-const goGame = (opts?: KAPLAYwareOpts) => k.go("game", opts);
+const goGame = (gamesToPlay?: Microgame[], mods?: {}, lastView?: string) => k.go("game", gamesToPlay, mods, lastView);
 export default goGame;

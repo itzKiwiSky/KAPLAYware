@@ -1,7 +1,7 @@
 import { KAPLAYCtx, SpriteAtlasData } from "kaplay";
 import { Microgame } from "../types/Microgame";
 import k from "../engine";
-import { getGameID } from "../scenes/game/utils";
+import { getGameID } from "../utils";
 
 export const loadAPIs = [
 	"loadRoot",
