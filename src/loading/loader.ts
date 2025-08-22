@@ -7,6 +7,7 @@ k.loadSprite("logo", "sprites/logo.png");
 
 k.loadSprite("cartridge", "sprites/menu/cartridge.png", { sliceX: 2, sliceY: 1, anims: { "focus": 1, "blur": 0 } });
 k.loadSprite("cartridge_pack", "sprites/menu/cartridge_pack.png", { sliceX: 2, sliceY: 1, anims: { "focus": 1, "blur": 0 } });
+k.loadSprite("cartridge_box", "sprites/menu/cartridge_box.png", { sliceX: 2, sliceY: 1, anims: { "focus": 1, "blur": 0 } });
 k.loadSprite("kaboy", "sprites/menu/kaboy.png");
 
 k.loadSprite("ui_arrow", "sprites/menu/ui_arrow.png");
