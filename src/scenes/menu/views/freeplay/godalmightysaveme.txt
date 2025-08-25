@@ -1,0 +1,182 @@
+import kaplay from "kaplay"
+const k = kaplay()
+
+const boxes = [
+    {
+        id: "box1",
+        name: "Box 1",
+        games: [
+            { id: "g1", name: "Game 1" },
+            { id: "g2", name: "Game 2" }
+        ]
+    },
+    {
+        id: "box2",
+        name: "Box 2",
+        games: [
+            { id: "g3", name: "Game 3" },
+            { id: "g4", name: "Game 4" },
+            { id: "g5", name: "Game 5" }
+        ]
+    },
+    {
+        id: "box3",
+        name: "Box 3",
+        games: [
+            { id: "g6", name: "Game 6" },
+            { id: "g7", name: "Game 7" }
+        ]
+    }
+]
+
+// ------------------ State ------------------
+let expandedBoxes = new Set([0])
+let currentBoxIndex = 0
+let currentGameIndex = null
+
+const menuContainer = k.add([k.pos(0, 100)])
+let intendedX = 0
+
+// ------------------ Entities ------------------
+const boxEntities = []
+
+boxes.forEach((box, bi) => {
+    const boxLabel = menuContainer.add([
+        k.text(box.name, { size: 24 }),
+        k.pos(0, 0)
+    ])
+
+    const gameLabels = box.games.map(game =>
+        menuContainer.add([k.text(game.name, { size: 16 }), k.pos(0, 0), { bi }])
+    )
+
+    boxEntities.push({ boxLabel, gameLabels })
+})
+
+// ------------------ Layout Calculation ------------------
+function calculateLayout() {
+    const spacingBox = 200
+    const spacingGame = 150
+
+    let cursorX = 0
+
+    boxes.forEach((box, bi) => {
+        const boxEnt = boxEntities[bi]
+
+        // box absolute target
+        boxEnt.boxLabel.targetX = cursorX
+
+        if (expandedBoxes.has(bi)) {
+            let gx = cursorX + spacingGame
+            box.games.forEach((_, gi) => {
+                boxEnt.gameLabels[gi].targetX = gx // games spread
+                gx += spacingGame
+            })
+            cursorX = gx
+        } else {
+            // collapsed → games stack on box
+            box.games.forEach((_, gi) => {
+                boxEnt.gameLabels[gi].targetX = cursorX
+            })
+            cursorX += spacingBox
+        }
+    })
+}
+
+// ------------------ Navigation ------------------
+function moveRight() {
+    const box = boxes[currentBoxIndex]
+    if (expandedBoxes.has(currentBoxIndex)) {
+        if (currentGameIndex === null) {
+            currentGameIndex = 0
+        } else if (currentGameIndex < box.games.length - 1) {
+            currentGameIndex++
+        } else {
+            currentGameIndex = null
+            currentBoxIndex = (currentBoxIndex + 1) % boxes.length
+        }
+    } else {
+        currentBoxIndex = (currentBoxIndex + 1) % boxes.length
+        currentGameIndex = null
+    }
+    intendedX = -getCurrentTargetX() + 200
+}
+
+function moveLeft() {
+    const box = boxes[currentBoxIndex]
+    if (expandedBoxes.has(currentBoxIndex)) {
+        if (currentGameIndex !== null) {
+            if (currentGameIndex > 0) {
+                currentGameIndex--
+            } else {
+                currentGameIndex = null
+            }
+        } else {
+            currentBoxIndex = (currentBoxIndex - 1 + boxes.length) % boxes.length
+            currentGameIndex = expandedBoxes.has(currentBoxIndex)
+                ? boxes[currentBoxIndex].games.length - 1
+                : null
+        }
+    } else {
+        currentBoxIndex = (currentBoxIndex - 1 + boxes.length) % boxes.length
+        currentGameIndex = null
+    }
+    intendedX = -getCurrentTargetX() + 200
+}
+
+function toggleExpandCollapse() {
+    if (expandedBoxes.has(currentBoxIndex)) {
+        expandedBoxes.delete(currentBoxIndex)
+        currentGameIndex = null
+    } else {
+        expandedBoxes.add(currentBoxIndex)
+    }
+    calculateLayout()
+    intendedX = -getCurrentTargetX() + 200
+}
+
+// ------------------ Focus ------------------
+function getCurrentTargetX() {
+    const be = boxEntities[currentBoxIndex]
+    if (currentGameIndex === null) return be.boxLabel.targetX ?? 0
+    return be.gameLabels[currentGameIndex].targetX ?? 0
+}
+
+// ------------------ Update ------------------
+k.onUpdate(() => {
+    // scroll with parent
+    menuContainer.pos.x = k.lerp(menuContainer.pos.x, intendedX, 0.1)
+
+    // lerp objects into their collapsed/expanded local positions
+    boxes.forEach((box, bi) => {
+        const boxEnt = boxEntities[bi]
+
+        boxEnt.boxLabel.pos.x = k.lerp(
+            boxEnt.boxLabel.pos.x,
+            boxEnt.boxLabel.targetX,
+            0.2
+        )
+        boxEnt.boxLabel.color =
+            currentBoxIndex === bi && currentGameIndex === null
+                ? k.Color.YELLOW
+                : k.Color.WHITE
+
+        boxEnt.gameLabels.forEach((g, gi) => {
+            g.pos.x = k.lerp(g.pos.x, g.targetX, 0.2)
+            g.color =
+                currentBoxIndex === bi && currentGameIndex === gi
+                    ? k.Color.YELLOW
+                    : k.Color.WHITE
+        })
+    })
+})
+
+// ------------------ Input ------------------
+k.onKeyPress("right", () => moveRight())
+k.onKeyPress("left", () => moveLeft())
+k.onKeyPress("enter", () => toggleExpandCollapse())
+k.onKeyPress("space", () => toggleExpandCollapse())
+
+// ------------------ Init ------------------
+calculateLayout()
+intendedX = 200

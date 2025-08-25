@@ -44,6 +44,7 @@ const MAIN_MENU_POS = k.vec2(0, 0);
 
 export const addMainView = (isFirst: boolean) => {
 	const p = createView<CoolButton>(MAIN_MENU_POS, "main");
+	p.selectorPaused = true;
 	let finishedAnimatingButtons = false;
 
 	const kaboy = p.add([
@@ -191,8 +192,8 @@ export const addMainView = (isFirst: boolean) => {
 
 	// will run everytime i enter the view (including the first one)
 	p.onEnter(() => {
-		if (!isFirst) finishedAnimatingButtons = true;
 		p.selectorPaused = true;
+		if (!isFirst) finishedAnimatingButtons = true;
 		p.wait(0.15, () => p.selectorPaused = false);
 		p.tween(999, 12, 0.75, (p) => kaboy.pos.y = p, k.easings.easeOutQuint);
 	});

@@ -10,15 +10,15 @@ function addBox(text: string, parent: GameObj) {
 		k.anchor("center"),
 		k.scale(),
 		k.pos(k.center()),
-		k.opacity(1),
+		k.opacity(0.5),
 		k.rotate(),
 		k.z(1),
 		"box",
 		{
-			isOpen: false,
 			text: text,
-			cartridges: [] as CartridgeObject[],
-			intendedX: k.center().x,
+			isOpen: false,
+			boxIndex: 0,
+			itemIndex: 0,
 		},
 	]);
 
@@ -44,7 +44,7 @@ function addCartridge(game: Microgame, parent: GameObj) {
 	const obj = parent.add([
 		k.sprite("cartridge", { anim: "blur" }),
 		k.anchor("center"),
-		k.pos(k.center().x, k.center().y),
+		k.pos(k.center()),
 		k.scale(),
 		k.opacity(),
 		k.rotate(),
@@ -53,7 +53,7 @@ function addCartridge(game: Microgame, parent: GameObj) {
 		"game",
 		{
 			game: game,
-			intendedX: k.center().x,
+			boxIndex: 0,
 		},
 	]);
 
@@ -105,56 +105,164 @@ export function getOptionsByGroup(group: PossibleGroups) {
 
 export const addFreeplayView = (isFirst: boolean) => {
 	const p = createView<CartridgeObject | BoxObject>(FREEPLAY_POS, "freeplay");
-	p.selectorPaused = false;
+	p.selectorPaused = true;
 	p.menuBack = "left";
 	p.menuNext = "right";
 	p.menuSelect = "action";
 
-	let currentGroup: PossibleGroups = "pack";
-	function changeGroup(newGroup = currentGroup) {
-		const boxes = p.get("box");
-		const optionsByGroup = getOptionsByGroup(newGroup);
+	const currentGroup: PossibleGroups = "pack";
+	const optionsByGroup = getOptionsByGroup(currentGroup);
+	const menuContainer = p.add([k.pos()]);
 
-		if (boxes.length == 0) {
-			Object.keys(optionsByGroup).forEach((key, index) => {
-				const box = addBox(key, p);
-				const games = optionsByGroup[key] as Microgame[];
-				games.forEach((g, index) => {
-					const cartridge = addCartridge(g, p);
-					box.cartridges[index] = cartridge;
+	// ------------------ State ------------------
+	let expandedBoxes = new Set([0]);
+	let currentBoxIndex = 0;
+	let currentGameIndex = null; // null = selecting box itself
+
+	// parent container for smooth scrolling
+	let intendedX = 0;
+
+	type BoxEntity = { box: BoxObject; games: CartridgeObject[]; };
+
+	// ------------------ Entities ------------------
+	const boxEntities: BoxEntity[] = [];
+
+	Object.keys(optionsByGroup).forEach((boxKey, bi) => {
+		const games = optionsByGroup[boxKey];
+
+		const boxObj = addBox(boxKey, menuContainer);
+
+		const cartObjs = games.map((game: Microgame) => {
+			const cartObj = addCartridge(game, menuContainer);
+			cartObj.boxIndex = bi;
+			return cartObj;
+		});
+
+		boxEntities.push({ box: boxObj, games: cartObjs });
+	});
+
+	// ------------------ Position Calculation ------------------
+	function calculateLayout() {
+		const Xspacing = 306;
+
+		let cursorX = 0;
+
+		Object.keys(optionsByGroup).forEach((boxKey, bi) => {
+			const games = optionsByGroup[boxKey];
+			const boxEnt = boxEntities[bi];
+
+			// if expanded, lay out games after it
+			if (expandedBoxes.has(bi)) {
+				let gx = cursorX + Xspacing;
+				games.forEach((_, gi: number) => {
+					boxEnt.games[gi].targetX = gx;
+					gx += Xspacing;
 				});
-			});
-
-			// nice lerp where index is the index in array and p.index is the scrolling index
-			// packObj.intendedX = k.center().x + packObj.width * 1.5 * (index - p.index);
-
-			const boxes = p.get("box") as BoxObject[];
-			p.menuItems = boxes;
-			p.onUpdate(() => {
-				boxes.forEach((box, boxIndex) => {
-					const boxX = k.center().x + box.width * 1.5 * (boxIndex - p.index);
-					box.pos.x = k.lerp(box.pos.x, boxX, 0.5);
-
-					box.cartridges.forEach((cart, cartIndex) => {
-						if (!box.isOpen) cart.pos.x = k.lerp(cart.pos.x, box.pos.x, 0.5);
-						else {
-							// box is open
-							const cartX = k.center().x + cart.width * 1.5 * (cartIndex - p.index);
-							cart.pos.x = k.lerp(cart.pos.x, cartX, 0.5);
-						}
-					});
-
-					if (k.isButtonPressed("action")) {
-						boxes.forEach((box) => box.isOpen = false);
-						box.isOpen = true;
-					}
+				cursorX = gx;
+			}
+			else {
+				// collapsed → games sit under the box
+				games.forEach((_, gi) => {
+					boxEnt.games[gi].targetX = cursorX;
 				});
-			});
-
-			return;
-		}
+				cursorX += Xspacing; // skip only box width
+			}
+		});
 	}
 
-	// kickstarts the adding of the boxes
-	changeGroup();
+	// ------------------ Navigation ------------------
+	function moveRight() {
+		const boxKey = Object.keys(optionsByGroup)[currentBoxIndex];
+		const games = optionsByGroup[boxKey];
+		if (expandedBoxes.has(currentBoxIndex)) {
+			if (currentGameIndex === null) {
+				currentGameIndex = 0;
+			}
+			else if (currentGameIndex < games.length - 1) {
+				currentGameIndex++;
+			}
+			else {
+				currentGameIndex = null;
+				currentBoxIndex = (currentBoxIndex + 1) % Object.keys(optionsByGroup).length;
+			}
+		}
+		else {
+			currentBoxIndex = (currentBoxIndex + 1) % Object.keys(optionsByGroup).length;
+			currentGameIndex = null;
+		}
+		intendedX = -getCurrentTargetX() + 200;
+	}
+
+	function moveLeft() {
+		const boxKey = Object.keys(optionsByGroup)[currentBoxIndex];
+		const games = optionsByGroup[boxKey];
+		if (expandedBoxes.has(currentBoxIndex)) {
+			if (currentGameIndex !== null) {
+				if (currentGameIndex > 0) {
+					currentGameIndex--;
+				}
+				else {
+					currentGameIndex = null;
+				}
+			}
+			else {
+				currentBoxIndex = (currentBoxIndex - 1 + Object.keys(optionsByGroup).length) % Object.keys(optionsByGroup).length;
+				currentGameIndex = expandedBoxes.has(currentBoxIndex)
+					? games.length - 1
+					: null;
+			}
+		}
+		else {
+			currentBoxIndex = (currentBoxIndex - 1 + Object.keys(optionsByGroup).length) % Object.keys(optionsByGroup).length;
+			currentGameIndex = null;
+		}
+		intendedX = -getCurrentTargetX() + 200;
+	}
+
+	function toggleExpandCollapse() {
+		if (expandedBoxes.has(currentBoxIndex)) {
+			expandedBoxes.delete(currentBoxIndex);
+			currentGameIndex = null;
+		}
+		else {
+			expandedBoxes.add(currentBoxIndex);
+		}
+		calculateLayout();
+		intendedX = -getCurrentTargetX() + 200;
+	}
+
+	// find the "focus" X position of current selection
+	function getCurrentTargetX() {
+		const be = boxEntities[currentBoxIndex];
+		if (currentGameIndex === null) {
+			return be.box.targetX ?? 0;
+		}
+		return be.games[currentGameIndex].targetX ?? 0;
+	}
+
+	// ------------------ Update ------------------
+	k.onUpdate(() => {
+		// smooth scroll
+		menuContainer.pos.x = k.lerp(menuContainer.pos.x, intendedX, 0.1);
+
+		// lerp each item to target
+		Object.keys(optionsByGroup).forEach((box, bi) => {
+			const boxEnt = boxEntities[bi];
+			boxEnt.box.pos.x = k.lerp(boxEnt.box.pos.x, boxEnt.box.targetX, 0.2);
+
+			boxEnt.games.forEach((g, gi) => {
+				g.pos.x = k.lerp(g.pos.x, g.targetX, 0.2);
+			});
+		});
+	});
+
+	// ------------------ Input ------------------
+	k.onKeyPress("right", () => moveRight());
+	k.onKeyPress("left", () => moveLeft());
+	k.onKeyPress("enter", () => toggleExpandCollapse());
+	k.onKeyPress("space", () => toggleExpandCollapse());
+
+	// ------------------ Init ------------------
+	calculateLayout();
+	intendedX = 200;
 };
