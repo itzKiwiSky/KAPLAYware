@@ -5,7 +5,6 @@ import k from "../../../../engine";
 import { overload2 } from "../../../../utils";
 
 /*
-
 	seed: number;
 	inputs: {
 		// REQUIRED
@@ -17,9 +16,6 @@ import { overload2 } from "../../../../utils";
 		// NON REQUIRED, BUT COOL TO HAVE
 		device: ButtonBindingDevice;
 	}[];
-
-
-
 */
 
 type SingleInput =
@@ -61,7 +57,11 @@ export function createPreviewGameCtx(ctx: MicrogameCtx): PreviewGameCtx {
 	const releaseButtonHandler = new k.KEvent<[TButton]>();
 	const moveMouseHandler = new k.KEvent<[pos: Vec2, delta: Vec2]>();
 
-	ctx.onButtonPress = (btn, action) => pressButtonHandler.add((nBtn) => btn == nBtn ? action(nBtn) : false);
+	ctx.onButtonPress = overload2((btn, action) => {
+		return pressButtonHandler.add((nBtn) => nBtn == btn ? action(nBtn) : false);
+	}, (action) => {
+		return pressButtonHandler.add((nBtn) => action(nBtn));
+	});
 
 	ctx.onButtonDown = overload2((btn, action) => {
 		return downButtonHandler.add((nBtn) => nBtn == btn ? action(nBtn) : false);
@@ -76,6 +76,8 @@ export function createPreviewGameCtx(ctx: MicrogameCtx): PreviewGameCtx {
 	});
 
 	ctx.onMouseMove = (action) => moveMouseHandler.add((pos, delta) => action(pos, delta));
+
+	ctx.mousePos = () => k.vec2();
 
 	const buttonState = {
 		pressed: new Set<TButton>([]),

@@ -158,7 +158,7 @@ export const addMainView = (isFirst: boolean) => {
 
 	p.onSelect(() => {
 		if (p.selectorPaused) return;
-		if (p.lastInput == "mouse" && !p.getSelected().isHovering()) return;
+		if (k.getLastInputDeviceType() == "mouse" && !p.getSelected().isHovering()) return;
 		p.selectorPaused = true;
 		boyScreen.play("select");
 		const l = k.loop(0.1, () => {

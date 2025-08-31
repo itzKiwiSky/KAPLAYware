@@ -1,4 +1,4 @@
-import { FreeplayPreviewData } from "./scenes/menu/views/previewContext.ts";
+import { FreeplayPreviewData } from "./scenes/menu/views/freeplay/previewContext.ts";
 import type { Microgame } from "./types/Microgame.ts";
 
 declare global {

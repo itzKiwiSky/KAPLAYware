@@ -9,7 +9,6 @@ export interface LinearSelectorComp<T extends any> extends Comp {
 	menuNext: TButton;
 	menuBack: TButton;
 	menuSelect: TButton;
-	lastInput: ButtonBindingDevice;
 	triggerSelect(): void;
 	setSelected(newSelect: T): void;
 	getSelected(): T;
@@ -56,7 +55,6 @@ export function linearSelector<T extends any>(): LinearSelectorComp<T> {
 		menuNext: undefined,
 		menuBack: undefined,
 		menuSelect: undefined,
-		lastInput: undefined,
 		add() {
 			obj = this;
 		},

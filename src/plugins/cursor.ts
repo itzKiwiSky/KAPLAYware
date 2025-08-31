@@ -1,8 +1,6 @@
 import { AreaComp, ButtonBindingDevice, GameObj } from "kaplay";
 import k from "../engine";
 
-let lastInput: ButtonBindingDevice = "mouse";
-
 /** The cursor object :) */
 const cursor = k.add([
 	k.sprite("@cursor"),
@@ -21,7 +19,7 @@ const cursor = k.add([
 ]);
 
 cursor.onUpdate(() => {
-	if (lastInput == "mouse" && !cursor.stayHidden) cursor.opacity = k.lerp(cursor.opacity, 1, 0.25);
+	if (k.getLastInputDeviceType() == "mouse" && !cursor.stayHidden) cursor.opacity = k.lerp(cursor.opacity, 1, 0.25);
 	else cursor.opacity = k.lerp(cursor.opacity, 0, 0.25);
 	if (cursor.stayHidden) return;
 
@@ -36,10 +34,6 @@ cursor.onUpdate(() => {
 
 cursor.onMouseMove(() => {
 	cursor.pos = k.mousePos();
-	lastInput = "mouse";
 });
-
-cursor.onKeyPress(() => lastInput = "keyboard");
-cursor.onGamepadButtonPress(() => lastInput = "gamepad");
 
 export default cursor;

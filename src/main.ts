@@ -20,7 +20,7 @@ window.freeplayPreviewData = {};
 
 const INITIAL_SCENE = () => {
 	if (window.DEV_MICROGAME && window.DEV_RECORDINPUT) goGame();
-	else goMenu("freeplay");
+	else goMenu("main");
 };
 
 k.onLoad(() => {

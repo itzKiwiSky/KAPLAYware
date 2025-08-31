@@ -129,9 +129,6 @@ export function createGameCtx(ware: WareEngine, wareApp: WareApp): MicrogameCtx 
 			// stuff like that
 			return wareApp.inputs.obj.onMouseMove(action);
 		},
-		onButtonPress(btn, action) {
-			return wareApp.inputs.obj.onButtonPress(btn, action);
-		},
 		// timer controllers
 		tween(from, to, duration, setValue, easeFunc) {
 			return wareApp.timers.add(k.tween(from, to, duration, setValue, easeFunc));
@@ -202,25 +199,21 @@ export function createGameCtx(ware: WareEngine, wareApp: WareApp): MicrogameCtx 
 		},
 
 		mousePos() {
-			if (k.kaplaywared.ignoreWareInputEvents) return k.center();
 			return k.mousePos();
 		},
 
 		isButtonPressed(btn) {
 			if (wareApp.inputs.paused) return false;
-			if (k.kaplaywared.ignoreWareInputEvents) return false;
 			else return k.isButtonPressed(btn);
 		},
 
 		isButtonDown(btn) {
 			if (wareApp.inputs.paused) return false;
-			if (k.kaplaywared.ignoreWareInputEvents) return false;
 			else return k.isButtonDown(btn);
 		},
 
 		isButtonReleased(btn) {
 			if (wareApp.inputs.paused) return false;
-			if (k.kaplaywared.ignoreWareInputEvents) return false;
 			else return k.isButtonReleased(btn);
 		},
 
@@ -236,6 +229,13 @@ export function createGameCtx(ware: WareEngine, wareApp: WareApp): MicrogameCtx 
 		getCamScale: () => wareApp.cameraObj.scale,
 		setCamScale: (val) => wareApp.cameraObj.scale = val,
 		shake: (val: number = 12) => wareApp.cameraObj.shake += val,
+
+		onButtonPress: overload2((action: (btn: any) => void) => {
+			// @ts-ignore
+			return wareApp.inputs.obj.onButtonPress(action);
+		}, (btn: any, action: (btn: any) => void) => {
+			return wareApp.inputs.obj.onButtonPress(btn, action);
+		}),
 
 		onButtonDown: overload2((action: (btn: any) => void) => {
 			return wareApp.inputs.obj.onButtonDown(action);
@@ -335,8 +335,8 @@ export function createGameCtx(ware: WareEngine, wareApp: WareApp): MicrogameCtx 
 	};
 
 	const microgameAPI: MicrogameAPI = {
-		getRGB: () => wareApp.backgroundColor,
-		setRGB: (val) => wareApp.backgroundColor = val,
+		getRGB: () => wareApp.boxObj.color,
+		setRGB: (val) => wareApp.boxObj.color = val,
 		onTimeout: (action) => ware.onTimeOutEvents.add(action),
 		win: () => wareApp.rootObj.trigger("win"),
 		lose: () => wareApp.rootObj.trigger("lose"),

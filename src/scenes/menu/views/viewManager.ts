@@ -50,6 +50,7 @@ export function createView<T extends any>(pos: Vec2, name: string): ViewObj<T> {
 export function goView(viewName: string) {
 	if (!views.some((v) => v.viewName == viewName)) k.throwError("MenuScene, you're trying to enter a view that doesn't exist! You tried: " + viewName);
 	views[curView].isActive = false;
+	views[curView].trigger("viewExit");
 	curView = views.indexOf(views.find((view) => view.viewName == viewName));
 	views[curView].isActive = true;
 	views[curView].trigger("viewEnter");

@@ -34,7 +34,7 @@ type PackObject = ReturnType<typeof addPack>;
 
 const STORY_POS = k.vec2(800, 0);
 
-export const addStoryView = (isFirst) => {
+export function addStoryView(isFirst: boolean) {
 	const p = createView<PackObject>(STORY_POS, "story");
 	p.selectorPaused = true;
 
@@ -181,4 +181,4 @@ export const addStoryView = (isFirst) => {
 			k.tween(kaboy.pos.y, 600, 0.5, (p) => kaboy.pos.y = p, k.easings.easeOutQuint);
 		});
 	});
-};
+}

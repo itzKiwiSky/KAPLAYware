@@ -112,10 +112,6 @@ const getGame: Microgame = {
 			bean.flipX = movement.x < 0;
 		});
 
-		ctx.onButtonPress("action", () => {
-			ctx.debug.log("THIS IS CALLED GET.TS ON BUTTON PRESS ACTION");
-		});
-
 		bean.onCollide("apple", () => {
 			if (!appleFinishedMoving) return;
 			apple.destroy();

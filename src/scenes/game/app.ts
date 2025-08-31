@@ -47,7 +47,6 @@ export function createGameContainer(rootParent = k.getTreeRoot()) {
 		k.pos(-cameraObject.width / 2, -cameraObject.height / 2),
 		k.timer(),
 	]);
-	k.kaplaywared.wareSceneObj = sceneObject;
 
 	cameraObject.onUpdate(() => {
 		cameraObject.shake = k.lerp(cameraObject.shake, 0, 5 * k.dt());
@@ -136,7 +135,6 @@ export type WareApp = {
 		cancel(): void;
 	};
 
-	backgroundColor: Color;
 	/** Wheter all the events, inputs, sounds in the app should be paused */
 	paused: boolean;
 	/** Equivalent to KAPLAYCtx.time that gets paused when the app is paused */
@@ -170,11 +168,9 @@ export function createWareApp(rootParent = k.getTreeRoot()): WareApp {
 	let disabledSounds: AudioPlay[] = []; // sounds that were disabled by sounds.paused
 
 	let inputObj = k.add([]) as WareApp["inputs"]["obj"];
-	k.kaplaywared.wareInputObj = inputObj;
 
 	const app = {
 		time: 0,
-		backgroundColor: k.rgb(),
 
 		get rootObj() {
 			return gameContainer.root;
@@ -365,7 +361,6 @@ export function createWareApp(rootParent = k.getTreeRoot()): WareApp {
 	} satisfies WareApp;
 
 	gameContainer.root.onUpdate(() => {
-		gameContainer.box.color = app.backgroundColor;
 		app.time += k.dt();
 	});
 
