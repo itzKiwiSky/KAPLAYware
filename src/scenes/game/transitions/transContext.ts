@@ -85,6 +85,7 @@ export function createTransCtx(): TransCtx {
 			timers = [];
 			conductors.forEach((conductor) => conductor.destroy());
 			conductors = [];
+			paused = null;
 		},
 		createConductor(bpm, startPaused) {
 			const c = createConductor(bpm, startPaused);

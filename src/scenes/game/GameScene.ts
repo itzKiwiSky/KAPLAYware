@@ -13,6 +13,11 @@ import { Microgame } from "../../types/Microgame";
 import goMenu from "../menu/MenuScene";
 
 k.scene("game", (gamesToPlay: Microgame[], mods: {}, lastView: string) => {
+	k.setLayers([
+		"scene",
+		"ui",
+	], "scene");
+
 	gamesToPlay = gamesToPlay ?? window.microgames;
 	mods = {};
 	lastView = lastView ?? "main";
@@ -21,19 +26,29 @@ k.scene("game", (gamesToPlay: Microgame[], mods: {}, lastView: string) => {
 	// setup the game
 	const app = createWareApp();
 	const transition = createTransition(chillTransition, app);
-	const ware = createWareEngine(app, { availableGames: gamesToPlay });
+	const ware = createWareEngine(app, { games: gamesToPlay });
 	ware.ctx = createGameCtx(ware, app);
 
-	const pauseScreen = createPauseScreen(() => setPaused(false), () => goMenu(lastView));
+	const pauseScreen = createPauseScreen(ware, () => {
+		setPaused(false);
+	}, () => {
+		goMenu(lastView);
+	});
 
 	let gamePaused = false;
 	const setPaused = (newPause: boolean) => {
 		gamePaused = newPause;
 		app.paused = gamePaused;
-		transition.ctx.paused = gamePaused;
 		pauseScreen.isGamePaused = gamePaused;
 		app.draws.paused = false;
-		if (!transition.ctx.paused) app.sounds.paused = true;
+		// if transition is still running
+		if (transition.ctx.paused != null) {
+			transition.ctx.paused = gamePaused;
+			// keep sounds paused
+			if (!transition.ctx.paused) app.sounds.paused = true;
+		}
+		// if transition is done sound pausing will be determined regularly
+		if (transition.ctx.paused == null) app.sounds.paused = gamePaused;
 		if (currentBomb) currentBomb.paused = gamePaused;
 	};
 

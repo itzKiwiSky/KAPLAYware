@@ -1,46 +1,83 @@
 import { Color, GameObj, Vec2 } from "kaplay";
 import k from "../../../engine";
 import { linearSelector } from "../../menu/linearSelector";
+import cursor from "../../../plugins/cursor";
+import { WareEngine } from "../ware";
+import { gameHidesMouse } from "../../../utils";
 
-export function createPauseScreen(resume: () => void, menu: () => void) {
-	// let canPress = false;
+export function createPauseScreen(ware: WareEngine, resume: () => void, menu: () => void) {
 	let enabled = false;
-	const p = k.add([linearSelector<"resume" | "menu">(), k.z(100)]);
+	const p = k.add([linearSelector<"resume" | "menu">(), k.layer("ui")]);
 	p.menuItems = ["resume", "menu"];
 	p.menuBack = "left";
 	p.menuNext = "right";
 	p.menuSelect = "action";
 
-	const drawBtn = (pos: Vec2, color: Color, text: string, selected = false) => {
-		if (selected) {
+	p.onUpdate(() => {
+		if (enabled == true && k.getLastInputDeviceType() == "mouse") {
+			cursor.stayHidden = false;
+		}
+	});
+
+	function addBtn(parent: GameObj, pos: Vec2, color: Color, text: string) {
+		const button = parent.add([
+			k.rect(190, 60, { radius: 50 }),
+			k.pos(pos),
+			k.color(color),
+			k.area(),
+			k.outline(5, color.darken(10)),
+			k.anchor("center"),
+			{
+				focused: false,
+			},
+		]);
+
+		const btn = text.toLowerCase() as "resume" | "menu";
+
+		button.onUpdate(() => {
+			button.hidden = !enabled;
+
+			if (button.isHovering() && p.getSelected() != btn) p.setSelected(btn);
+			button.focused = p.getSelected() == btn;
+		});
+
+		button.onDraw(() => {
+			k.drawText({
+				text: text,
+				size: 30,
+				anchor: "center",
+				align: "center",
+			});
+
 			k.drawRect({
 				width: 190,
 				height: 60,
-				pos: pos,
 				radius: 50,
-				outline: { color: k.mulfok.WHITE, width: 25 },
 				anchor: "center",
+				fill: false,
+				outline: {
+					width: 10,
+					color: k.mulfok.VOID_VIOLET,
+				},
 			});
-		}
 
-		k.drawRect({
-			width: 190,
-			height: 60,
-			pos: pos,
-			radius: 50,
-			color: color,
-			outline: { color: k.mulfok.VOID_VIOLET, width: 10 },
-			anchor: "center",
+			if (button.focused) {
+				k.drawRect({
+					width: 200,
+					height: 70,
+					radius: 50,
+					anchor: "center",
+					fill: false,
+					outline: {
+						width: 5,
+						color: k.WHITE,
+					},
+				});
+			}
 		});
 
-		k.drawText({
-			text: text,
-			pos: pos,
-			size: 35,
-			align: "center",
-			anchor: "center",
-		});
-	};
+		return button;
+	}
 
 	p.onDraw(() => {
 		if (!enabled) return;
@@ -66,19 +103,25 @@ export function createPauseScreen(resume: () => void, menu: () => void) {
 		});
 
 		// draw buttons
-		drawBtn(k.center().add(-150, 70), k.mulfok.DARK_BLUE, "RESUME", p.getSelected() == "resume");
-		drawBtn(k.center().add(150, 70), k.mulfok.DARK_RED, "MENU", p.getSelected() == "menu");
+		// drawBtn(k.center().add(-150, 70), k.mulfok.DARK_BLUE, "RESUME", p.getSelected() == "resume");
+		// drawBtn(k.center().add(150, 70), k.mulfok.DARK_RED, "MENU", p.getSelected() == "menu");
 	});
 
+	addBtn(p, k.center().add(-150, 70), k.mulfok.DARK_BLUE, "RESUME");
+	addBtn(p, k.center().add(150, 70), k.mulfok.DARK_RED, "MENU");
+
 	p.onSelect(() => {
-		if (p.getSelected() == "resume") resume();
+		if (!enabled) return;
+		if (p.getSelected() == "resume") {
+			resume();
+			if (gameHidesMouse(ware.microgame)) cursor.stayHidden = true;
+		}
 		if (p.getSelected() == "menu") menu();
 	});
 
 	return {
 		set isGamePaused(val: boolean) {
 			enabled = val;
-			if (enabled == true) p.index = 0;
 		},
 	};
 }

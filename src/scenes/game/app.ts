@@ -302,6 +302,7 @@ export function createWareApp(rootParent = k.getTreeRoot()): WareApp {
 			},
 			play(src, options) {
 				const sound = k.play(src, options);
+				// options.paused is undefined, don't use it for checks
 
 				if (soundsPaused && sound.paused == false) {
 					sound.paused = true;

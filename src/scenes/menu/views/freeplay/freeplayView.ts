@@ -133,7 +133,7 @@ export const addFreeplayView = (isFirst: boolean) => {
 	const app = createWareApp(kaboy);
 	app.boxObj.pos = k.vec2(0, -116);
 	app.boxObj.scaleToSize(k.vec2(246, 148));
-	const ware = createWareEngine(app, { availableGames: window.microgames });
+	const ware = createWareEngine(app, { games: window.microgames });
 	const ctx = createPreviewGameCtx(createGameCtx(ware, app));
 
 	// State, all of this is for grouping and later for sorting

@@ -10,6 +10,7 @@ const avoidGame: Microgame = {
 	input: "keys",
 	urlPrefix: "games/chillPack/avoid/",
 	load(ctx) {
+		ctx.loadSound("avoidmusic", "sounds/avoid.mp3");
 		ctx.loadSound("squash", "sounds/squash.mp3");
 		ctx.loadSound("stomp", "sounds/stomp.wav");
 		ctx.loadSound("crawl", "sounds/crawl.ogg");
@@ -57,6 +58,7 @@ const avoidGame: Microgame = {
 	},
 	start(ctx) {
 		ctx.setGravity(1300);
+		ctx.play("avoidmusic", { speed: ctx.speed, loop: true });
 
 		const crawl = ctx.play("crawl", { loop: true, paused: true, detune: ctx.rand(0, 50) });
 		const floor = ctx.add([

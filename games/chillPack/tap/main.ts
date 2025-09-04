@@ -19,8 +19,10 @@ const tapGame: Microgame = {
 		ctx.loadSound("sadmonkey", "sounds/sadmonkey.mp3");
 		ctx.loadSound("tap", "sounds/tap.wav");
 		ctx.loadSound("buzzer", "../assets/sounds/buzzer.mp3");
+		ctx.loadSound("tapsong", "sounds/tapsong.wav");
 	},
 	start(ctx) {
+		ctx.play("tapsong", { speed: ctx.speed, loop: true });
 		const screenframe = ctx.add([ctx.sprite("screenframe")]);
 		const screen = ctx.add([ctx.sprite("screen"), ctx.color(ctx.mulfok.VOID_PURPLE)]);
 		const hand = ctx.add([ctx.sprite("hand"), ctx.pos(), ctx.z(1)]);

@@ -13,13 +13,13 @@ import goMenu from "./scenes/menu/MenuScene";
 /** The available buttons in the kaplay button definition */
 export type TButton = "up" | "down" | "left" | "right" | "action";
 
-k.setVolume(0.25);
+k.setVolume(0.5);
 k.setCursor("none");
 k.loadRoot("./");
 window.freeplayPreviewData = {};
 
 const INITIAL_SCENE = () => {
-	if (window.DEV_MICROGAME && window.DEV_RECORDINPUT) goGame();
+	if (window.DEV_MICROGAME) goGame();
 	else goMenu("main");
 };
 

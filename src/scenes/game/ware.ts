@@ -9,7 +9,7 @@ import { WareApp } from "./app";
 /** Certain options to instantiate kaplayware (ware-engine) */
 export type KAPLAYwareOpts = {
 	/** What games will be available generally */
-	availableGames?: Microgame[];
+	games?: Microgame[];
 	/** What input should be determined? */
 	inputFilter?: MicrogameInput | "any";
 	// mods here
@@ -76,15 +76,17 @@ export function createWareEngine(app: WareApp, opts: KAPLAYwareOpts = {}): WareE
 		timeLeft: 20,
 		timePaused: false,
 		winState: undefined,
-		getRandomGame() {
+		getRandomGame(this: WareEngine) {
 			let randomGame: Microgame = null;
 
 			const regularHat = microgameHat.filter((g) => !g.isBoss);
 			const bossHat = microgameHat.filter((g) => g.isBoss);
 
 			// first check if there's items available in the hat, if not, push to the arrays above
-			if (this.shouldBoss() && bossHat.length == 0) bossHat.push(...opts.availableGames.filter((g) => g.isBoss));
-			else if (!this.shouldBoss() && regularHat.length == 0) regularHat.push(...opts.availableGames.filter((g) => !g.isBoss));
+			if (this.shouldBoss() && bossHat.length == 0) {
+				bossHat.push(...opts.games.filter((g) => g.isBoss));
+			}
+			else if (!this.shouldBoss() && regularHat.length == 0) regularHat.push(...opts.games.filter((g) => !g.isBoss));
 			microgameHat = regularHat.concat(bossHat);
 
 			// now choose a random microgame based on if should boss or not
@@ -101,7 +103,7 @@ export function createWareEngine(app: WareApp, opts: KAPLAYwareOpts = {}): WareE
 			if (window.DEV_DIFFICULTY) return window.DEV_DIFFICULTY;
 			else return Math.max(1, (Math.floor(score / 10) + 1) % 4) as 1 | 2 | 3;
 		},
-		shouldBoss(games = window.microgames) {
+		shouldBoss(games = opts.games) {
 			const theresBoss = games.some((g) => g.isBoss);
 			const scoreEqualsBoss = this.score % HOW_FREQUENT_BOSS == 0;
 			const onlyBoss = games.length == 1 && games[0].isBoss == true;

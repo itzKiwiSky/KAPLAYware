@@ -10,6 +10,7 @@ const dontGame: Microgame = {
 	input: "keys",
 	urlPrefix: "games/chillPack/dont/",
 	load(ctx) {
+		ctx.loadSound("music", "sounds/dont.mp3");
 		ctx.loadSprite("explosion", "sprites/explosion.png", { sliceX: 7, sliceY: 1, anims: { "a": { from: 0, to: 6 } } });
 		ctx.loadSprite("button", "sprites/button.png", { sliceX: 2, sliceY: 1 });
 		ctx.loadSprite("earth", "sprites/earth.png");
@@ -22,6 +23,7 @@ const dontGame: Microgame = {
 	},
 	start(ctx) {
 		// positions itself
+		ctx.play("music", { speed: ctx.speed, loop: true });
 		const frame = ctx.add([ctx.sprite("frame"), ctx.z(1)]);
 
 		const stars = ctx.add([ctx.sprite("stars"), ctx.pos()]);
