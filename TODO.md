@@ -14,6 +14,7 @@
 - Make it so when pausing the whole scene unzooms and it shows the cool background little animation with the KABOY
 
 ### Avoid
+- **POLISH MUSIC**
 - **FREEPLAY DATA**
 
 ### Click
@@ -57,6 +58,7 @@
 
 ### Mine
 - **FREEPLAY DATA**
+- **POLISH MUSIC**
 - Increase times of mine
 - Re do background so its prettier
 

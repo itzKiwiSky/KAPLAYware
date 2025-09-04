@@ -13,11 +13,6 @@ import { Microgame } from "../../types/Microgame";
 import goMenu from "../menu/MenuScene";
 
 k.scene("game", (gamesToPlay: Microgame[], mods: {}, lastView: string) => {
-	k.setLayers([
-		"scene",
-		"ui",
-	], "scene");
-
 	gamesToPlay = gamesToPlay ?? window.microgames;
 	mods = {};
 	lastView = lastView ?? "main";

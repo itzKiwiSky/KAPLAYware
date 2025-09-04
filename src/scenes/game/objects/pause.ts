@@ -7,7 +7,7 @@ import { gameHidesMouse } from "../../../utils";
 
 export function createPauseScreen(ware: WareEngine, resume: () => void, menu: () => void) {
 	let enabled = false;
-	const p = k.add([linearSelector<"resume" | "menu">(), k.layer("ui")]);
+	const p = k.add([linearSelector<"resume" | "menu">(), k.z(2)]);
 	p.menuItems = ["resume", "menu"];
 	p.menuBack = "left";
 	p.menuNext = "right";
@@ -27,6 +27,7 @@ export function createPauseScreen(ware: WareEngine, resume: () => void, menu: ()
 			k.area(),
 			k.outline(5, color.darken(10)),
 			k.anchor("center"),
+			k.z(3),
 			{
 				focused: false,
 			},
