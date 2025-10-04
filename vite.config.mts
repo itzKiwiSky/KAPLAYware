@@ -1,32 +1,65 @@
 // @ts-nocheck
 import { defineConfig } from "vite";
-import { viteSingleFile } from "vite-plugin-singlefile"
+import { viteSingleFile } from "vite-plugin-singlefile";
+import { viteStaticCopy } from "vite-plugin-static-copy";
+import { DynamicPublicDirectory } from "vite-multiple-assets";
 
 // https://vitejs.dev/config/
-export default defineConfig(async () => ({
-  // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
-  //
-  // 1. prevent vite from obscuring rust errors
-  plugins: [viteSingleFile()],
-  clearScreen: false,
-  // 2. tauri expects a fixed port, fail if that port is not available
-  server: {
-    allowedHosts: true,
-    hmr: false,
-    port: 8000,
-    strictPort: true,
-    watch: {
-      // 3. tell vite to ignore watching `src-tauri`
-      ignored: ["**/src-tauri/**"],
-    },
-  },
-  publicDir: "./assets",
-  build: {
-    minify: "terser",
-    chunkSizeWarningLimit: 10000,
-    sourcemap: "hidden", // makes it so code is obstructed on release
-  },
-  define: {
-    DEV_MINIGAME: process.env.DEV_MINIGAME,
-  },
+export default defineConfig(async ({ mode }) => ({
+	plugins: [
+		viteSingleFile(),
+		DynamicPublicDirectory(["assets/**/*", {
+			input: "games/**",
+			output: "games",
+		}], {
+			ignore: ["**/*.ts"],
+		}) as PluginOption,
+		{
+			name: "kaplayware-plugin",
+			transformIndexHtml: {
+				handler() {
+					if (mode !== "desktop") return;
+
+					return {
+						tags: [
+							{
+								tag: "script",
+								attrs: {
+									src: "%PUBLIC_URL%/__neutralino_globals.js",
+								},
+								injectTo: "head-prepend",
+							},
+							{
+								tag: "script",
+								attrs: {
+									type: "module",
+									src: "./src/desktop.ts",
+								},
+								injectTo: "body-prepend",
+							},
+						],
+					};
+				},
+				order: "pre",
+			},
+		},
+	],
+	server: {
+		allowedHosts: true,
+		hmr: false,
+		port: 8000,
+	},
+	publicDir: false,
+	assetsInclude: [],
+	build: {
+		minify: "terser",
+		chunkSizeWarningLimit: 10000,
+		sourcemap: "hidden", // Makes it so code is obstructed on release,
+	},
+	define: {
+		DEV_MICROGAME: process.env.DEV_MICROGAME,
+		DEV_SPEED: process.env.DEV_SPEED,
+		DEV_DIFFICULTY: process.env.DEV_DIFFICULTY,
+		DEV_RECORDINPUT: process.env.DEV_RECORDINPUT,
+	},
 }));

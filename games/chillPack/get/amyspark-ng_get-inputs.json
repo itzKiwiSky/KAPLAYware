@@ -1,0 +1,206 @@
+{
+    "seed": 1873361408,
+    "inputs": [
+        {
+            "frame": 1,
+            "button": "action",
+            "type": "press"
+        },
+        {
+            "frame": 2,
+            "type": "mouseMove",
+            "delta": {
+                "x": 0,
+                "y": -3
+            },
+            "position": {
+                "x": 410.26438569206846,
+                "y": 382.58164852255055
+            }
+        },
+        {
+            "frame": 2,
+            "button": "action",
+            "type": "down"
+        },
+        {
+            "frame": 3,
+            "type": "mouseMove",
+            "delta": {
+                "x": 0,
+                "y": 1
+            },
+            "position": {
+                "x": 410.26438569206846,
+                "y": 384.447900466563
+            }
+        },
+        {
+            "frame": 3,
+            "button": "action",
+            "type": "release"
+        },
+        {
+            "frame": 73,
+            "type": "mouseMove",
+            "delta": {
+                "x": 0,
+                "y": 1
+            },
+            "position": {
+                "x": 410.26438569206846,
+                "y": 385.3810264385692
+            }
+        },
+        {
+            "frame": 168,
+            "button": "up",
+            "type": "press"
+        },
+        {
+            "frame": 169,
+            "button": "up",
+            "type": "down"
+        },
+        {
+            "frame": 170,
+            "button": "up",
+            "type": "down"
+        },
+        {
+            "frame": 171,
+            "button": "up",
+            "type": "down"
+        },
+        {
+            "frame": 172,
+            "button": "up",
+            "type": "down"
+        },
+        {
+            "frame": 173,
+            "button": "up",
+            "type": "down"
+        },
+        {
+            "frame": 174,
+            "button": "up",
+            "type": "down"
+        },
+        {
+            "frame": 175,
+            "button": "up",
+            "type": "down"
+        },
+        {
+            "frame": 176,
+            "button": "up",
+            "type": "down"
+        },
+        {
+            "frame": 177,
+            "button": "up",
+            "type": "down"
+        },
+        {
+            "frame": 178,
+            "button": "up",
+            "type": "down"
+        },
+        {
+            "frame": 179,
+            "button": "up",
+            "type": "release"
+        },
+        {
+            "frame": 192,
+            "button": "left",
+            "type": "press"
+        },
+        {
+            "frame": 193,
+            "button": "left",
+            "type": "down"
+        },
+        {
+            "frame": 194,
+            "button": "left",
+            "type": "down"
+        },
+        {
+            "frame": 195,
+            "button": "left",
+            "type": "down"
+        },
+        {
+            "frame": 196,
+            "button": "left",
+            "type": "down"
+        },
+        {
+            "frame": 197,
+            "button": "left",
+            "type": "down"
+        },
+        {
+            "frame": 198,
+            "button": "left",
+            "type": "down"
+        },
+        {
+            "frame": 199,
+            "button": "left",
+            "type": "down"
+        },
+        {
+            "frame": 200,
+            "button": "left",
+            "type": "down"
+        },
+        {
+            "frame": 201,
+            "button": "left",
+            "type": "down"
+        },
+        {
+            "frame": 202,
+            "button": "left",
+            "type": "down"
+        },
+        {
+            "frame": 203,
+            "button": "left",
+            "type": "down"
+        },
+        {
+            "frame": 204,
+            "button": "left",
+            "type": "down"
+        },
+        {
+            "frame": 205,
+            "button": "left",
+            "type": "down"
+        },
+        {
+            "frame": 206,
+            "button": "left",
+            "type": "down"
+        },
+        {
+            "frame": 207,
+            "button": "left",
+            "type": "down"
+        },
+        {
+            "frame": 208,
+            "button": "left",
+            "type": "down"
+        },
+        {
+            "frame": 209,
+            "button": "left",
+            "type": "release"
+        }
+    ]
+}

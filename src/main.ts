@@ -1,22 +1,26 @@
 import k from "./engine";
-import "./loader";
+import "./loading/loader";
 import "./plugins/cursor";
 
-import "../src/scenes/focus";
-import "../src/scenes/title";
-import "./scenes/menu/menu";
-import "./scenes/menu/select";
-import "../src/scenes/game";
-import "../src/scenes/gameover";
-import goGame from "../src/scenes/game";
+import "./scenes/FocusScene";
+import "./scenes/TitleScene";
+import "./scenes/menu/MenuScene";
+import "../src/scenes/game/GameScene";
+
+import goGame from "../src/scenes/game/GameScene";
+import goMenu from "./scenes/menu/MenuScene";
+
+/** The available buttons in the kaplay button definition */
+export type TButton = "up" | "down" | "left" | "right" | "action";
 
 k.setVolume(0.5);
 k.setCursor("none");
 k.loadRoot("./");
+window.freeplayPreviewData = {};
 
 const INITIAL_SCENE = () => {
-	if (DEV_MINIGAME) goGame();
-	else goGame();
+	if (window.DEV_MICROGAME) goGame();
+	else goMenu("main");
 };
 
 k.onLoad(() => {
